@@ -6,14 +6,18 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +45,12 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun EbookView() {
+    val context = LocalContext.current
+    val activityLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { _ ->
+    }
+
     var page = "2";
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -64,6 +74,30 @@ fun EbookView() {
                 lineHeight = 23.sp,
                 textAlign = TextAlign.Start
             )
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                FloatingActionButton(
+                    onClick = {
+                    val intent = Intent(context, SummaryActivity::class.java)
+                    activityLauncher.launch(intent)
+                    },
+                    modifier = Modifier.width(180.dp).height(50.dp)
+                    ) {
+                    Text("Generate Summary")
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                FloatingActionButton( onClick = {
+                    val intent = Intent(context, QuizActivity::class.java)
+                    activityLauncher.launch(intent)
+                },
+                    modifier = Modifier.width(180.dp).height(50.dp)
+                ) {
+                    Text("Generate Quiz")
+                }
+            }
             Spacer(modifier = Modifier.height(10.dp))
             Text(page + " / 611")
         }

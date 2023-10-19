@@ -44,6 +44,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.sp
+import BottomSheet
 
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -141,13 +142,11 @@ fun BookCard() {
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 var showSheet by remember { mutableStateOf(false) }
-
-//            if (showSheet) {
-//                BottomSheet() {
-//                    showSheet = false
-//                }
-//            }
-
+                if (showSheet) {
+                    BottomSheet() {
+                        showSheet = false
+                    }
+                }
                 IconButton(onClick = {
 
                 }) {
@@ -171,6 +170,4 @@ fun BookCard() {
             }
         }
     }
-
-
 }
