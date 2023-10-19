@@ -78,14 +78,17 @@ fun QuizView(navController: NavController) {
 fun TopBar(name: String , navController: NavController) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
-//    val activityLauncher = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.StartActivityForResult()
-//    ) { _ ->
-//    }
+    val activityLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { _ ->
+    }
     TopAppBar(
         title = { Text(text = name) },
         navigationIcon = {
-            IconButton(onClick = {}) {
+            IconButton(onClick = {
+                val intent = Intent(context, ReaderActivity::class.java)
+                activityLauncher.launch(intent)
+            }) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBack,
                     contentDescription = "Arrow Back"
