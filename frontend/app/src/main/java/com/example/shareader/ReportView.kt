@@ -8,6 +8,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -58,7 +59,7 @@ fun ReportView(navController: NavController) {
     Column (
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier.padding()
+        modifier = Modifier.padding(10.dp).fillMaxHeight()
     ){
         TopAppBar(
             title = { Text(text = "ReportQuiz") },
@@ -92,10 +93,10 @@ fun ReportQuestion(){
             .fillMaxWidth()
             .border(width = 1.dp, color = Color.Black, shape = RoundedCornerShape(8.dp))
     ){
-        Text(text = "Question:", fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Start, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
+        Text(text = "Question:", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Start, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
         Text(text = "examplequestions",modifier = Modifier.padding(horizontal = 16.dp), textAlign = TextAlign.Center, )
         Text(text = " ")
-        Text(text = "Generated Answer:", fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Start,modifier = Modifier.padding(horizontal = 16.dp))
+        Text(text = "Generated Answer:", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Start,modifier = Modifier.padding(horizontal = 16.dp))
         Text(text = "exampleanswers",modifier = Modifier.padding(horizontal = 16.dp,  vertical = 8.dp), textAlign = TextAlign.Center)
 
     }
@@ -103,7 +104,7 @@ fun ReportQuestion(){
 
 @Composable
 fun ReportSelection(){
-    val radioOptions = listOf("It is harmful/unsafe.", "It isn;t true.", "It isn't helpful to understand content.", "Other reasons...")
+    val radioOptions = listOf("It is harmful/unsafe.", "It isn't true.", "It isn't helpful to understand content.", "Other reasons...")
     val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[1] ) }
     Column {
         radioOptions.forEach { text ->
