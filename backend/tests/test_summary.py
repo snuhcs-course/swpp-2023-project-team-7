@@ -1,7 +1,7 @@
 import pytest
 import sys
 sys.path.append('/home/swpp/swpp-2023-project-team-7/backend/')
-from llama.run_summary import split_large_text, MAX_SIZE
+from llama.preprocess_summary import split_large_text, MAX_SIZE
 from llama.custom_type import Summary
 
 def test_split_text():
