@@ -40,11 +40,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
+object Quiz {
+    var idx = 1
+    var question = "generated question"
+    var answer = "generated answer"
+}
+
 @Composable
 fun QuizView(navController: NavController) {
+    var answerVisible by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
     val activityLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -62,12 +72,18 @@ fun QuizView(navController: NavController) {
             verticalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.padding()
         ){
-            TopBar(name = "Quiz", navController)
-            QuizProgressIndicator()
-            getQuestion()
+            TopBar(name = "Quiz", navController, Quiz.question, Quiz.answer)
+            QuizProgressIndicator(Quiz.idx)
+            getQuestion(Quiz.question)
             writeAnswer()
-            getAnswer()
-            BottomBar()
+            getAnswer(answerVisible, Quiz.answer)
+            BottomBar(answerVisible){
+                if(answerVisible && Quiz.idx < 10){
+                    Quiz.idx++
+                    /*Todo: update generated quiz and answer*/
+                }
+                answerVisible = !answerVisible
+            }
         }
 
     }
@@ -75,7 +91,7 @@ fun QuizView(navController: NavController) {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(name: String , navController: NavController) {
+fun TopBar(name: String , navController: NavController, question: String, answer: String) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
     val activityLauncher = rememberLauncherForActivityResult(
@@ -109,7 +125,7 @@ fun TopBar(name: String , navController: NavController) {
             ) {
                 DropdownMenuItem(
                     text = { Text("Report This Quiz") },
-                    onClick = { navController.navigate("report")}
+                    onClick = { navController.navigate("report/${question}/${answer}")}
                 )
                 DropdownMenuItem(
                     text = { Text("Regenerate Quiz") },
@@ -125,7 +141,8 @@ fun TopBar(name: String , navController: NavController) {
 
 
 @Composable
-fun BottomBar(){
+fun BottomBar(answerVisible:Boolean, onClick: () -> Unit){
+
     Row(
         modifier = Modifier.padding()
 
@@ -146,14 +163,14 @@ fun BottomBar(){
         }
         Button(
             onClick = {
-
+                onClick()
             },
             modifier = Modifier
                 .width(180.dp)
                 .padding(20.dp)
         ) {
             Text(
-                text = "Next",
+                text = if(answerVisible) "Next" else "See Answer",
                 color = Color.White,
                 fontWeight = FontWeight.Bold
             )
@@ -165,18 +182,18 @@ fun BottomBar(){
 }
 
 @Composable
-fun QuizProgressIndicator(){
+fun QuizProgressIndicator(idx:Int){
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-        Text(text = "1/10")
-        LinearProgressIndicator(progress = 0.7f)
+        Text(text = "$idx/10")
+        LinearProgressIndicator(progress = idx/10.0f, modifier = Modifier.fillMaxWidth().padding(20.dp))
     }
 }
 
 @Composable
-fun getQuestion(){
-    Text(text = "Question", fontSize = 24.sp, modifier = Modifier.padding(24.dp))
+fun getQuestion(question : String){
+    Text(text = question, fontSize = 24.sp, modifier = Modifier.padding(24.dp))
 }
 
 
@@ -198,17 +215,18 @@ fun writeAnswer(){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun getAnswer(){
-
+fun getAnswer(answerVisible:Boolean, answer:String){
+    var alpha = if(answerVisible) 1f else 0f
     OutlinedTextField(
-        value = "Generated Answer",
+        value = answer,
         onValueChange = {},
         modifier = Modifier
             .padding(horizontal = 20.dp)
             .fillMaxWidth()
-            .height(180.dp),
+            .height(180.dp)
+            .alpha(alpha),
         label = { Text("Answer") },
-        readOnly = true, // Make it non-editable
+        readOnly = true
     )
 
 }

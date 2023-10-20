@@ -1,8 +1,10 @@
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -136,23 +138,26 @@ fun Progress(){
 fun Actions(){
     Column(
         horizontalAlignment = Alignment.Start,
-        modifier = Modifier.padding(bottom = 20.dp, start = 10.dp)
+        modifier = Modifier.padding(bottom = 20.dp, start = 10.dp, end = 10.dp)
     ){
         Text("Actions", fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 10.dp, bottom = 10.dp))
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().clickable {}
         ){
             Icon(imageVector = Icons.Outlined.Refresh, contentDescription = "clear progress")
             Text("Clear Progress", modifier = Modifier.padding(10.dp))
         }
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().clickable {}
         ){
             Icon(imageVector = Icons.Outlined.Check, contentDescription = "mark")
             Text("Mark as completed", modifier = Modifier.padding(10.dp))
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().clickable {}
         ){
             Icon(imageVector = Icons.Outlined.Delete, contentDescription = "delete", tint = Color(0xFFFF0000))
             Text("Delete From My library", modifier = Modifier.padding(10.dp), color = Color(0xFFFF0000))
