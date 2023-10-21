@@ -5,175 +5,168 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.border
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-//import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-
-object Quiz {
-    var idx = 1
-    var question = "generated question"
-    var answer = "generated answer"
-}
+import com.example.shareader.ui.theme.SHAReaderTheme
+import com.example.shareader.ui.viewmodels.QuizViewModel
 
 @Composable
-fun QuizView(navController: NavController) {
+fun QuizView(
+    navController: NavController = NavController(LocalContext.current),
+    quizViewModel: QuizViewModel = viewModel()
+) {
+    var quizIdx by remember { mutableIntStateOf(0) }
     var answerVisible by remember { mutableStateOf(false) }
+    val quizList by quizViewModel.quizList.collectAsState()
+    val quizSize by quizViewModel.quizSize.collectAsState()
+    val quizLoadState by quizViewModel.quizLoadState.collectAsState()
 
-    val context = LocalContext.current
-    val activityLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { _ ->
+    LaunchedEffect(Unit) {
+        quizViewModel.loadQuiz()
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
+    val currentQuestion = if (quizList.size > quizIdx) quizList[quizIdx].question else null
+    val currentAnswer = if (quizList.size > quizIdx) quizList[quizIdx].answer else null
+    val currentVisible = currentQuestion != null && currentAnswer != null
 
+    SHAReaderTheme {
+        Scaffold(topBar = {
+            TopBar(name = "Quiz", navController, currentQuestion, currentAnswer)
+        }) { innerPadding ->
+            AnimatedContent(targetState = currentVisible, label = "QuizView.Content") {
+                when (it) {
+                    true -> Column(
+                        modifier = Modifier.padding(innerPadding),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        QuizProgressIndicator(quizIdx + 1, quizSize)
+                        QuestionTitle(question = currentQuestion ?: "")
+                        WriteAnswer(modifier = Modifier.weight(1f))
+                        GeneratedAnswer(
+                            modifier = Modifier.weight(1f),
+                            answerVisible = answerVisible,
+                            answer = quizList[quizIdx].answer
+                        )
+                        BottomBar(answerVisible, onPrevClicked = {
+                            if (!answerVisible && quizIdx > 0) {
+                                quizIdx--
+                            }
+                            answerVisible = !answerVisible
+                        }, onNextClicked = {
+                            if (answerVisible && quizIdx < 10) {
+                                quizIdx++
+                            }
+                            answerVisible = !answerVisible
+                        })
+                    }
 
-        Column (
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.padding()
-        ){
-            TopBar(name = "Quiz", navController, Quiz.question, Quiz.answer)
-            QuizProgressIndicator(Quiz.idx)
-            getQuestion(Quiz.question)
-            writeAnswer()
-            getAnswer(answerVisible, Quiz.answer)
-            BottomBar(answerVisible){
-                if(answerVisible && Quiz.idx < 10){
-                    Quiz.idx++
-                    /*Todo: update generated quiz and answer*/
+                    false -> Column(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // TODO: more user-freindly loading
+                        CircularProgressIndicator()
+                    }
                 }
-                answerVisible = !answerVisible
             }
         }
-
     }
 }
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(name: String , navController: NavController, question: String, answer: String) {
+fun TopBar(name: String, navController: NavController, question: String?, answer: String?) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
     val activityLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { _ ->
     }
-    TopAppBar(
-        title = { Text(text = name) },
-        navigationIcon = {
-            IconButton(onClick = {
-                val intent = Intent(context, ReaderActivity::class.java)
-                activityLauncher.launch(intent)
-            }) {
-                Icon(
-                    imageVector = Icons.Filled.ArrowBack,
-                    contentDescription = "Arrow Back"
-                )
-            }
-        },
-        actions = {
-            IconButton(onClick = {expanded = !expanded}) {
-                Icon(
-                    imageVector = Icons.Filled.MoreVert,
-                    contentDescription = "Menu",
-                    tint = Color.Black
-                )
-            }
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Report This Quiz") },
-                    onClick = { navController.navigate("report/${question}/${answer}")}
-                )
-                DropdownMenuItem(
-                    text = { Text("Regenerate Quiz") },
-                    onClick = { Toast.makeText(context, "Regenerate", Toast.LENGTH_SHORT).show() }
-                )
-            }
-
+    TopAppBar(title = { Text(text = name) }, navigationIcon = {
+        IconButton(onClick = {
+            val intent = Intent(context, ReaderActivity::class.java)
+            activityLauncher.launch(intent)
+        }) {
+            Icon(
+                imageVector = Icons.Filled.ArrowBack, contentDescription = "Arrow Back"
+            )
         }
-    )
+    }, actions = {
+        IconButton(onClick = {
+            if (question != null && answer != null) {
+                expanded = !expanded
+            }
+        }) {
+            Icon(
+                imageVector = Icons.Filled.MoreVert,
+                contentDescription = "Menu",
+                tint = Color.Black
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(text = { Text("Report This Quiz") },
+                onClick = { navController.navigate("report/${question}/${answer}") })
+            DropdownMenuItem(text = { Text("Regenerate Quiz") },
+                onClick = { Toast.makeText(context, "Regenerate", Toast.LENGTH_SHORT).show() })
+        }
+
+    })
 
 }
 
 
-
 @Composable
-fun BottomBar(answerVisible:Boolean, onClick: () -> Unit){
+fun BottomBar(answerVisible: Boolean, onPrevClicked: () -> Unit, onNextClicked: () -> Unit) {
 
     Row(
-        modifier = Modifier.padding()
-
-    ){
-        Button(
-            onClick = {
-
-            },
+        modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        FilledTonalButton(
             modifier = Modifier
-                .width(180.dp)
-                .padding(20.dp)
+                .height(48.dp)
+                .weight(1f)
+                .fillMaxHeight(),
+            shape = RoundedCornerShape(12.dp),
+            onClick = { onPrevClicked() },
         ) {
-            Text(
-                text = "Previous",
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
+            Text(text = "Previous")
         }
         Button(
-            onClick = {
-                onClick()
-            },
             modifier = Modifier
-                .width(180.dp)
-                .padding(20.dp)
+                .height(48.dp)
+                .weight(1f)
+                .fillMaxHeight(),
+            shape = RoundedCornerShape(12.dp),
+            onClick = { onNextClicked() },
         ) {
-            Text(
-                text = if(answerVisible) "Next" else "See Answer",
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
+            Text(text = if (answerVisible) "Next" else "See Answer")
         }
 
     }
@@ -182,61 +175,62 @@ fun BottomBar(answerVisible:Boolean, onClick: () -> Unit){
 }
 
 @Composable
-fun QuizProgressIndicator(idx:Int){
+fun QuizProgressIndicator(idx: Int, size: Int) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        Text(text = "$idx/10")
-        LinearProgressIndicator(progress = idx/10.0f, modifier = Modifier.fillMaxWidth().padding(20.dp))
+        modifier = Modifier.padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(text = "$idx / $size")
+        LinearProgressIndicator(
+            progress = idx.toFloat() / size, modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
 @Composable
-fun getQuestion(question : String){
-    Text(text = question, fontSize = 24.sp, modifier = Modifier.padding(24.dp))
+fun QuestionTitle(modifier: Modifier = Modifier, question: String) {
+    Column(
+        modifier = modifier
+            .padding(16.dp)
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = question,
+            style = MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Center
+        )
+    }
 }
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun writeAnswer(){
+fun WriteAnswer(modifier: Modifier = Modifier) {
     var text by remember { mutableStateOf("") }
 
-    OutlinedTextField(
-        value = text,
+    OutlinedTextField(value = text,
         onValueChange = { text = it },
-        modifier = Modifier
-            .padding(horizontal = 20.dp)
-            .fillMaxWidth()
-            .height(180.dp),
-        label = { Text("Answer") }
-    )
+        modifier = modifier
+            .padding(16.dp)
+            .fillMaxWidth(),
+        label = { Text("Answer") })
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun getAnswer(answerVisible:Boolean, answer:String){
-    var alpha = if(answerVisible) 1f else 0f
+fun GeneratedAnswer(modifier: Modifier = Modifier, answerVisible: Boolean, answer: String) {
+    val alpha = if (answerVisible) 1f else 0f
     OutlinedTextField(
         value = answer,
         onValueChange = {},
-        modifier = Modifier
-            .padding(horizontal = 20.dp)
+        modifier = modifier
+            .padding(16.dp)
             .fillMaxWidth()
-            .height(180.dp)
             .alpha(alpha),
         label = { Text("Answer") },
         readOnly = true
     )
-
 }
-//@Composable
-//fun QuizView(content:@Composable()){
-//    Scaffold (topBar = {
-//        TopAppBar(title = { Text(text = "Quiz") },
-//            navigationIcon = {Icon(imageVector = Icons.Default.ArrowBack)})},){
-//        content()
-//    }}
-//    })
-//
-//}

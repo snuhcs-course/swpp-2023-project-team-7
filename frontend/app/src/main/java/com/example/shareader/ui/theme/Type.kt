@@ -1,34 +1,42 @@
 package com.example.shareader.ui.theme
 
 import androidx.compose.material3.Typography
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
+import com.example.shareader.R
+
+@OptIn(ExperimentalTextApi::class)
+val Gabarito = FontFamily(
+    Font(
+        R.font.gabarito
+    )
+)
+
+@OptIn(ExperimentalTextApi::class)
+val Lora = FontFamily(
+    Font(
+        R.font.lora
+    )
+)
 
 // Set of Material typography styles to start with
+private val defaultTypoGraphy = Typography()
 val Typography = Typography(
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    )
-    /* Other default text styles to override
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
-    ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
-    )
-    */
+    displayLarge = defaultTypoGraphy.displayLarge.copy(fontFamily = Lora, fontWeight = FontWeight.SemiBold),
+    displayMedium = defaultTypoGraphy.displayMedium.copy(fontFamily = Lora, fontWeight = FontWeight.SemiBold),
+    displaySmall = defaultTypoGraphy.displaySmall.copy(fontFamily = Lora, fontWeight = FontWeight.SemiBold),
+    headlineLarge = defaultTypoGraphy.headlineLarge.copy(fontFamily = Lora, fontWeight = FontWeight.SemiBold),
+    headlineMedium = defaultTypoGraphy.headlineMedium.copy(fontFamily = Lora, fontWeight = FontWeight.SemiBold),
+    headlineSmall = defaultTypoGraphy.headlineSmall.copy(fontFamily = Lora, fontWeight = FontWeight.SemiBold),
+    titleLarge = defaultTypoGraphy.titleLarge.copy(fontFamily = Lora, fontWeight = FontWeight.SemiBold),
+    titleMedium = defaultTypoGraphy.titleMedium.copy(fontFamily = Lora, fontWeight = FontWeight.SemiBold),
+    titleSmall = defaultTypoGraphy.titleSmall.copy(fontFamily = Lora, fontWeight = FontWeight.SemiBold),
+    bodyLarge = defaultTypoGraphy.bodyLarge.copy(fontFamily = Gabarito),
+    bodyMedium = defaultTypoGraphy.bodyMedium.copy(fontFamily = Gabarito),
+    bodySmall = defaultTypoGraphy.bodySmall.copy(fontFamily = Gabarito),
+    labelLarge = defaultTypoGraphy.labelLarge.copy(fontFamily = Gabarito),
+    labelMedium = defaultTypoGraphy.labelMedium.copy(fontFamily = Gabarito),
+    labelSmall = defaultTypoGraphy.labelSmall.copy(fontFamily = Gabarito),
 )
