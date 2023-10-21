@@ -28,10 +28,7 @@ async def ai_summary(request: Request, book_id: str, progress: float):
                 return
             yield {
                 "event": "summary",
-                "data": {
-                    "delta_content": delta_content,
-                    "finished": finished
-                }
+                "data": delta_content
             }
 
     return EventSourceResponse(event_generator())
@@ -49,6 +46,7 @@ def ai_quiz(request: Request, book_id: str, progress: float):
             yield {
                 "event": "quiz",
                 "data": {
+                    "quiz_id": "123123",
                     "quiz": quiz,
                     "quiz_len": quiz_len
                 }
