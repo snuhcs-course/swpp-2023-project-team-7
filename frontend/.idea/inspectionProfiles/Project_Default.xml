@@ -3,6 +3,7 @@
     <option name="myName" value="Project Default" />
     <inspection_tool class="PreviewMultipleParameterProviders" enabled="true" level="ERROR" enabled_by_default="true">
       <option name="composableFile" value="true" />
+      <option name="previewFile" value="true" />
     </inspection_tool>
   </profile>
 </component>
