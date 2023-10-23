@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.INTERNET" android:protectionLevel="normal" />
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        android:protectionLevel="normal" />
 
     <application
         android:allowBackup="true"
@@ -14,7 +16,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SplashScreen.MySplash"
         tools:targetApi="31">
-
+        <activity
+            android:name=".AddBookActivity"
+            android:exported="false"
+            android:label="@string/title_activity_add_book"
+            android:theme="@style/Theme.SplashScreen.MySplash" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -22,10 +28,10 @@
             android:theme="@style/Theme.SplashScreen.MySplash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ReaderActivity"
             android:exported="true"
@@ -35,7 +41,6 @@
                 <action android:name="android.intent.action.READER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".SummaryActivity"
             android:exported="true"
@@ -45,7 +50,6 @@
                 <action android:name="android.intent.action.SUMMARY" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".QuizActivity"
             android:exported="true"
@@ -55,7 +59,6 @@
                 <action android:name="android.intent.action.QUIZ" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>
