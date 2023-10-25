@@ -24,77 +24,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.shareader.ui.theme.SHAReaderTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        installSplashScreen()
         setContent {
             SHAReaderTheme {
-                HomeView()
-            }
-        }
-    }
-}
-
-@Composable
-fun HomeView() {
-    val context = LocalContext.current
-    val activityLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { _ ->
-    }
-
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column (
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding()
-        ){
-            Button(
-                onClick = {
-                    val intent = Intent(context, ReaderActivity::class.java)
-                    activityLauncher.launch(intent)
-                },
-                modifier = Modifier
-                    .width(200.dp)
-            ) {
-                Text(
-                    text = "E-Book Reader",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Button(
-                onClick = {
-                    val intent = Intent(context, SummaryActivity::class.java)
-                    activityLauncher.launch(intent)
-                },
-                modifier = Modifier
-                    .width(200.dp)
-            ) {
-                Text(
-                    text = "Summary View",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Button(
-                onClick = {
-                    val intent = Intent(context, QuizActivity::class.java)
-                    activityLauncher.launch(intent)
-                },
-                modifier = Modifier
-                    .width(200.dp)
-            ) {
-                Text(
-                    text = "Quiz View",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
+                BookListView()
             }
         }
     }
