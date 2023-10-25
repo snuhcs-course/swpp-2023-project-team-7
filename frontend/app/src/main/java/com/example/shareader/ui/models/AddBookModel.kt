@@ -3,11 +3,11 @@ package com.example.shareader.ui.models
 import android.graphics.Bitmap
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -71,7 +71,7 @@ class AddBookModel {
             }
 
             val requestFile: RequestBody =
-                RequestBody.create(MediaType.parse("multipart/form-data"), file)
+                file.asRequestBody("multipart/form-data".toMediaTypeOrNull())
             val fileBody = MultipartBody.Part.createFormData("file", file.name, requestFile)
             val result = addBookAPI.uploadImage(fileBody).execute()
             file.delete()
