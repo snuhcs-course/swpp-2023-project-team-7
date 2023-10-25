@@ -9,11 +9,11 @@ class BookListViewModel : ViewModel() {
     val bookCardDataList = BookModel.getInstance().bookList.map {
         it.map { bookData ->
             BookCardData(
-                id = bookData.id,
-                title = bookData.title,
-                author = bookData.author,
-                progress = bookData.progress,
-                coverImage = bookData.coverImage,
+                id = bookData.value.id,
+                title = bookData.value.title,
+                author = bookData.value.author,
+                progress = bookData.value.progress,
+                coverImage = bookData.value.coverImage,
             )
         }
     }
