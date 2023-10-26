@@ -50,7 +50,7 @@ def get_summary(progress, book_id):
     available_summary_list = single_summary.find_included_summaries(leaf)
 
     content = "\n\n".join([summary.summary_content for summary in available_summary_list])
-    content += "\n\n" + book_content[leaf.end_idx:word_index]
+    content += "\n\n" + book_content[leaf.start_idx:word_index]
 
     for resp in openai.ChatCompletion.create(
         model="gpt-3.5-turbo", messages=[
