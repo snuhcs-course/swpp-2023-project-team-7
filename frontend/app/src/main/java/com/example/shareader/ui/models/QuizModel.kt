@@ -54,7 +54,12 @@ class QuizModel {
 
                 var myEvent = false
                 while (isActive) {
-                    val line = reader.readLine() ?: break
+                    val line = try {
+                        reader.readLine() ?: break
+                    } catch (e: Exception) {
+                        println("Error while reading SSE: $e")
+                        break
+                    }
                     if (line.startsWith("event:")) {
                         val eventName = line.split(":")[1].trim()
                         if (eventName == "quiz") {
