@@ -115,6 +115,7 @@ fun QuizView(
                                     val intent = Intent(context, ReaderActivity::class.java)
                                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                                     activityLauncher.launch(intent)
+                                    return@BottomBar
                                 }
                                 if (answerVisible && quizIdx < quizList.size - 1) {
                                     quizIdx++

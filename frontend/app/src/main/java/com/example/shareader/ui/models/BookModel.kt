@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class PageSplitData(
@@ -76,7 +77,6 @@ class BookModel {
     fun setPageSize(width: Int, height: Int, bookId: String) {
         val bookData = bookList.value[bookId] ?: return
         val pageSplitData = bookData.pageSplitData
-        println("Compare: ${pageSplitData?.width}, ${pageSplitData?.height}, $width, $height")
         if (pageSplitData != null && pageSplitData.width == width && pageSplitData.height == height) {
             return
         }
@@ -89,6 +89,15 @@ class BookModel {
                 bookList.value = bookList.value.toMutableMap().apply {
                     this[bookId] = it
                 }
+            }
+        }
+    }
+
+    fun setProgress(progress: Double, bookId: String) {
+        bookList.update {
+            val bookData = bookList.value[bookId] ?: return
+            it.toMutableMap().apply {
+                this[bookId] = bookData.copy(progress = progress)
             }
         }
     }

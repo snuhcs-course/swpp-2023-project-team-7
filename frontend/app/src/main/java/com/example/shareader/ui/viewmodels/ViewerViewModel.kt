@@ -14,6 +14,10 @@ class ViewerViewModel(
     fun setPageSize(width: Int, height: Int) {
         BookModel.getInstance().setPageSize(width, height, bookId)
     }
+
+    fun setProgress(progress: Double) {
+        BookModel.getInstance().setProgress(progress, bookId)
+    }
 }
 
 class ViewerViewModelFactory(private val bookId: String) :
