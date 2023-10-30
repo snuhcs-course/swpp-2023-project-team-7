@@ -3,7 +3,6 @@ package com.example.shareader
 import android.content.Intent
 import android.content.res.Resources
 import android.text.SpannableString
-import android.text.TextPaint
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -41,7 +40,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,15 +55,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.shareader.ui.PageSplitter
 import com.example.shareader.ui.models.BookData
+import com.example.shareader.ui.models.QuizModel
 import com.example.shareader.ui.viewmodels.ViewerViewModel
 import com.example.shareader.ui.viewmodels.ViewerViewModelFactory
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-//import androidx.paging.Pager
-//import com.google.accompanist.pager.ExperimentalPagerApi
-//import com.google.accompanist.pager.PagerState
-//import com.google.accompanist.pager.rememberPagerState
 
 @Composable
 fun EbookView(
@@ -208,10 +203,7 @@ fun BookPager(
             ) {
                 if (bookData == null) return@remember null
                 val density = Resources.getSystem().displayMetrics.density
-                val textPaint = TextPaint()
-                textPaint.isAntiAlias = true
-//                textPaint.typeface = Lora
-                textPaint.textSize = 24f * density
+                val textPaint = PageSplitter.buildTextPaint()
                 textPaint.color = onBackground.toArgb()
                 val startIndex = if (pageIndex == 0) 0 else bookData.pageSplitData?.pageSplits?.get(
                     pageIndex - 1
@@ -369,6 +361,7 @@ fun ViewerOverlay(
                                 }
                                 FilledTonalButton(
                                     onClick = {
+                                        QuizModel.getInstance().loadQuiz("1", 0.98)
                                         val intent = Intent(context, QuizActivity::class.java)
                                         activityLauncher.launch(intent)
                                     },

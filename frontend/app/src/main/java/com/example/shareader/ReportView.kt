@@ -2,21 +2,25 @@ package com.example.shareader
 
 import android.widget.Toast
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -24,73 +28,123 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.shareader.ui.theme.SHAReaderTheme
+
+@Preview(showBackground = true, device = "id:pixel_5")
+@Composable
+fun ReportViewPreview() {
+    ReportView(navController = NavController(LocalContext.current), question = "Question", answer = "Answer")
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReportView(navController: NavController, question: String, answer:String) {
+fun ReportView(navController: NavController, question: String, answer: String) {
     val context = LocalContext.current
 //    val activityLauncher = rememberLauncherForActivityResult(
 //        contract = ActivityResultContracts.StartActivityForResult()
 //    ) { _ ->
 //    }
-    Column (
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier.padding(10.dp).fillMaxHeight()
-    ){
-        TopAppBar(
-            title = { Text(text = "ReportQuiz") },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigate("quiz") }) {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowBack,
-                        contentDescription = "Arrow Back"
-                    )
+    SHAReaderTheme {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = "Report Quiz") },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.Filled.ArrowBack,
+                                contentDescription = "Arrow Back"
+                            )
+                        }
+                    })
+            }
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                Column (
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    ReportTitle()
+                    ReportQuestion(question, answer)
+                    ReportSelection()
                 }
-            })
-        ReportTitle()
-        ReportQuestion(question, answer)
-        ReportSelection()
-        SubmitButton(navController)
+                SubmitButton(navController)
+            }
+        }
     }
-
 }
 
 @Composable
-fun ReportTitle(){
-    Text(text = "Why are you reporting this quiz?", fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Start)
+fun ReportTitle() {
+    Text(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 32.dp)
+            .fillMaxWidth(),
+        text = "Why are you reporting this quiz?",
+        style = MaterialTheme.typography.titleLarge,
+        textAlign = TextAlign.Center
+    )
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReportQuestion(question: String, answer: String){
+fun ReportQuestion(question: String, answer: String) {
 
     Column(
         modifier = Modifier
-            .padding(horizontal = 16.dp)
+            .padding(16.dp)
             .fillMaxWidth()
-            .border(width = 1.dp, color = Color.Black, shape = RoundedCornerShape(8.dp))
-    ){
-        Text(text = "Question:", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Start, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
-        Text(text = question,modifier = Modifier.padding(horizontal = 16.dp), textAlign = TextAlign.Center, )
-        Text(text = " ")
-        Text(text = "Generated Answer:", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Start,modifier = Modifier.padding(horizontal = 16.dp))
-        Text(text = answer,modifier = Modifier.padding(horizontal = 16.dp,  vertical = 8.dp), textAlign = TextAlign.Center)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Question:",
+            style = MaterialTheme.typography.labelLarge
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = question,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+        Text(
+            text = "Generated Answer:",
+            style = MaterialTheme.typography.labelLarge
+        )
+        Text(
+            text = answer,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
 
     }
 }
 
 @Composable
-fun ReportSelection(){
-    val radioOptions = listOf("It is harmful/unsafe.", "It isn't true.", "It isn't helpful to understand content.", "Other reasons...")
-    val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[1] ) }
-    Column {
+fun ReportSelection(modifier: Modifier = Modifier) {
+    val radioOptions = listOf(
+        "It is harmful / unsafe.",
+        "It isn't true.",
+        "It isn't helpful to understand content.",
+        "Other reasons..."
+    )
+    val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[1]) }
+    Column (modifier = modifier) {
         radioOptions.forEach { text ->
             Row(
                 Modifier
@@ -106,7 +160,10 @@ fun ReportSelection(){
                 Text(
                     text = text,
 //                    style = MaterialTheme.typography.body1.merge(),
-                    modifier = Modifier.padding(start = 16.dp).align(Alignment.CenterVertically).weight(1f)
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        .align(Alignment.CenterVertically)
+                        .weight(1f)
                 )
                 RadioButton(
                     selected = (text == selectedOption),
@@ -116,26 +173,25 @@ fun ReportSelection(){
         }
     }
 }
+
 @Composable
-fun SubmitButton(navController: NavController){
+fun SubmitButton(navController: NavController) {
     val context = LocalContext.current
     Button(
         onClick = {
-            Toast.makeText(context, "Thankyou for the feedback!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Thank you for the feedback!", Toast.LENGTH_SHORT).show()
             navController.navigate("quiz")
         },
         modifier = Modifier
-            .padding(20.dp)
-            .fillMaxWidth()
-        ) {
-            Text(
-                text = "Submit Feedback",
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-
+            .padding(16.dp)
+            .height(48.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Text(
+            text = "Submit Feedback"
+        )
+    }
 
 
 }

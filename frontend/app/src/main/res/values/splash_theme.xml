@@ -4,7 +4,7 @@
     <style name="Theme.SplashScreen.MySplash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/starting_blue</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/app_logo</item>
-        <item name="windowSplashScreenAnimationDuration">700</item>
+        <item name="windowSplashScreenAnimationDuration">5000</item>
         <item name="postSplashScreenTheme">@style/Theme.SHAReader</item>
 
         <!-- Status bar and Nav bar configs -->

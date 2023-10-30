@@ -54,10 +54,6 @@ fun QuizView(
     val quizSize by quizViewModel.quizSize.collectAsState()
     val quizLoadState by quizViewModel.quizLoadState.collectAsState()
 
-    LaunchedEffect(Unit) {
-        quizViewModel.loadQuiz()
-    }
-
     val currentQuestion = if (quizList.size > quizIdx) quizList[quizIdx].question else null
     val currentAnswer = if (quizList.size > quizIdx) quizList[quizIdx].answer else null
     val currentVisible = currentQuestion != null && currentAnswer != null

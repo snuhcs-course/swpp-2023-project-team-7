@@ -1,11 +1,15 @@
 package com.example.shareader.ui
 
 import android.content.res.Resources
+import android.graphics.Typeface
 import android.os.Build
 import android.text.DynamicLayout
 import android.text.Layout
 import android.text.SpannableStringBuilder
 import android.text.TextPaint
+import androidx.core.content.res.ResourcesCompat
+import com.example.shareader.R
+import com.example.shareader.SHAReaderApplication
 import com.example.shareader.ui.models.BookData
 import com.example.shareader.ui.models.PageSplitData
 import kotlinx.coroutines.Dispatchers
@@ -14,6 +18,7 @@ import kotlinx.coroutines.withContext
 
 class PageSplitter {
     companion object {
+        private var customTypeFace: Typeface? = null
         fun buildDynamicLayout(base: CharSequence, textPaint: TextPaint, width: Int): DynamicLayout {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 DynamicLayout.Builder.obtain(base, textPaint, width)
@@ -26,14 +31,25 @@ class PageSplitter {
                 DynamicLayout(base, textPaint, width, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
             }
         }
+
+        fun buildTextPaint(): TextPaint {
+            if (customTypeFace == null) {
+                val context = SHAReaderApplication.instance!!.applicationContext
+                customTypeFace = ResourcesCompat.getFont(context, R.font.garamond)
+            }
+            val density = Resources.getSystem().displayMetrics.density
+            val textPaint = TextPaint()
+            textPaint.isAntiAlias = true
+            textPaint.textSize = 24f * density
+            textPaint.typeface = customTypeFace
+            return textPaint
+        }
     }
 
     suspend fun splitPage (width: Int, height: Int, bookData: BookData, setBookData : (BookData) -> Unit) {
         withContext(Dispatchers.Default) {
             val density = Resources.getSystem().displayMetrics.density
-            val textPaint = TextPaint()
-            textPaint.isAntiAlias = true
-            textPaint.textSize = 24f * density
+            val textPaint = buildTextPaint()
 
             var base = SpannableStringBuilder()
             var dynamicLayout = buildDynamicLayout(base, textPaint, width)

@@ -16,10 +16,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.shareader.ui.theme.Lora
 import com.example.shareader.ui.viewmodels.SummaryViewModel
 
 @Composable
@@ -46,9 +47,8 @@ fun SummaryView(
             Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = summary,
-                fontSize = 22.sp,
-                lineHeight = 25.sp,
-                textAlign = TextAlign.Start
+                textAlign = TextAlign.Start,
+                style = MaterialTheme.typography.titleLarge.copy(fontFamily = Lora, fontWeight = FontWeight.Normal)
             )
         }
     }
