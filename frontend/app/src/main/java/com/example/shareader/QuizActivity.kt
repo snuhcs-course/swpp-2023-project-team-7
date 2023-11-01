@@ -28,7 +28,6 @@ class QuizActivity : ComponentActivity() {
                         navArgument("answer"){type = NavType.StringType}
                     )
                 ) {
-//                    ReportView(navController)
                     backStackEntry ->
                     val question = backStackEntry.arguments?.getString("question")
                     val answer = backStackEntry.arguments?.getString("answer")
