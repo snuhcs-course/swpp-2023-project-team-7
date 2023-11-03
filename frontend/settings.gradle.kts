@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SHAReader"
+rootProject.name = "Readability"
 include(":app")

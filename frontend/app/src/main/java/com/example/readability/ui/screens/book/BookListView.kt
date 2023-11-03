@@ -1,4 +1,4 @@
-package com.example.readability.ui.screens.books
+package com.example.readability.ui.screens.book
 
 import BottomSheet
 import androidx.compose.foundation.clickable

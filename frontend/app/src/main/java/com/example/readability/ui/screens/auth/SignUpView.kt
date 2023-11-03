@@ -4,19 +4,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,11 +36,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.times
+import com.example.readability.LocalSnackbarHost
 import com.example.readability.R
 import com.example.readability.ui.animation.animateIMEDp
+import com.example.readability.ui.components.CircularProgressIndicatorInButton
 import com.example.readability.ui.components.PasswordTextField
+import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
+import kotlinx.coroutines.launch
 
 private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@(.+)\$")
 
@@ -61,23 +62,24 @@ fun SignUpPreview() {
 @Composable
 fun SignUpView(
     onBack: () -> Unit = {},
-    onNavigateVerify: (String) -> Unit = {},
+    onSubmitted: suspend (String) -> Result<Unit> = { Result.success(Unit) },
+    onNavigateVerify: (String) -> Unit = {}
 ) {
-
     var email by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var repeatPassword by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(false) }
 
     val emailFocusRequester = remember { FocusRequester() }
+
+    val scope = rememberCoroutineScope()
 
     var showError by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf(false) }
     var usernameError by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
     var repeatPasswordError by remember { mutableStateOf(false) }
-
-    val imeDp by animateIMEDp("EmailView_IMEDp")
 
     val checkEmailError = { emailRegex.matches(email).not() }
     val checkUsernameError = { username.isEmpty() }
@@ -92,7 +94,15 @@ fun SignUpView(
         if (checkError()) {
             showError = true
         } else {
-            onNavigateVerify(email)
+            loading = true
+            scope.launch {
+                onSubmitted(email).onSuccess {
+                    onNavigateVerify(email)
+                }.onFailure {
+                    loading = false
+                    showError = true
+                }
+            }
         }
     }
 
@@ -109,7 +119,8 @@ fun SignUpView(
             TopAppBar(title = { Text("Sign up") }, navigationIcon = {
                 IconButton(onClick = { onBack() }) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Arrow Back"
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Arrow Back"
                     )
                 }
             })
@@ -211,15 +222,13 @@ fun SignUpView(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 )
             }
-            Button(
+            RoundedRectButton(
+                modifier = Modifier.fillMaxWidth(),
                 onClick = { submit() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16 * imeDp)
-                    .height(48.dp),
-                shape = RoundedCornerShape(12 * imeDp)
+                imeAnimation = animateIMEDp(label = "AuthView_SignUpView_imeDp"),
+                enabled = !loading
             ) {
-                Text("Sign up")
+                if (loading) CircularProgressIndicatorInButton() else Text("Sign up")
             }
         }
     }

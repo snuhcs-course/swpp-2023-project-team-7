@@ -1,4 +1,4 @@
-package com.example.readability.ui.screens.books
+package com.example.readability.ui.screens.book
 
 import android.content.Intent
 import android.graphics.Bitmap

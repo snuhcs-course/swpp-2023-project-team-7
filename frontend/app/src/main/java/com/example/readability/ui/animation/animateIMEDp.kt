@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -18,7 +19,7 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun animateIMEDp(label: String) : State<Dp> {
-    var lastImeBottom by remember { mutableStateOf(0) }
+    var lastImeBottom by remember { mutableIntStateOf(0) }
     var isImeVisible by remember { mutableStateOf(false) }
     if (WindowInsets.isImeVisible) {
         val imeBottom = WindowInsets.ime.getBottom(LocalDensity.current)
