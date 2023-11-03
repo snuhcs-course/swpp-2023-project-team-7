@@ -23,7 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,31 +33,38 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.readability.R
 import com.example.readability.ui.models.BookCardData
 import com.example.readability.ui.theme.Gabarito
-import com.example.readability.ui.viewmodels.BookListViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookListView(
-    bookListViewModel: BookListViewModel = viewModel()
+    bookCardDataList: List<BookCardData>,
+    onNavigateSettings: () -> Unit = {},
+    onNavigateAddBook: () -> Unit = {},
+    onNavigateViewer: (id: String) -> Unit = {}
 ) {
-    val bookCardDataList by bookListViewModel.bookCardDataList.collectAsState(initial = emptyList())
-
     Scaffold(topBar = {
         CenterAlignedTopAppBar(title = { Text("My Library") }, actions = {
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = {
+                onNavigateSettings()
+            }) {
                 Icon(
                     painter = painterResource(id = R.drawable.settings),
                     contentDescription = "Settings"
                 )
             }
         })
-    }, floatingActionButton = { AddButton() }) { innerPadding ->
+    }, floatingActionButton = {
+        FloatingActionButton(
+            onClick = { onNavigateAddBook() },
+        ) {
+            Icon(Icons.Filled.Add, "Floating action button.")
+        }
+    }) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -69,22 +75,13 @@ fun BookListView(
                 BookCard(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    bookCardData = bookCardData
+                    bookCardData = bookCardData,
+                    onClick = {
+                        onNavigateViewer(bookCardData.id)
+                    }
                 )
             }
         }
-    }
-}
-
-@Composable
-fun AddButton() {
-    FloatingActionButton(
-        onClick = {
-//            val intent = Intent(context, AddBookActivity::class.java)
-//            activityLauncher.launch(intent)
-        },
-    ) {
-        Icon(Icons.Filled.Add, "Floating action button.")
     }
 }
 
@@ -104,7 +101,7 @@ fun BookCardPreview() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BookCard(modifier: Modifier = Modifier, bookCardData: BookCardData) {
+fun BookCard(modifier: Modifier = Modifier, bookCardData: BookCardData, onClick: () -> Unit = {}) {
     var showSheet by remember { mutableStateOf(false) }
 
     if (showSheet) {
@@ -114,10 +111,7 @@ fun BookCard(modifier: Modifier = Modifier, bookCardData: BookCardData) {
     }
     Row(
         modifier = modifier
-            .height(IntrinsicSize.Min).clickable {
-//                val intent = Intent(context, ReaderActivity::class.java)
-//                activityLauncher.launch(intent)
-            },
+            .height(IntrinsicSize.Min).clickable { onClick() },
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

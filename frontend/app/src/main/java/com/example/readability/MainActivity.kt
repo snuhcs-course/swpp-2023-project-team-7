@@ -16,11 +16,11 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.readability.ui.animation.composableFadeThrough
-import com.example.readability.ui.screens.Screen
-import com.example.readability.ui.screens.auth.AuthView
-import com.example.readability.ui.screens.book.BookView
+import com.example.readability.ui.screens.Screens
+import com.example.readability.ui.screens.auth.AuthScreen
+import com.example.readability.ui.screens.book.BookScreen
 import com.example.readability.ui.screens.settings.SettingsView
-import com.example.readability.ui.screens.viewer.ViewerView
+import com.example.readability.ui.screens.viewer.ViewerScreen
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -58,26 +58,40 @@ class MainActivity : ComponentActivity() {
                         scope = snackbarScope
                     )) {
                         NavHost(
-//                            modifier = Modifier.padding(innerPadding),
                             navController = navController,
-                            startDestination = Screen.Auth.route,
+                            startDestination = Screens.Book.route,
                         ) {
-                            composableFadeThrough(Screen.Auth.route) {
-                                AuthView(onNavigateBookList = {
-                                    navController.navigate(Screen.Book.route) {
-                                        popUpTo(Screen.Auth.route) {
+                            composableFadeThrough(Screens.Auth.route) {
+                                AuthScreen(onNavigateBookList = {
+                                    navController.navigate(Screens.Book.route) {
+                                        popUpTo(Screens.Auth.route) {
                                             inclusive = true
                                         }
                                     }
                                 })
                             }
-                            composableFadeThrough(Screen.Book.route) {
-                                BookView()
+                            composableFadeThrough(Screens.Book.route) {
+                                BookScreen(
+                                    onNavigateSettings = {
+                                        navController.navigate(Screens.Settings.route)
+                                    },
+                                    onNavigateViewer = {
+                                        navController.navigate(Screens.Viewer.createRoute(it))
+                                    }
+                                )
                             }
-                            composableFadeThrough(Screen.Viewer.route) {
-                                ViewerView()
+                            composableFadeThrough(Screens.Viewer.route) {
+                                ViewerScreen(
+                                    id = it.arguments?.getString("book_id") ?: "",
+                                    onNavigateSettings = {
+                                        navController.navigate(Screens.Settings.route)
+                                    },
+                                    onBack = {
+                                        navController.popBackStack()
+                                    }
+                                )
                             }
-                            composableFadeThrough(Screen.Settings.route) {
+                            composableFadeThrough(Screens.Settings.route) {
                                 SettingsView()
                             }
                         }

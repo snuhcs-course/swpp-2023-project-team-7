@@ -29,29 +29,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import com.example.readability.ui.models.Quiz
+import com.example.readability.ui.models.QuizLoadState
 import com.example.readability.ui.theme.ReadabilityTheme
-import com.example.readability.ui.viewmodels.QuizViewModel
 
 enum class QuizState {
-    QUESTION,
-    ANSWER,
-    FIRST_QUESTION,
-    LAST_ANSWER,
-    UNLOADED_ANSWER,
+    QUESTION, ANSWER, FIRST_QUESTION, LAST_ANSWER, UNLOADED_ANSWER,
 }
 
 @Composable
 fun QuizView(
-    navController: NavController = NavController(LocalContext.current),
-    quizViewModel: QuizViewModel = viewModel()
+    quizList: List<Quiz>,
+    quizSize: Int,
+    quizLoadState: QuizLoadState,
+    onBack: () -> Unit,
+    onNavigateReport: (Int) -> Unit
 ) {
     var quizIdx by remember { mutableIntStateOf(0) }
     var answerVisible by remember { mutableStateOf(false) }
-    val quizList by quizViewModel.quizList.collectAsState()
-    val quizSize by quizViewModel.quizSize.collectAsState()
-    val quizLoadState by quizViewModel.quizLoadState.collectAsState()
 
     val currentQuestion = if (quizList.size > quizIdx) quizList[quizIdx].question else null
     val currentAnswer = if (quizList.size > quizIdx) quizList[quizIdx].answer else null
@@ -61,10 +56,11 @@ fun QuizView(
         true -> when (quizIdx) {
             quizSize - 1 -> QuizState.LAST_ANSWER
             else -> when (quizList.size) {
-                in 0 .. (quizIdx + 1) -> QuizState.UNLOADED_ANSWER
+                in 0..(quizIdx + 1) -> QuizState.UNLOADED_ANSWER
                 else -> QuizState.ANSWER
             }
         }
+
         false -> when (quizIdx) {
             0 -> QuizState.FIRST_QUESTION
             else -> QuizState.QUESTION
@@ -73,7 +69,9 @@ fun QuizView(
 
     ReadabilityTheme {
         Scaffold(topBar = {
-            TopBar(name = "Quiz", navController, currentQuestion, currentAnswer)
+            TopBar(name = "Quiz", onBack, onNavigateReport = {
+                onNavigateReport(quizIdx)
+            }, currentQuestion, currentAnswer)
         }) { innerPadding ->
             AnimatedContent(targetState = currentVisible, label = "QuizView.Content") {
                 when (it) {
@@ -90,7 +88,8 @@ fun QuizView(
                             answerVisible = answerVisible,
                             answer = quizList[quizIdx].answer
                         )
-                        BottomBar(quizState = quizState,
+                        BottomBar(
+                            quizState = quizState,
                             onPrevClicked = {
                                 if (!answerVisible && quizIdx > 0) {
                                     quizIdx--
@@ -101,9 +100,7 @@ fun QuizView(
                             },
                             onNextClicked = {
                                 if (quizState == QuizState.LAST_ANSWER) {
-//                                    val intent = Intent(context, ReaderActivity::class.java)
-//                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-//                                    activityLauncher.launch(intent)
+                                    onBack()
                                     return@BottomBar
                                 }
                                 if (answerVisible && quizIdx < quizList.size - 1) {
@@ -133,19 +130,17 @@ fun QuizView(
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(name: String, navController: NavController, question: String?, answer: String?) {
+fun TopBar(
+    name: String,
+    onBack: () -> Unit = {},
+    onNavigateReport: () -> Unit,
+    question: String?,
+    answer: String?
+) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
-    val activityLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { _ ->
-    }
     TopAppBar(title = { Text(text = name) }, navigationIcon = {
-        IconButton(onClick = {
-//            val intent = Intent(context, ReaderActivity::class.java)
-//            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-//            activityLauncher.launch(intent)
-        }) {
+        IconButton(onClick = onBack) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Arrow Back"
             )
@@ -161,8 +156,9 @@ fun TopBar(name: String, navController: NavController, question: String?, answer
             )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            DropdownMenuItem(text = { Text("Report This Quiz") },
-                onClick = { navController.navigate("report/${question}/${answer}") })
+            DropdownMenuItem(
+                text = { Text("Report This Quiz") }, onClick = onNavigateReport
+            )
             DropdownMenuItem(text = { Text("Regenerate Quiz") },
                 onClick = { Toast.makeText(context, "Regenerate", Toast.LENGTH_SHORT).show() })
         }
@@ -183,19 +179,25 @@ fun BottomBar(
         modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Box(modifier = Modifier.weight(1f)) {
-            AnimatedContent(targetState = quizState == QuizState.FIRST_QUESTION, label = "QuizView.BottomBar.PrevButton") {
+            AnimatedContent(
+                targetState = quizState == QuizState.FIRST_QUESTION,
+                label = "QuizView.BottomBar.PrevButton"
+            ) {
                 when (it) {
                     true -> Spacer(modifier = Modifier.fillMaxWidth())
                     else -> FilledTonalButton(
                         modifier = Modifier
-                            .height(48.dp).fillMaxWidth(),
+                            .height(48.dp)
+                            .fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         onClick = { onPrevClicked() },
                     ) {
-                        Text(text = when (quizState) {
-                            QuizState.QUESTION -> "Previous"
-                            else -> "Solve Again"
-                        })
+                        Text(
+                            text = when (quizState) {
+                                QuizState.QUESTION -> "Previous"
+                                else -> "Solve Again"
+                            }
+                        )
                     }
                 }
             }
@@ -219,12 +221,15 @@ fun BottomBar(
                         color = MaterialTheme.colorScheme.onSurface,
                         strokeWidth = 2.dp
                     )
-                    else -> Text(text = when (quizState) {
-                        QuizState.QUESTION -> "See Answer"
-                        QuizState.FIRST_QUESTION -> "See Answer"
-                        QuizState.LAST_ANSWER -> "Finish"
-                        else -> "Next"
-                    })
+
+                    else -> Text(
+                        text = when (quizState) {
+                            QuizState.QUESTION -> "See Answer"
+                            QuizState.FIRST_QUESTION -> "See Answer"
+                            QuizState.LAST_ANSWER -> "Finish"
+                            else -> "Next"
+                        }
+                    )
                 }
 
             }
