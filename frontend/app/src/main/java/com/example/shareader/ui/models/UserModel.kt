@@ -49,17 +49,16 @@ interface LoginAPI {
 
     @POST("/user/signup")
     fun signUp(@Body signUpRequest: SignUpRequest ) : Call<SignUpResponse>
-
 }
 
 
 class UserModel{
-    private val loginAPI: LoginAPI
-
+    var loginAPI: LoginAPI
     private var username = ""
     private var useremail = ""
     private var access_token = ""
     private var refresh_token = ""
+
 
     companion object {
         private var instance: UserModel? = null
@@ -81,16 +80,13 @@ class UserModel{
 
 
     suspend fun signIn (email: String, password: String): Result<String> {
-
         return withContext(Dispatchers.IO) {
             val result = loginAPI.signIn(
                     grantType = "", scope = "", clientId = "", clientSecret = "",
                     username = email, password = password
 
             ).execute()
-
             if (result.isSuccessful) {
-
                 val responseBody = result.body()
                 if (responseBody != null) {
                     access_token = responseBody.access_token
@@ -98,7 +94,6 @@ class UserModel{
                     useremail = email
                 }
                 return@withContext Result.success("Success")
-
             } else {
                 return@withContext Result.failure<String>(Throwable("Login failed"))
             }
@@ -106,7 +101,6 @@ class UserModel{
     }
 
     suspend fun signUp (email: String, username: String, password: String): Result<String> {
-
         return withContext(Dispatchers.IO) {
             val result = loginAPI.signUp(
                 SignUpRequest(
@@ -114,9 +108,7 @@ class UserModel{
                     username = username,
                     password = password
                 )
-
             ).execute()
-
             if (result.isSuccessful) {
                 return@withContext Result.success("Success")
             } else {
@@ -124,8 +116,6 @@ class UserModel{
             }
         }
     }
-
-
 }
 
 
