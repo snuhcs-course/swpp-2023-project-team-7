@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -49,7 +50,9 @@ fun IntroPreview() {
 
 @Composable
 fun IntroView(
-    onContinueWithEmailClicked: () -> Unit = {}
+    onContinueWithEmailClicked: () -> Unit = {},
+    onPrivacyPolicyClicked: () -> Unit = {},
+    onTermsOfUseClicked: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -74,14 +77,18 @@ fun IntroView(
                 textAlign = TextAlign.Center,
             )
             Spacer(modifier = Modifier.weight(1f))
-            InformText()
+            InformText(
+                onPrivacyPolicyClicked = onPrivacyPolicyClicked,
+                onTermsOfUseClicked = onTermsOfUseClicked
+            )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = onContinueWithEmailClicked,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .height(48.dp),
+                    .height(48.dp)
+                    .testTag("ContinueWithEmailButton"),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(

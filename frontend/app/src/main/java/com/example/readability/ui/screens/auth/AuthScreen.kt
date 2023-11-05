@@ -1,6 +1,9 @@
 package com.example.readability.ui.screens.auth
 
+import android.util.Base64
+import android.util.Base64.URL_SAFE
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
@@ -18,7 +21,9 @@ sealed class AuthScreens(val route: String) {
 
     object SignUp : AuthScreens("sign_up")
     object VerifyEmail : AuthScreens("verify_email/{email}/{fromSignUp}") {
-        fun createRoute(email: String, fromSignUp: Boolean) = "verify_email/$email/$fromSignUp"
+        fun createRoute(email: String, fromSignUp: Boolean) = "verify_email/${
+            Base64.encodeToString(email.toByteArray(), URL_SAFE).trim()
+        }/$fromSignUp"
     }
 
     object ResetPassword : AuthScreens("reset_password")
@@ -29,9 +34,9 @@ sealed class AuthScreens(val route: String) {
 
 @Composable
 fun AuthScreen(
+    navController: NavHostController = rememberNavController(),
     onNavigateBookList: () -> Unit = {},
 ) {
-    val navController = rememberNavController()
     NavHost(navController = navController, startDestination = AuthScreens.Intro.route) {
         composableSharedAxis(AuthScreens.Intro.route, axis = SharedAxis.X) {
             IntroView(
@@ -56,12 +61,12 @@ fun AuthScreen(
                         delay(2000L)
                     }
                     if (it == "testtest") {
-                        onNavigateBookList()
                         Result.success(Unit)
                     } else {
                         Result.failure(Exception("Password is incorrect"))
                     }
                 },
+                onNavigateBookList = { onNavigateBookList() },
                 onNavigateForgotPassword = { navController.navigate(AuthScreens.ForgotPassword.route) },
             )
         }
@@ -104,8 +109,13 @@ fun AuthScreen(
         }
         composableSharedAxis(AuthScreens.VerifyEmail.route,
             axis = SharedAxis.X,
-            arguments = listOf(navArgument("fromSignUp") { defaultValue = false })) {
-            VerifyEmailView(email = it.arguments?.getString("email") ?: "",
+            arguments = listOf(navArgument("fromSignUp") { defaultValue = false },
+                navArgument("email") { defaultValue = "" })) {
+            VerifyEmailView(email = String(
+                Base64.decode(
+                    it.arguments?.getString("email") ?: "", URL_SAFE
+                )
+            ),
                 fromSignUp = it.arguments?.getBoolean("fromSignUp") ?: false,
                 onBack = { navController.popBackStack() },
                 onNavigateBookList = { onNavigateBookList() },

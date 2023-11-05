@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,7 +38,9 @@ import com.example.readability.ui.animation.animateIMEDp
 import com.example.readability.ui.components.PasswordTextField
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 @Preview(device = "id:pixel_5")
@@ -80,17 +83,13 @@ fun ResetPasswordView(
         } else {
             scope.launch {
                 onPasswordSubmitted(newPassword).onSuccess {
-                    onNavigateEmail()
+                    withContext(Dispatchers.Main) { onNavigateEmail() }
                 }.onFailure {
                     loading = false
                     showError = true
                 }
             }
         }
-    }
-
-    LaunchedEffect(Unit) {
-        passwordFocusRequester.requestFocus()
     }
 
     Scaffold(
@@ -108,6 +107,11 @@ fun ResetPasswordView(
                 }
             })
         }) { innerPadding ->
+        LaunchedEffect(Unit) {
+            passwordFocusRequester.requestFocus()
+            passwordError = isPasswordError()
+            repeatPasswordError = isRepeatPasswordError()
+        }
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -119,7 +123,8 @@ fun ResetPasswordView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .focusRequester(passwordFocusRequester),
+                    .focusRequester(passwordFocusRequester)
+                    .testTag("PasswordTextField"),
                 label = "New Password",
                 password = newPassword,
                 onPasswordChanged = {
@@ -133,7 +138,8 @@ fun ResetPasswordView(
             PasswordTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .testTag("RepeatPasswordTextField"),
                 label = "Repeat Password",
                 password = repeatPassword,
                 onPasswordChanged = {
@@ -147,7 +153,9 @@ fun ResetPasswordView(
             Spacer(modifier = Modifier.weight(1f))
             RoundedRectButton(
                 onClick = { submit() },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("ResetPasswordButton"),
                 imeAnimation = animateIMEDp(label = "AuthView_ResetPasswordView_imeDp")
             ) {
                 Text("Reset Password")

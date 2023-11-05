@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,7 +32,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,7 +43,9 @@ import com.example.readability.ui.animation.animateIMEDp
 import com.example.readability.ui.components.CircularProgressIndicatorInButton
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 @Preview(device = "id:pixel_5")
@@ -55,7 +60,8 @@ private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@(.+)\$")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgotPasswordView(
-    onBack: () -> Unit = {}, onNavigateVerify: (String) -> Unit = {},
+    onBack: () -> Unit = {},
+    onNavigateVerify: (String) -> Unit = {},
     onEmailSubmitted: suspend (String) -> Result<Unit> = { Result.success(Unit) }
 ) {
     var email by remember { mutableStateOf("") }
@@ -76,17 +82,13 @@ fun ForgotPasswordView(
             loading = true
             scope.launch {
                 onEmailSubmitted(email).onSuccess {
-                    onNavigateVerify(email)
+                    withContext(Dispatchers.Main) { onNavigateVerify(email) }
                 }.onFailure {
                     showError = true
                     loading = false
                 }
             }
         }
-    }
-
-    LaunchedEffect(Unit) {
-        emailFocusRequester.requestFocus()
     }
 
     Scaffold(modifier = Modifier
@@ -106,6 +108,10 @@ fun ForgotPasswordView(
                 },
             )
         }) { innerPadding ->
+        LaunchedEffect(Unit) {
+            emailFocusRequester.requestFocus()
+            emailError = checkEmailError()
+        }
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -130,7 +136,8 @@ fun ForgotPasswordView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .focusRequester(emailFocusRequester),
+                    .focusRequester(emailFocusRequester)
+                    .testTag("EmailTextField"),
                 value = email,
                 onValueChange = {
                     email = it
@@ -145,16 +152,17 @@ fun ForgotPasswordView(
                 },
                 isError = emailError && showError,
                 supportingText = if (emailError && showError) {
-                    { Text("Please enter a valid email") }
+                    { Text("Please enter a valid email address") }
                 } else null,
-                keyboardActions = KeyboardActions(
-                    onDone = { submit() }
-                )
+                keyboardActions = KeyboardActions(onDone = { submit() }),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             )
             Spacer(modifier = Modifier.weight(1f))
             RoundedRectButton(
                 onClick = { submit() },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("NextButton"),
                 imeAnimation = animateIMEDp(label = "ForgotPasswordView_NextButton_imeDP"),
                 enabled = !loading
             ) {

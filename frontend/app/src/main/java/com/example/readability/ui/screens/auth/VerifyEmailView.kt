@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,7 +33,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,7 +45,9 @@ import com.example.readability.ui.animation.animateIMEDp
 import com.example.readability.ui.components.CircularProgressIndicatorInButton
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 @Preview(device = "id:pixel_5")
@@ -73,19 +78,17 @@ fun VerifyEmailView(
     val snackbarHost = LocalSnackbarHost.current
 
     val submit = {
+        loading = true
         scope.launch {
-            loading = true
             onVerificationCodeSubmitted(verificationCode).onSuccess {
-                if (fromSignUp) onNavigateBookList() else onNavigateResetPassword()
+                withContext(Dispatchers.Main) {
+                    if (fromSignUp) onNavigateBookList() else onNavigateResetPassword()
+                }
             }.onFailure {
                 loading = false
                 snackbarHost.showSnackbar(it.toString())
             }
         }
-    }
-
-    LaunchedEffect(Unit) {
-        verificationCodeFocusRequester.requestFocus()
     }
 
     Scaffold(modifier = Modifier
@@ -106,6 +109,9 @@ fun VerifyEmailView(
                 }
             })
         }) { innerPadding ->
+        LaunchedEffect(Unit) {
+            verificationCodeFocusRequester.requestFocus()
+        }
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -143,16 +149,20 @@ fun VerifyEmailView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .focusRequester(verificationCodeFocusRequester),
-                keyboardActions = KeyboardActions(
-                    onDone = { submit() }
-                )
+                    .focusRequester(verificationCodeFocusRequester)
+                    .testTag("VerificationCodeTextField"),
+                keyboardActions = KeyboardActions(onDone = { submit() }),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
             Spacer(modifier = Modifier.weight(1f))
             RoundedRectButton(
-                modifier = Modifier.fillMaxWidth(), onClick = {
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("NextButton"),
+                onClick = {
                     submit()
-                }, enabled = !loading,
+                },
+                enabled = !loading && verificationCode.isNotBlank(),
                 imeAnimation = animateIMEDp(label = "AuthView_VerifyEmailView_imeDp")
             ) {
                 if (loading) CircularProgressIndicatorInButton() else Text("Next")

@@ -2,8 +2,6 @@ package com.example.readability.ui.screens.viewer
 
 import android.annotation.SuppressLint
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,7 +22,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -42,8 +39,8 @@ fun QuizView(
     quizList: List<Quiz>,
     quizSize: Int,
     quizLoadState: QuizLoadState,
-    onBack: () -> Unit,
-    onNavigateReport: (Int) -> Unit
+    onBack: () -> Unit = {},
+    onNavigateReport: (Int) -> Unit = {},
 ) {
     var quizIdx by remember { mutableIntStateOf(0) }
     var answerVisible by remember { mutableStateOf(false) }
@@ -83,11 +80,15 @@ fun QuizView(
                         QuizProgressIndicator(quizIdx + 1, quizSize)
                         QuestionTitle(question = currentQuestion ?: "")
                         WriteAnswer(modifier = Modifier.weight(1f))
-                        GeneratedAnswer(
-                            modifier = Modifier.weight(1f),
-                            answerVisible = answerVisible,
-                            answer = quizList[quizIdx].answer
-                        )
+                        AnimatedContent(modifier = Modifier.weight(1f).fillMaxWidth(), targetState = answerVisible, label = "QuizView_GeneratedAnswer") {
+                            when (it) {
+                                true -> GeneratedAnswer(
+                                    modifier = Modifier.fillMaxSize(),
+                                    answer = quizList[quizIdx].answer
+                                )
+                                else -> Unit
+                            }
+                        }
                         BottomBar(
                             quizState = quizState,
                             onPrevClicked = {
@@ -285,17 +286,14 @@ fun WriteAnswer(modifier: Modifier = Modifier) {
         label = { Text("Answer") })
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GeneratedAnswer(modifier: Modifier = Modifier, answerVisible: Boolean, answer: String) {
-    val alpha = if (answerVisible) 1f else 0f
+fun GeneratedAnswer(modifier: Modifier = Modifier, answer: String) {
     OutlinedTextField(
         value = answer,
         onValueChange = {},
         modifier = modifier
             .padding(16.dp)
-            .fillMaxWidth()
-            .alpha(alpha),
+            .fillMaxWidth(),
         label = { Text("Answer") },
         readOnly = true
     )

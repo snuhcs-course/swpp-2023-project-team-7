@@ -76,7 +76,8 @@ fun NavGraphBuilder.composableSharedAxis(
             },
             popExitTransition = {
                 slideOutHorizontally(
-                    targetOffsetX = { distancePx }, animationSpec = tween(DURATION_LONG, 0, EASING_EMPHASIZED)
+                    targetOffsetX = { distancePx },
+                    animationSpec = tween(DURATION_LONG, 0, EASING_EMPHASIZED)
                 ) + fadeOut(
                     animationSpec = tween(
                         (DURATION_LONG * (1 - FADE_THROUGH_THRESHOLD)).toInt(), 0, EASING_EMPHASIZED

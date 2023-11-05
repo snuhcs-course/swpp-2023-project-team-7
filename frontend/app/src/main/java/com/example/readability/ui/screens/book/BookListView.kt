@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,6 +62,8 @@ fun BookListView(
     }, floatingActionButton = {
         FloatingActionButton(
             onClick = { onNavigateAddBook() },
+            modifier = Modifier
+                .testTag("Floating action button")
         ) {
             Icon(Icons.Filled.Add, "Floating action button.")
         }
@@ -116,7 +119,7 @@ fun BookCard(modifier: Modifier = Modifier, bookCardData: BookCardData, onClick:
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
-            modifier = Modifier.padding(16.dp, 16.dp, 0.dp, 16.dp),
+            modifier = Modifier.padding(16.dp, 16.dp, 0.dp, 16.dp).testTag(bookCardData.coverImage),
             model = bookCardData.coverImage,
             contentDescription = "Book Cover Image",
         )

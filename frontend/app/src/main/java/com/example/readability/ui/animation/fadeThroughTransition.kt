@@ -26,9 +26,7 @@ fun NavGraphBuilder.composableFadeThrough(
         content = content,
         enterTransition = {
             scaleIn(
-                animationSpec = tween(
-                    (DURATION_LONG * FADE_THROUGH_THRESHOLD).toInt(), 0, EASING_EMPHASIZED
-                ), initialScale = DEFAULT_START_SCALE
+                animationSpec = tween(DURATION_LONG, 0, EASING_EMPHASIZED), initialScale = DEFAULT_START_SCALE
             ) + fadeIn(
                 animationSpec = tween(
                     (DURATION_LONG * (1 - FADE_THROUGH_THRESHOLD)).toInt(),
@@ -39,20 +37,16 @@ fun NavGraphBuilder.composableFadeThrough(
         },
         exitTransition = {
             scaleOut(
-                animationSpec = tween(
-                    (DURATION_LONG * FADE_THROUGH_THRESHOLD).toInt(), (DURATION_LONG * (1 - FADE_THROUGH_THRESHOLD)).toInt(), EASING_EMPHASIZED
-                ), targetScale = DEFAULT_START_SCALE
+                animationSpec = tween(DURATION_LONG, 0, EASING_EMPHASIZED), targetScale = DEFAULT_START_SCALE
             ) + fadeOut(
                 animationSpec = tween(
-                    (DURATION_LONG * (1 - FADE_THROUGH_THRESHOLD)).toInt(), 0, EASING_EMPHASIZED
+                    (DURATION_LONG * FADE_THROUGH_THRESHOLD).toInt(), 0, EASING_EMPHASIZED
                 )
             )
         },
         popEnterTransition = {
             scaleIn(
-                animationSpec = tween(
-                    (DURATION_LONG * FADE_THROUGH_THRESHOLD).toInt(), 0, EASING_EMPHASIZED
-                ), initialScale = DEFAULT_START_SCALE
+                animationSpec = tween(DURATION_LONG, 0, EASING_EMPHASIZED), initialScale = DEFAULT_START_SCALE
             ) + fadeIn(
                 animationSpec = tween(
                     (DURATION_LONG * (1 - FADE_THROUGH_THRESHOLD)).toInt(),
@@ -63,12 +57,11 @@ fun NavGraphBuilder.composableFadeThrough(
         },
         popExitTransition = {
             scaleOut(
-                animationSpec = tween(
-                    (DURATION_LONG * FADE_THROUGH_THRESHOLD).toInt(), (DURATION_LONG * (1 - FADE_THROUGH_THRESHOLD)).toInt(), EASING_EMPHASIZED
-                ), targetScale = DEFAULT_START_SCALE
+
+                animationSpec = tween(DURATION_LONG, 0, EASING_EMPHASIZED), targetScale = DEFAULT_START_SCALE
             ) + fadeOut(
                 animationSpec = tween(
-                    (DURATION_LONG * (1 - FADE_THROUGH_THRESHOLD)).toInt(), 0, EASING_EMPHASIZED
+                    (DURATION_LONG * FADE_THROUGH_THRESHOLD).toInt(), 0, EASING_EMPHASIZED
                 )
             )
         },

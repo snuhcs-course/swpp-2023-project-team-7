@@ -32,18 +32,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.readability.LocalSnackbarHost
 import com.example.readability.R
 import com.example.readability.ui.animation.animateIMEDp
 import com.example.readability.ui.components.CircularProgressIndicatorInButton
 import com.example.readability.ui.components.PasswordTextField
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@(.+)\$")
 
@@ -97,7 +100,7 @@ fun SignUpView(
             loading = true
             scope.launch {
                 onSubmitted(email).onSuccess {
-                    onNavigateVerify(email)
+                    withContext(Dispatchers.Main) { onNavigateVerify(email) }
                 }.onFailure {
                     loading = false
                     showError = true
@@ -106,9 +109,6 @@ fun SignUpView(
         }
     }
 
-    LaunchedEffect(Unit) {
-        emailFocusRequester.requestFocus()
-    }
 
     Scaffold(
         modifier = Modifier
@@ -125,6 +125,13 @@ fun SignUpView(
                 }
             })
         }) { innerPaddings ->
+        LaunchedEffect(Unit) {
+            emailFocusRequester.requestFocus()
+            emailError = checkEmailError()
+            usernameError = checkUsernameError()
+            passwordError = checkPasswordError()
+            repeatPasswordError = checkRepeatPasswordError()
+        }
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -142,7 +149,8 @@ fun SignUpView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
-                        .focusRequester(emailFocusRequester),
+                        .focusRequester(emailFocusRequester)
+                        .testTag("EmailTextField"),
                     value = email,
                     onValueChange = {
                         email = it
@@ -160,14 +168,17 @@ fun SignUpView(
                     },
                     isError = showError && emailError,
                     supportingText = if (showError && emailError) {
-                        { Text(text = "Please enter a valid email") }
+                        { Text(text = "Please enter a valid email address") }
                     } else null,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next, keyboardType = KeyboardType.Email
+                    ),
                 )
                 OutlinedTextField(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 16.dp)
+                        .testTag("UsernameTextField"),
                     value = username,
                     onValueChange = {
                         username = it
@@ -187,12 +198,15 @@ fun SignUpView(
                     supportingText = if (showError && usernameError) {
                         { Text(text = "Please enter a valid username") }
                     } else null,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next, keyboardType = KeyboardType.Text
+                    ),
                 )
                 PasswordTextField(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 16.dp)
+                        .testTag("PasswordTextField"),
                     label = "Password",
                     password = password,
                     onPasswordChanged = {
@@ -207,7 +221,8 @@ fun SignUpView(
                 PasswordTextField(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 16.dp)
+                        .testTag("RepeatPasswordTextField"),
                     label = "Repeat Password",
                     password = repeatPassword,
                     onPasswordChanged = {
@@ -223,7 +238,9 @@ fun SignUpView(
                 )
             }
             RoundedRectButton(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("SignUpButton"),
                 onClick = { submit() },
                 imeAnimation = animateIMEDp(label = "AuthView_SignUpView_imeDp"),
                 enabled = !loading

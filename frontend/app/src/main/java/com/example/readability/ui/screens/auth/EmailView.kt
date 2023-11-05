@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,7 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.R
@@ -75,14 +78,12 @@ fun EmailView(
         }
     }
 
-    LaunchedEffect(Unit) {
-        emailFocusRequester.requestFocus()
-    }
 
-    Scaffold(modifier = Modifier
-        .imePadding()
-        .systemBarsPadding()
-        .navigationBarsPadding(),
+    Scaffold(
+        modifier = Modifier
+            .imePadding()
+            .systemBarsPadding()
+            .navigationBarsPadding(),
         topBar = {
             TopAppBar(
                 title = {
@@ -97,6 +98,10 @@ fun EmailView(
                 },
             )
         }) { innerPadding ->
+        LaunchedEffect(Unit) {
+            emailFocusRequester.requestFocus()
+            emailError = checkEmailError()
+        }
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -113,7 +118,8 @@ fun EmailView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
-                        .focusRequester(emailFocusRequester),
+                        .focusRequester(emailFocusRequester)
+                        .testTag("EmailTextField"),
                     value = email,
                     onValueChange = {
                         email = it
@@ -134,20 +140,26 @@ fun EmailView(
                         { Text(text = "Please enter a valid email address") }
                     } else null,
                     keyboardActions = KeyboardActions(onDone = { submit() }),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 )
             }
 
-            TextButton(onClick = { onNavigateForgotPassword() }) {
-                Text("Forgot Password?")
+            TextButton(modifier = Modifier.testTag("ForgotPasswordButton"),
+                onClick = { onNavigateForgotPassword() }) {
+                Text("Forgot password?")
             }
 
-            TextButton(onClick = { onNavigateSignUp() }) {
+            TextButton(
+                modifier = Modifier.testTag("SignUpButton"),
+                onClick = { onNavigateSignUp() }) {
                 Text("Sign up")
             }
 
             RoundedRectButton(
                 onClick = { submit() },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("SignInButton"),
                 imeAnimation = animateIMEDp(
                     label = "EmailView_SignInButton_IMEDp",
                 )

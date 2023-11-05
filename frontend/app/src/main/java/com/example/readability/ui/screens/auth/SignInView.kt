@@ -10,9 +10,9 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,17 +33,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.LocalSnackbarHost
+import com.example.readability.R
 import com.example.readability.ui.animation.animateIMEDp
 import com.example.readability.ui.components.CircularProgressIndicatorInButton
 import com.example.readability.ui.components.PasswordTextField
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 @Preview(showBackground = true, device = "id:pixel_5")
@@ -59,6 +64,7 @@ fun SignInView(
     email: String,
     onBack: () -> Unit = {},
     onPasswordSubmitted: suspend (String) -> Result<Unit> = { Result.success(Unit) },
+    onNavigateBookList: () -> Unit = {},
     onNavigateForgotPassword: (String) -> Unit = {}
 ) {
     var password by remember { mutableStateOf("") }
@@ -82,6 +88,7 @@ fun SignInView(
             scope.launch {
                 onPasswordSubmitted(password).onSuccess {
                     // TODO: show welcome message
+                    withContext(Dispatchers.Main) { onNavigateBookList() }
                     snackbarHost.showSnackbar("Welcome back!")
                 }.onFailure {
                     loading = false
@@ -89,10 +96,6 @@ fun SignInView(
                 }
             }
         }
-    }
-
-    LaunchedEffect(Unit) {
-        passwordFocusRequester.requestFocus()
     }
 
     Scaffold(
@@ -111,30 +114,42 @@ fun SignInView(
                     }
                 })
         }) { innerPadding ->
+        LaunchedEffect(Unit) {
+            passwordFocusRequester.requestFocus()
+        }
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            OutlinedTextField(value = email, onValueChange = {}, singleLine = true, label = {
-                Text(text = "Email", color = Color.Gray.copy(alpha = 0.7f))
-            }, leadingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.Email,
-                    contentDescription = "delete",
-                    tint = Color.Gray.copy(alpha = 0.7f)
-                )
-            }, modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp), enabled = false
+            OutlinedTextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .testTag("EmailTextField"),
+                value = email,
+                onValueChange = {},
+                singleLine = true,
+                label = {
+                    Text(text = "Email")
+                },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.email),
+                        contentDescription = "email icon",
+                    )
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                enabled = false,
             )
             Spacer(modifier = Modifier.height(16.dp))
             PasswordTextField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .focusRequester(passwordFocusRequester),
+                    .focusRequester(passwordFocusRequester)
+                    .testTag("PasswordTextField"),
                 password = password,
                 onPasswordChanged = { password = it },
                 label = "Password",
@@ -146,11 +161,13 @@ fun SignInView(
             )
             Spacer(modifier = Modifier.weight(1f))
             TextButton(onClick = { onNavigateForgotPassword(email) }) {
-                Text("Forgot Password?")
+                Text("Forgot password?")
             }
             RoundedRectButton(
                 onClick = { submit() },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("SignInButton"),
                 imeAnimation = animateIMEDp(
                     label = "AuthView_SignInView_imeAnimation"
                 ),
