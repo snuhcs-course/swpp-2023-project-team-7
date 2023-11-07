@@ -6,6 +6,7 @@ plugins {
     // and/or
     id("io.github.gmazzo.test.aggregation.results") version "2.1.1"
 }
+
 //plugins {
 //    id("io.github.gmazzo.test.aggregation.coverage") version "<latest>"
 //    // and/or

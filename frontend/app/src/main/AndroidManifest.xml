@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" android:protectionLevel="normal" />
 
     <application
-        android:name=".SHAReaderApplication"
+        android:name=".ReadabilityApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -15,71 +15,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SplashScreen.MySplash"
         tools:targetApi="31">
-        <activity
-            android:name=".AddBookActivity"
-            android:exported="false"
-            android:label="@string/title_activity_add_book"
-            android:theme="@style/Theme.SplashScreen.MySplash" />
-        <activity
-            android:name=".LaunchActivity"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.SplashScreen.MySplash">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".ReaderActivity"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.SHAReader">
-            <intent-filter>
-                <action android:name="android.intent.action.READER" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".SummaryActivity"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.SHAReader">
-            <intent-filter>
-                <action android:name="android.intent.action.SUMMARY" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".QuizActivity"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.SHAReader">
-            <intent-filter>
-                <action android:name="android.intent.action.QUIZ" />
-            </intent-filter>
-        </activity>
 
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.SHAReader">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOKLIST" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".LoginActivity"
             android:windowSoftInputMode="adjustResize"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.SHAReader">
+            android:theme="@style/Theme.Readability">
             <intent-filter>
-                <action android:name="android.intent.action.LOGIN" />
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
