@@ -10,6 +10,9 @@ import com.example.readability.ui.animation.SharedAxis
 import com.example.readability.ui.animation.composableSharedAxis
 import com.example.readability.ui.viewmodels.AddBookViewModel
 import com.example.readability.ui.viewmodels.BookListViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.lang.Thread.sleep
 
 sealed class BookScreens(val route: String) {
     object BookList : BookScreens("book_list")
@@ -30,7 +33,7 @@ fun BookScreen(
                 onNavigateAddBook = {
                     navController.navigate(BookScreens.AddBook.route)
                 },
-                onNavigateSettings = onNavigateSettings,
+                onNavigateSettings = { /*onNavigateSettings()*/ },
                 onNavigateViewer = onNavigateViewer,
             )
         }
@@ -39,7 +42,13 @@ fun BookScreen(
             AddBookView(
                 onBack = { navController.popBackStack() },
                 onBookUploaded = { navController.popBackStack() },
-                onAddBookClicked = { addBookViewModel.addBook(it) },
+                onAddBookClicked = {
+                    // addBookViewModel.addBook(it) -> TODO: Implement this after adding UserModel
+                    withContext(Dispatchers.IO) {
+                        sleep(1000L)
+                    }
+                    Result.success(Unit)
+                },
             )
         }
     }

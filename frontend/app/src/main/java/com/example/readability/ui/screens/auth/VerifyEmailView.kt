@@ -42,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import com.example.readability.LocalSnackbarHost
 import com.example.readability.R
 import com.example.readability.ui.animation.animateIMEDp
-import com.example.readability.ui.components.CircularProgressIndicatorInButton
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.Dispatchers
@@ -162,10 +161,11 @@ fun VerifyEmailView(
                 onClick = {
                     submit()
                 },
-                enabled = !loading && verificationCode.isNotBlank(),
+                enabled = verificationCode.isNotBlank(),
+                loading = loading,
                 imeAnimation = animateIMEDp(label = "AuthView_VerifyEmailView_imeDp")
             ) {
-                if (loading) CircularProgressIndicatorInButton() else Text("Next")
+                Text("Next")
             }
         }
     }

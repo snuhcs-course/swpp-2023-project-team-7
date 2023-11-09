@@ -12,6 +12,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
@@ -25,7 +26,7 @@ import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-class SnackBarState (val state: SnackbarHostState? = null, val scope: CoroutineScope? = null) {
+class SnackBarState(val state: SnackbarHostState? = null, val scope: CoroutineScope? = null) {
     fun showSnackbar(message: String) {
         scope?.launch {
             state?.showSnackbar(message)
@@ -38,14 +39,23 @@ val LocalSnackbarHost = staticCompositionLocalOf {
 }
 
 class MainActivity : ComponentActivity() {
+    companion object {
+        init {
+            System.loadLibrary("readability")
+        }
+    }
+
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         window.setFlags(
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
         )
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        installSplashScreen()
 
         setContent {
             val snackbarHostState = remember { SnackbarHostState() }
@@ -53,13 +63,15 @@ class MainActivity : ComponentActivity() {
             ReadabilityTheme {
                 Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) {
                     val navController = rememberNavController()
-                    CompositionLocalProvider(LocalSnackbarHost provides SnackBarState(
-                        state = snackbarHostState,
-                        scope = snackbarScope
-                    )) {
+                    CompositionLocalProvider(
+                        LocalSnackbarHost provides SnackBarState(
+                            state = snackbarHostState,
+                            scope = snackbarScope
+                        )
+                    ) {
                         NavHost(
                             navController = navController,
-                            startDestination = Screens.Book.route,
+                            startDestination = Screens.Auth.route,
                         ) {
                             composableFadeThrough(Screens.Auth.route) {
                                 AuthScreen(onNavigateBookList = {

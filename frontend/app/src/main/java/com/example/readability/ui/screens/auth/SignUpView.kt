@@ -40,7 +40,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.R
 import com.example.readability.ui.animation.animateIMEDp
-import com.example.readability.ui.components.CircularProgressIndicatorInButton
 import com.example.readability.ui.components.PasswordTextField
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
@@ -110,11 +109,10 @@ fun SignUpView(
     }
 
 
-    Scaffold(
-        modifier = Modifier
-            .imePadding()
-            .navigationBarsPadding()
-            .systemBarsPadding(),
+    Scaffold(modifier = Modifier
+        .imePadding()
+        .navigationBarsPadding()
+        .systemBarsPadding(),
         topBar = {
             TopAppBar(title = { Text("Sign up") }, navigationIcon = {
                 IconButton(onClick = { onBack() }) {
@@ -243,9 +241,9 @@ fun SignUpView(
                     .testTag("SignUpButton"),
                 onClick = { submit() },
                 imeAnimation = animateIMEDp(label = "AuthView_SignUpView_imeDp"),
-                enabled = !loading
+                loading = loading,
             ) {
-                if (loading) CircularProgressIndicatorInButton() else Text("Sign up")
+                Text("Sign up")
             }
         }
     }
