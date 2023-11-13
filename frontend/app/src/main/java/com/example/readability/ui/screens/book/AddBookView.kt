@@ -55,7 +55,6 @@ import com.example.readability.ui.models.AddBookRequest
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
-import java.util.Locale
 
 
 @Composable
@@ -137,8 +136,10 @@ fun AddBookView(
         if (uri != null) {
             val contentResolver = context.contentResolver
             fileName = queryName(contentResolver, uri)
-            title = fileName.substring(0, fileName.length - 4).replace("_", " ")
-                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
+            title = fileName.substring(0, fileName.length - 4).replace("_", " ").split(" ")
+                .joinToString(" ") {
+                    it.replaceFirstChar { it.uppercase() }
+                }
             val inputStream = contentResolver.openInputStream(uri)
             if (inputStream != null) {
                 content = inputStream.bufferedReader().use { it.readText() }
@@ -198,7 +199,10 @@ fun AddBookView(
                         )
                         Text(text = if (fileName.isEmpty()) "Select txt File" else "Change txt File")
                     }
-                    if (fileName.isNotEmpty()) Text(text = "Selected File: $fileName", style = MaterialTheme.typography.bodyMedium)
+                    if (fileName.isNotEmpty()) Text(
+                        text = "Selected File: $fileName",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
                 Text(modifier = Modifier
                     .layout { measurable, constraints ->
@@ -214,7 +218,7 @@ fun AddBookView(
                     }
                     .background(MaterialTheme.colorScheme.background)
                     .padding(horizontal = 4.dp),
-                    text = "Book Cover (Optional)",
+                    text = "Book File",
                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
             }
             Spacer(modifier = Modifier.height(16.dp))

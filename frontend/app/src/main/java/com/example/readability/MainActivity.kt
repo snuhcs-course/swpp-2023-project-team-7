@@ -20,7 +20,7 @@ import com.example.readability.ui.animation.composableFadeThrough
 import com.example.readability.ui.screens.Screens
 import com.example.readability.ui.screens.auth.AuthScreen
 import com.example.readability.ui.screens.book.BookScreen
-import com.example.readability.ui.screens.settings.SettingsView
+import com.example.readability.ui.screens.settings.SettingsScreen
 import com.example.readability.ui.screens.viewer.ViewerScreen
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.CoroutineScope
@@ -71,7 +71,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         NavHost(
                             navController = navController,
-                            startDestination = Screens.Auth.route,
+                            startDestination = Screens.Book.route,
                         ) {
                             composableFadeThrough(Screens.Auth.route) {
                                 AuthScreen(onNavigateBookList = {
@@ -104,7 +104,18 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             composableFadeThrough(Screens.Settings.route) {
-                                SettingsView()
+                                SettingsScreen(
+                                    onBack = {
+                                        navController.popBackStack()
+                                    },
+                                    onNavigateAuth = {
+                                        navController.navigate(Screens.Auth.route) {
+                                            popUpTo(Screens.Auth.route) {
+                                                inclusive = true
+                                            }
+                                        }
+                                    }
+                                )
                             }
                         }
                     }

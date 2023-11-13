@@ -115,10 +115,11 @@ fun BookCard(modifier: Modifier = Modifier, bookCardData: BookCardData, onClick:
     var showSheet by remember { mutableStateOf(false) }
 
     if (showSheet) {
-        BottomSheet() {
+        BottomSheet(bookCardData = bookCardData) {
             showSheet = false
         }
     }
+    
     Row(
         modifier = modifier
             .height(IntrinsicSize.Min)

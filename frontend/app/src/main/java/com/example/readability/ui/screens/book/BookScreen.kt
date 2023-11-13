@@ -33,7 +33,7 @@ fun BookScreen(
                 onNavigateAddBook = {
                     navController.navigate(BookScreens.AddBook.route)
                 },
-                onNavigateSettings = { /*onNavigateSettings()*/ },
+                onNavigateSettings = { onNavigateSettings() },
                 onNavigateViewer = onNavigateViewer,
             )
         }

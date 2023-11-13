@@ -93,10 +93,3 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
-
-configurations.all {
-    resolutionStrategy.dependencySubstitution {
-        substitute(module("org.hamcrest:hamcrest-core:1.3")).using(module("junit:junit:4.13.2"))
-        substitute(module("org.hamcrest:hamcrest-library:1.3")).using(module("junit:junit:4.13.2"))
-    }
-}
