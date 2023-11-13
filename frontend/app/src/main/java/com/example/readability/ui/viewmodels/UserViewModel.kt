@@ -1,9 +1,7 @@
-package com.example.shareader.ui.viewmodels
+package com.example.readability.ui.viewmodels
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.shareader.ui.models.UserModel
+import com.example.readability.ui.models.UserModel
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

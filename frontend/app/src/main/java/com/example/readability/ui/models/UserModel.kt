@@ -1,7 +1,5 @@
-package com.example.shareader.ui.models
+package com.example.readability.ui.models
 
-import android.util.Log
-import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Call
@@ -11,11 +9,7 @@ import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.Headers
-import retrofit2.http.Multipart
 import retrofit2.http.POST
-import retrofit2.http.Query
-
-
 
 
 data class UserResponse(
@@ -48,7 +42,7 @@ interface LoginAPI {
     ): Call<UserResponse>
 
     @POST("/user/signup")
-    fun signUp(@Body signUpRequest: SignUpRequest ) : Call<SignUpResponse>
+    fun signUp(@Body signUpRequest: SignUpRequest) : Call<SignUpResponse>
 }
 
 
@@ -110,9 +104,14 @@ class UserModel{
                 )
             ).execute()
             if (result.isSuccessful) {
-                return@withContext Result.success("Success")
+                val responseBody = result.body()
+                if (responseBody != null && responseBody.success) {
+                    return@withContext Result.success("Success")
+                }else{
+                    return@withContext Result.success("SignUp failed")
+                }
             } else {
-                return@withContext Result.failure<String>(Throwable("SignUp failed"))
+                return@withContext Result.failure<String>(Throwable("SignUp error"))
             }
         }
     }
