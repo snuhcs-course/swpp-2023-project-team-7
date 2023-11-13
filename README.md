@@ -1,21 +1,19 @@
-# SNU-SWPP-Template
+# SNU-SWPP-2023
 
-You can use the README file to showcase and promote your mobile app. The template provided below is just a starting point. Feel free to craft your README as you see fit. 
 
-Please note that the README doesn't affect your grade and is not included in documentation(Wiki).
+# Readability
 
-# [Your Application Name]
+Readability is an eBook reader application that provide reading assistant services.
 
-[Short application description here]
-
-![Application Screenshot](path_to_screenshot.png)
 
 ## Features
 
-- Feature 1: Brief description
-- Feature 2: Brief description
-- ...
+- Feature 1: Summary for previous contents
+- Feature 2: Quiz generation
 
+- Ebook Viewer with overlay
+- Upload own book with txt file
+  
 ## Getting Started
 
 ### Prerequisites
