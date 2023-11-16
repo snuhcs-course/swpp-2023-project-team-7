@@ -72,12 +72,20 @@ def user_signup(user_signup_request: UserSignupRequest):
     cursor.execute(f"SELECT * FROM Users WHERE email = '{user_signup_request.email}'")
     result = cursor.fetchall()
     if len(result) != 0:
-        return {"error": "Email already exists"}
+        raise HTTPException(
+                status_code=409,
+                detail="Email already exists"
+            )
+        # return {"error": "Email already exists"}
 
     cursor.execute(f"SELECT * FROM Users WHERE username = '{user_signup_request.username}'")
     result = cursor.fetchall()
     if len(result) != 0:
-        return {"error": "Username already exists"}
+        raise HTTPException(
+                status_code=409,
+                detail="Username already exists"
+            )
+        # return {"error": "Username already exists"}
 
     hashed_password = get_password_hash(user_signup_request.password)
     cursor.execute(f"INSERT INTO Users (username, email, password) VALUES ('{user_signup_request.username}', '{user_signup_request.email}', '{hashed_password}')")
@@ -167,6 +175,35 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
     insert_access_token_to_user(email, access_token)
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+
+@user.post("/user/info")
+def get_user_info(
+    access_token: str
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    if not get_user_with_access_token(access_token):
+        raise credentials_exception
+
+    if not books_db.is_connected():
+        books_db.reconnect()
+    cursor = books_db.cursor()
+    cursor.execute(f"SELECT * FROM Users WHERE access_token = '{access_token}'")
+    result = cursor.fetchall()
+
+    if len(result) == 0:
+        return None
+    
+    return {
+        "username": result[0][2],
+        "email": result[0][0],
+        "created_at": result[0][3],
+        "verified": result[0][4],
+    }
 
 @user.post("/token/refresh")
 def refresh_access_token(refresh_token: str):
