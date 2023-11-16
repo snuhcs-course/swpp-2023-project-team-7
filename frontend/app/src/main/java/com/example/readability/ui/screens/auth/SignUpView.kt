@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.readability.LocalSnackbarHost
 import com.example.readability.R
 import com.example.readability.ui.animation.animateIMEDp
 import com.example.readability.ui.components.PasswordTextField
@@ -64,7 +65,7 @@ fun SignUpPreview() {
 @Composable
 fun SignUpView(
     onBack: () -> Unit = {},
-    onSubmitted: suspend (String) -> Result<Unit> = { Result.success(Unit) },
+    onSubmitted: suspend (String, String, String) -> Result<Unit> = { _, _, _ -> Result.success(Unit) },
     onNavigateVerify: (String) -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
@@ -76,6 +77,7 @@ fun SignUpView(
     val emailFocusRequester = remember { FocusRequester() }
 
     val scope = rememberCoroutineScope()
+    val snackbarHost = LocalSnackbarHost.current
 
     var showError by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf(false) }
@@ -98,11 +100,11 @@ fun SignUpView(
         } else {
             loading = true
             scope.launch {
-                onSubmitted(email).onSuccess {
+                onSubmitted(email, username, password).onSuccess {
                     withContext(Dispatchers.Main) { onNavigateVerify(email) }
                 }.onFailure {
                     loading = false
-                    showError = true
+                    snackbarHost.showSnackbar(it.message ?: "Unknown error occurred. Please try again.")
                 }
             }
         }

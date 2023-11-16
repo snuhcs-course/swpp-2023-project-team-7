@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.readability.ui.animation.SharedAxis
 import com.example.readability.ui.animation.composableSharedAxis
+import com.example.readability.ui.models.UserModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -53,19 +54,12 @@ fun AuthScreen(
             )
         }
         composableSharedAxis(AuthScreens.SignIn.route, axis = SharedAxis.X) {
+            val email = it.arguments?.getString("email") ?: ""
             SignInView(
-                email = it.arguments?.getString("email") ?: "",
+                email = email,
                 onBack = { navController.popBackStack() },
                 onPasswordSubmitted = {
-                    // TODO: post login request and return result
-                    withContext(Dispatchers.IO) {
-                        delay(2000L)
-                    }
-                    if (it == "testtest") {
-                        Result.success(Unit)
-                    } else {
-                        Result.failure(Exception("Password is incorrect"))
-                    }
+                    UserModel.getInstance().signIn(email, it)
                 },
                 onNavigateBookList = { onNavigateBookList() },
                 onNavigateForgotPassword = { navController.navigate(AuthScreens.ForgotPassword.route) },
@@ -74,12 +68,8 @@ fun AuthScreen(
         composableSharedAxis(AuthScreens.SignUp.route, axis = SharedAxis.X) {
             SignUpView(
                 onBack = { navController.popBackStack() },
-                onSubmitted = {
-                    // TODO: send fields and return
-                    withContext(Dispatchers.IO) {
-                        delay(1500L)
-                    }
-                    Result.success(Unit)
+                onSubmitted = { email, username, password ->
+                    UserModel.getInstance().signUp(email, username, password)
                 },
                 onNavigateVerify = {
                     navController.navigate(

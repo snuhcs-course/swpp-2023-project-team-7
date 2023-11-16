@@ -5,6 +5,7 @@ plugins {
     id("io.github.gmazzo.test.aggregation.coverage") version "2.1.1"
     // and/or
     id("io.github.gmazzo.test.aggregation.results") version "2.1.1"
+    id("com.google.devtools.ksp") version "1.8.10-1.0.9" apply false
 }
 
 //plugins {

@@ -71,7 +71,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         NavHost(
                             navController = navController,
-                            startDestination = Screens.Book.route,
+                            startDestination = Screens.Auth.route,
                         ) {
                             composableFadeThrough(Screens.Auth.route) {
                                 AuthScreen(onNavigateBookList = {
