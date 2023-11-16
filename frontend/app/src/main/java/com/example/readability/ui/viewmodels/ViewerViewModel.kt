@@ -10,6 +10,7 @@ class ViewerViewModel(
 ) : ViewModel() {
     val bookData = BookModel.getInstance().bookList.map { it[bookId] }
     val pageSize = BookModel.getInstance().bookList.map { it[bookId]?.pageSplitData?.pageSplits?.size ?: 0 }
+    val pageSplitter = BookModel.getInstance().pageSplitter
 
     fun setPageSize(width: Int, height: Int) {
         BookModel.getInstance().setPageSize(width, height, bookId)

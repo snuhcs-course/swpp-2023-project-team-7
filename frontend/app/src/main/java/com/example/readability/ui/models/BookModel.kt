@@ -36,7 +36,7 @@ data class BookCardData(
 )
 
 class BookModel {
-    private val pageSplitter = PageSplitter()
+    val pageSplitter = PageSplitter()
     private val splitScope = CoroutineScope(Dispatchers.Default)
     private var splitJob: Job? = null
 

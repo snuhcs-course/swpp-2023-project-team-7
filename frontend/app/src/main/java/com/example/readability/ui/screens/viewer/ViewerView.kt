@@ -1,6 +1,6 @@
 package com.example.readability.ui.screens.viewer
 
-import android.content.res.Resources
+import android.content.res.Configuration
 import android.text.SpannableString
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
@@ -68,6 +68,8 @@ import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -88,6 +90,7 @@ import kotlinx.coroutines.sync.withLock
 @Composable
 fun ViewerView(
     bookData: BookData?,
+    pageSplitter: PageSplitter,
     pageSize: Int,
     onBack: () -> Unit = {},
     onProgressChange: (Double) -> Unit = {},
@@ -161,6 +164,7 @@ fun ViewerView(
                         BookPager(modifier = Modifier.fillMaxSize(),
                             bookData = bookData,
                             pageSize = pageSize,
+                            pageSplitter = pageSplitter,
                             pageIndex = pageIndex,
                             overlayVisible = overlayVisible,
                             onPageChanged = { pageIndex ->
@@ -180,35 +184,82 @@ fun ViewerView(
 
 @Composable
 fun LoadingScreen(modifier: Modifier = Modifier, bookData: BookData?) {
-    Column(
-        modifier = modifier
-            .background(color = MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        if (bookData != null) {
-            Row {
-                Spacer(modifier = Modifier.weight(1f))
-                AsyncImage(
-                    modifier = Modifier.weight(2f),
-                    model = bookData.coverImage,
-                    contentDescription = "Book Cover Image",
-                )
-                Spacer(modifier = Modifier.weight(1f))
+    val configuration = LocalConfiguration.current
+    when (configuration.orientation) {
+        Configuration.ORIENTATION_LANDSCAPE -> {
+            Row(
+                modifier = modifier
+                    .background(color = MaterialTheme.colorScheme.background)
+                    .padding(24.dp),
+                horizontalArrangement = Arrangement.spacedBy(64.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (bookData != null) {
+                    Column (
+                    ) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        AsyncImage(
+                            modifier = Modifier.weight(2f),
+                            model = bookData.coverImage,
+                            contentDescription = "Book Cover Image",
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                    Column (
+                        verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Text(
+                            text = bookData.title,
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = "Opening Book...",
+                            style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
             }
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = bookData.title,
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = "Opening Book...",
-                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
-                textAlign = TextAlign.Center,
-            )
+        }
+        Configuration.ORIENTATION_PORTRAIT -> {
+            Column(
+                modifier = modifier
+                    .background(color = MaterialTheme.colorScheme.background)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (bookData != null) {
+                    Row {
+                        Spacer(modifier = Modifier.weight(1f))
+                        AsyncImage(
+                            modifier = Modifier.weight(2f),
+                            model = bookData.coverImage,
+                            contentDescription = "Book Cover Image",
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                    Column (
+                        verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = bookData.title,
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = "Opening Book...",
+                            style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -218,6 +269,7 @@ fun LoadingScreen(modifier: Modifier = Modifier, bookData: BookData?) {
 fun BookPager(
     modifier: Modifier = Modifier,
     bookData: BookData,
+    pageSplitter: PageSplitter,
     pageSize: Int,
     pageIndex: Int,
     overlayVisible: Boolean,
@@ -254,7 +306,7 @@ fun BookPager(
             println("isMovingByAnimation = true")
             mutex.withLock { animationCount++ }
             try {
-                pagerState.animateScrollToPage(pageIndex)
+                pagerState.animateScrollToPage(pageIndex, animationSpec = tween(300, 0, EASING_EMPHASIZED))
             } finally {
                 println("isMovingByAnimation = false")
                 mutex.withLock { animationCount-- }
@@ -263,8 +315,35 @@ fun BookPager(
         }
     }
 
-    val width = Resources.getSystem().displayMetrics.widthPixels
-    val horizontalPadding = 64.dp * shrinkAnimation
+    var width by remember { mutableStateOf(0) }
+    var height by remember { mutableStateOf(0) }
+    val padding = with(LocalDensity.current) { 16.dp.toPx() }
+    val pageWidth = (bookData.pageSplitData?.width ?: 0) + padding * 2
+    val pageHeight = (bookData.pageSplitData?.height ?: 0) + padding * 2
+    val density = LocalDensity.current
+
+    val pagePadding = remember(width, height, pageWidth, pageHeight) {
+        val pageGap = 32.dp
+
+        var pagePadding = pageGap * 2
+        if (width == 0 || height == 0) {
+            return@remember pagePadding
+        }
+        val pagePaddingPx = with(density) { pagePadding.toPx() }
+
+        val ratio = pageWidth / pageHeight
+
+        val desiredWidth = width - pagePaddingPx * 2
+        val derivedHeight = desiredWidth / ratio
+        if (height - pagePaddingPx < derivedHeight) {
+            // shrink height to match it
+            val diff = derivedHeight - (height - pagePaddingPx)
+            val diffWidth = diff * ratio
+            pagePadding += with(density) { (diffWidth / 2).toDp() }
+        }
+
+        pagePadding
+    }
 
     HorizontalPager(
         modifier = Modifier
@@ -301,6 +380,10 @@ fun BookPager(
                         }
                     }
                 }
+            }
+            .onSizeChanged {
+                width = it.width
+                height = it.height
             },
         state = pagerState,
         flingBehavior = PagerDefaults.flingBehavior(
@@ -310,15 +393,16 @@ fun BookPager(
             pagerSnapDistance = PagerSnapDistance.atMost(if (overlayVisible) pageSize else 1)
         ),
         contentPadding = PaddingValues(
-            horizontal = horizontalPadding
+            horizontal = pagePadding * shrinkAnimation
         ),
-        pageSpacing = (32 * shrinkAnimation).dp,
+        pageSpacing = 32.dp * shrinkAnimation,
         userScrollEnabled = animationCount == 0,
     ) { pageIndex ->
         BookPage(
             bookData = bookData,
             pageSize = pageSize,
             pageIndex = pageIndex,
+            pageSplitter = pageSplitter,
         )
     }
 }
@@ -327,6 +411,7 @@ fun BookPager(
 fun BookPage(
     modifier: Modifier = Modifier,
     bookData: BookData?,
+    pageSplitter: PageSplitter,
     pageSize: Int,
     pageIndex: Int,
 ) {
@@ -336,7 +421,7 @@ fun BookPage(
         if (pageSize <= pageIndex) 0 else bookData?.pageSplitData?.pageSplits?.get(pageIndex)
     ) {
         if (bookData == null) return@remember null
-        val textPaint = PageSplitter.buildTextPaint()
+        val textPaint = pageSplitter.buildTextPaint()
         textPaint.color = onBackground.toArgb()
         val startIndex = if (pageIndex == 0) 0 else bookData.pageSplitData?.pageSplits?.get(
             pageIndex - 1
@@ -345,7 +430,7 @@ fun BookPage(
             if (pageIndex == pageSize) bookData.content.length else bookData.pageSplitData?.pageSplits?.get(
                 pageIndex
             ) ?: 0
-        PageSplitter.buildDynamicLayout(
+        pageSplitter.buildDynamicLayout(
             SpannableString(bookData.content.subSequence(startIndex, endIndex)),
             textPaint,
             bookData.pageSplitData?.width ?: 0
