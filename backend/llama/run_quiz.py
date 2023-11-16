@@ -2,6 +2,9 @@ import sys
 from os import path
 import pickle
 import openai
+import tiktoken
+
+tokenizer = tiktoken.get_encoding("cl100k_base")
 
 SYSTEM_QUIZ_PROMPT = '''
 You will be presented with a series of bullet points summarizing key elements of a story. Your task is to generate questions that are crucial for understanding the overall plot and essential aspects of the story. Generate a minimum of 2 and a maximum of 10 questions, ensuring that the questions you choose to create are deeply rooted in the comprehension and analysis of the story's plot, characters, and themes.
@@ -22,6 +25,7 @@ Question Format:
 
 Ensure that the questions are open-ended to promote deeper thinking and analysis.
 Format the questions clearly and concisely.
+Be sure to provide the answers as well.
 
 Format:
 Number of Questions: <number of questions>
@@ -31,34 +35,31 @@ Number of Questions: <number of questions>
 2A: <answer 2>
 '''
 
-base_path = path.dirname(path.realpath(__file__))
-
-book_content = open(path.abspath(path.join(base_path, "medium.txt")), "r").read()
-sys.path.append(path.abspath(base_path))
-single_summary = ""
-with open(path.abspath(path.join(base_path, "medium_summary.pkl")), 'rb') as pickle_file:
-    single_summary = pickle.load(pickle_file)
-
-def get_quizzes(progress, book_id):
+def get_quizzes(progress, book_content_url, summary_tree_url):
     """
     generates 10 quizzes based on the word_index
     :param progress: progress of the book
     :param book_id: book id to generate quiz from
     """
+    summary_tree = ""
+    with open(book_content_url, 'r') as book_file:
+        book_content = book_file.read()
+    with open(summary_tree_url, 'rb') as pickle_file:
+        summary_tree = pickle.load(pickle_file)
 
-    # TODO: load book from database and use instead of book_content
+    # word_index -> the number of characters read by the user.
+    # start_index, end_idx is the number of tokens processed by the summary
     word_index = int(progress * len(book_content))
+    read_content = book_content[:word_index]
+    tokenized_read_content = tokenizer.encode(read_content)
+    word_index = len(tokenized_read_content)-1
     
     # generate new quiz
-    leaf = single_summary.find_leaf_summary(word_index=word_index)
-    available_summary_list = single_summary.find_included_summaries(leaf)
+    leaf = summary_tree.find_leaf_summary(word_index=word_index)
+    available_summary_list = summary_tree.find_included_summaries(leaf)
 
     content = "\n\n".join([summary.summary_content for summary in available_summary_list])
     content += "\n\n" + book_content[leaf.end_idx:word_index]
-
-    quiz_line = ""
-    current_quiz = {}
-    quiz_count = 0
 
     for resp in openai.ChatCompletion.create(
         model="gpt-3.5-turbo", messages=[
@@ -71,30 +72,14 @@ def get_quizzes(progress, book_id):
         sys.stdout.write(delta_content)
         sys.stdout.flush()
 
-        # if delta_content contains newline, it means that it is a new question
-        if "\n" in delta_content:
-            quiz_line += delta_content.split("\n")[0]
-            quiz_header = quiz_line.split(":")[0].strip()
-            quiz_content = quiz_line.split(":")[1].strip()
-            if quiz_count == 0:
-                quiz_count = int(quiz_content)
-                print("quiz count: " + str(quiz_count))
-            elif "Q" in quiz_header:
-                current_quiz["question"] = quiz_content
-                print("added question: " + quiz_content)
-            else:
-                current_quiz["answer"] = quiz_content
-                yield current_quiz.copy(), quiz_count
-                print("added answer: " + quiz_content)
-            quiz_line = delta_content.split("\n")[1]
-        else:
-            quiz_line += delta_content
+        yield delta_content, finished
 
         if finished:
             break
 
 if __name__ == "__main__":
     # main()
-    key = None
-    for quiz, quiz_len in get_quizzes(progress=10880 / len(book_content), book_id=1):
-        print(quiz, quiz_len)
+    # key = None
+    # for quiz, quiz_len in get_quizzes(progress=10880 / len(book_content), book_id=1):
+    #     print(quiz, quiz_len)
+    pass

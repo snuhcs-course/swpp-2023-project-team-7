@@ -3,6 +3,9 @@ from os import path
 import uuid
 import pickle
 import openai
+import tiktoken
+
+tokenizer = tiktoken.get_encoding("cl100k_base")
 
 SYSTEM_SUMMARY_PROMPT = '''
 Prompt Instructions:
@@ -25,17 +28,11 @@ Final Touches:
 Review your summary to ensure that it accurately represents the main ideas and themes presented in the bullet points.
 Ensure that the language used is clear and easily understandable.
 '''
-
-
+#TODO: handle python imports better
 base_path = path.dirname(path.realpath(__file__))
-
-book_content = open(path.abspath(path.join(base_path, "medium.txt")), "r").read()
 sys.path.append(path.abspath(base_path))
-single_summary = ""
-with open(path.abspath(path.join(base_path, "medium_summary.pkl")), 'rb') as pickle_file:
-    single_summary = pickle.load(pickle_file)
 
-def get_summary(progress, book_id):
+def get_summary(progress, book_content_url, summary_tree_url):
     """
     generates summary based on the word_index
     :param progress: progress of the book
@@ -43,11 +40,21 @@ def get_summary(progress, book_id):
     :param callback: callback function to call when a delta content is generated
     """
 
-    # TODO: load book from database and use instead of book_content
+    summary_tree = ""
+    with open(book_content_url, 'r') as book_file:
+        book_content = book_file.read()
+    with open(summary_tree_url, 'rb') as pickle_file:
+        summary_tree = pickle.load(pickle_file)
+
+    # word_index -> the number of characters read by the user.
+    # start_index, end_idx is the number of tokens processed by the summary
     word_index = int(progress * len(book_content))
-    
-    leaf = single_summary.find_leaf_summary(word_index=word_index)
-    available_summary_list = single_summary.find_included_summaries(leaf)
+    read_content = book_content[:word_index]
+    tokenized_read_content = tokenizer.encode(read_content)
+    word_index = len(tokenized_read_content) - 1
+
+    leaf = summary_tree.find_leaf_summary(word_index=word_index)
+    available_summary_list = summary_tree.find_included_summaries(leaf)
 
     content = "\n\n".join([summary.summary_content for summary in available_summary_list])
     content += "\n\n" + book_content[leaf.start_idx:word_index]

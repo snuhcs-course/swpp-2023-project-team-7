@@ -20,7 +20,7 @@ class Summary:
 		if len(self.children) == 0:
 			return self
 		for child in self.children:
-			if word_index >= child.start_idx and word_index < child.end_idx:
+			if word_index >= child.start_idx and word_index <= child.end_idx:
 				return child.find_leaf_summary(word_index)
 
 	def find_included_summaries(self, child_summary):
