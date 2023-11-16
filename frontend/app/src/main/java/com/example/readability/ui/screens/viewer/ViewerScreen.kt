@@ -36,28 +36,21 @@ fun ViewerScreen(id: String, onNavigateSettings: () -> Unit, onBack: () -> Unit)
             val viewerViewModel: ViewerViewModel = viewModel(factory = ViewerViewModelFactory(id))
             val bookData by viewerViewModel.bookData.collectAsState(initial = null)
             val pageSize by viewerViewModel.pageSize.collectAsState(initial = 0)
-            ViewerView(bookData = bookData,
-                pageSize = pageSize,
-                onBack = onBack,
-                onNavigateQuiz = {
-                    if (bookData != null) {
-                        QuizModel.getInstance().loadQuiz(id, bookData!!.progress)
-                        navController.navigate(ViewerScreens.Quiz.route)
-                    }
-                },
-                onNavigateSettings = onNavigateSettings,
-                onProgressChange = {
-                    viewerViewModel.setProgress(it)
-                },
-                onNavigateSummary = {
-                    if (bookData != null) {
-                        SummaryModel.getInstance().loadSummary(id, bookData!!.progress)
-                        navController.navigate(ViewerScreens.Summary.route)
-                    }
-                },
-                onPageSizeChanged = { width, height ->
-                    viewerViewModel.setPageSize(width, height)
-                })
+            ViewerView(bookData = bookData, pageSize = pageSize, onBack = onBack, onNavigateQuiz = {
+                if (bookData != null) {
+                    QuizModel.getInstance().loadQuiz(id, bookData!!.progress)
+                    navController.navigate(ViewerScreens.Quiz.route)
+                }
+            }, onNavigateSettings = { /*onNavigateSettings()*/ }, onProgressChange = {
+                viewerViewModel.setProgress(it)
+            }, onNavigateSummary = {
+                if (bookData != null) {
+                    SummaryModel.getInstance().loadSummary(id, bookData!!.progress)
+                    navController.navigate(ViewerScreens.Summary.route)
+                }
+            }, onPageSizeChanged = { width, height ->
+                viewerViewModel.setPageSize(width, height)
+            })
         }
         composableSharedAxis(ViewerScreens.Quiz.route, axis = SharedAxis.X) {
             val quizViewModel: QuizViewModel = viewModel()
@@ -93,7 +86,9 @@ fun ViewerScreen(id: String, onNavigateSettings: () -> Unit, onBack: () -> Unit)
         composableSharedAxis(ViewerScreens.Summary.route, axis = SharedAxis.X) {
             val summaryViewModel: SummaryViewModel = viewModel()
             val summary by summaryViewModel.summaryState.collectAsState()
-            SummaryView(summary)
+            SummaryView(summary = summary, onBack = {
+                navController.popBackStack()
+            })
         }
     }
 }

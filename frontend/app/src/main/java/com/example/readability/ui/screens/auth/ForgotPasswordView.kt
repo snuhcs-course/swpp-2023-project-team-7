@@ -40,7 +40,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.R
 import com.example.readability.ui.animation.animateIMEDp
-import com.example.readability.ui.components.CircularProgressIndicatorInButton
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.Dispatchers
@@ -164,9 +163,9 @@ fun ForgotPasswordView(
                     .fillMaxWidth()
                     .testTag("NextButton"),
                 imeAnimation = animateIMEDp(label = "ForgotPasswordView_NextButton_imeDP"),
-                enabled = !loading
+                loading = loading,
             ) {
-                if (loading) CircularProgressIndicatorInButton() else Text("Next")
+                Text("Next")
             }
         }
     }

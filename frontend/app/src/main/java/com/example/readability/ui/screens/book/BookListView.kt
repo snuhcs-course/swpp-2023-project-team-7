@@ -7,16 +7,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -83,6 +87,9 @@ fun BookListView(
                         onNavigateViewer(bookCardData.id)
                     }
                 )
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
             }
         }
     }
@@ -114,14 +121,20 @@ fun BookCard(modifier: Modifier = Modifier, bookCardData: BookCardData, onClick:
     }
     Row(
         modifier = modifier
-            .height(IntrinsicSize.Min).clickable { onClick() },
+            .height(IntrinsicSize.Min)
+            .clickable { onClick() },
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
-            modifier = Modifier.padding(16.dp, 16.dp, 0.dp, 16.dp).testTag(bookCardData.coverImage),
+            modifier = Modifier
+                .padding(16.dp, 16.dp, 0.dp, 16.dp)
+                .fillMaxHeight()
+                .aspectRatio(3f / 4f, true)
+                .testTag(bookCardData.coverImage),
             model = bookCardData.coverImage,
             contentDescription = "Book Cover Image",
+            contentScale = ContentScale.FillWidth
         )
         Column(
             modifier = Modifier
@@ -129,17 +142,14 @@ fun BookCard(modifier: Modifier = Modifier, bookCardData: BookCardData, onClick:
                 .fillMaxHeight()
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(0.dp, 16.dp, 16.dp, 0.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(0.dp, 16.dp, 16.dp, 0.dp),
             ) {
                 Text(
                     modifier = Modifier.weight(1f),
                     text = bookCardData.title,
                     style = MaterialTheme.typography.titleMedium.copy(fontFamily = Gabarito, fontWeight = FontWeight.Medium)
-                )
-                Icon(
-                    painter = painterResource(id = R.drawable.cloud_check),
-                    contentDescription = "Uploaded",
-                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
             Text(
@@ -149,14 +159,30 @@ fun BookCard(modifier: Modifier = Modifier, bookCardData: BookCardData, onClick:
             )
             Spacer(modifier = Modifier.weight(1f))
             Row(
-                modifier = Modifier.fillMaxWidth().padding(0.dp, 0.dp, 4.dp, 0.dp),
-                verticalAlignment = Alignment.Bottom
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(0.dp, 0.dp, 4.dp, 0.dp),
+                verticalAlignment = Alignment.Bottom,
             ) {
-                Text(
-                    modifier = Modifier.weight(1f).padding(0.dp, 0.dp, 0.dp, 16.dp),
-                    text = "${(bookCardData.progress * 100).toInt()}%",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        modifier = Modifier
+                            .padding(0.dp, 0.dp, 0.dp, 16.dp)
+                            .size(20.dp),
+                        painter = painterResource(id = R.drawable.cloud_check),
+                        contentDescription = "Uploaded",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                    Text(
+                        modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 16.dp),
+                        text = "${(bookCardData.progress * 100).toInt()}%",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
                 IconButton(onClick = { showSheet = true }) {
                     Icon(
                         painter = painterResource(id = R.drawable.dots_three),

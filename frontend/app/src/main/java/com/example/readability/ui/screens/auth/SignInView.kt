@@ -42,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import com.example.readability.LocalSnackbarHost
 import com.example.readability.R
 import com.example.readability.ui.animation.animateIMEDp
-import com.example.readability.ui.components.CircularProgressIndicatorInButton
 import com.example.readability.ui.components.PasswordTextField
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
@@ -171,13 +170,9 @@ fun SignInView(
                 imeAnimation = animateIMEDp(
                     label = "AuthView_SignInView_imeAnimation"
                 ),
-                enabled = !loading
+                loading = loading,
             ) {
-                if (loading) {
-                    CircularProgressIndicatorInButton()
-                } else {
-                    Text("Sign in")
-                }
+                Text("Sign in")
             }
         }
     }

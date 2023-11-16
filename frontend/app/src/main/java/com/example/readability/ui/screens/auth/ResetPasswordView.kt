@@ -81,6 +81,7 @@ fun ResetPasswordView(
         if (isError()) {
             showError = true
         } else {
+            loading = true
             scope.launch {
                 onPasswordSubmitted(newPassword).onSuccess {
                     withContext(Dispatchers.Main) { onNavigateEmail() }
@@ -156,7 +157,8 @@ fun ResetPasswordView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("ResetPasswordButton"),
-                imeAnimation = animateIMEDp(label = "AuthView_ResetPasswordView_imeDp")
+                imeAnimation = animateIMEDp(label = "AuthView_ResetPasswordView_imeDp"),
+                loading = loading
             ) {
                 Text("Reset Password")
             }

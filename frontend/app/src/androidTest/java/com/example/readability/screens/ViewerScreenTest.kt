@@ -54,7 +54,7 @@ class ViewerScreenTest {
                 pageSplitter.splitPage(
                     300, 300, openBoatBookData
                 ) {
-                    openBoatBookData = it
+                    openBoatBookData = openBoatBookData.copy(pageSplitData = it)
                 }
             }
         }
@@ -424,6 +424,18 @@ class ViewerScreenTest {
         // check if summary is displayed
         composeTestRule.onNodeWithText("this is a summary").assertIsDisplayed()
         composeTestRule.onNodeWithText("Previous Story").assertIsDisplayed()
+    }
 
+    @Test
+    fun summaryView_BackButtonClicked() {
+        var onBack = false
+        composeTestRule.setContent {
+            SummaryView(summary = "this is a summary", onBack = { onBack = true })
+        }
+
+        // click back button
+        composeTestRule.onNodeWithContentDescription("Arrow Back").performClick()
+        // check if onBack is true
+        assert(onBack)
     }
 }

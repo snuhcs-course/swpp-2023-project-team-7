@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Readability" parent="android:Theme.Material.NoActionBar" />
+
+    <style name="Theme.Readability.Starting" parent="Theme.SplashScreen">
+        <!-- Set the splash screen background to black -->
+        <item name="windowSplashScreenBackground">@color/starting_blue</item>
+        <!-- Use windowSplashScreenAnimatedIcon to add a drawable or an animated
+             drawable. -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <!-- Set the theme of the Activity that follows your splash screen. -->
+        <item name="postSplashScreenTheme">@style/Theme.Readability</item>
+
+        <!-- navigation bar color -->
+        <item name="android:navigationBarColor">@color/starting_blue</item>
+        <!-- status bar color -->
+        <item name="android:statusBarColor">@color/starting_blue</item>
+    </style>
+</resources>

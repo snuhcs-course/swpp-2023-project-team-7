@@ -12,6 +12,7 @@ import com.example.readability.ui.animation.composableSharedAxis
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import java.lang.Thread.sleep
 
 sealed class AuthScreens(val route: String) {
     object Intro : AuthScreens("intro")
@@ -119,12 +120,24 @@ fun AuthScreen(
                 fromSignUp = it.arguments?.getBoolean("fromSignUp") ?: false,
                 onBack = { navController.popBackStack() },
                 onNavigateBookList = { onNavigateBookList() },
-                onNavigateResetPassword = { navController.navigate(AuthScreens.ResetPassword.route) })
+                onNavigateResetPassword = { navController.navigate(AuthScreens.ResetPassword.route) },
+                onVerificationCodeSubmitted = {
+                    withContext(Dispatchers.IO) {
+                        sleep(1000)
+                    }
+                    Result.success(Unit)
+                })
         }
         composableSharedAxis(AuthScreens.ResetPassword.route, axis = SharedAxis.X) {
             ResetPasswordView(
                 onBack = { navController.popBackStack() },
                 onNavigateEmail = { navController.navigate(AuthScreens.Email.route) },
+                onPasswordSubmitted = {
+                    withContext(Dispatchers.IO) {
+                        sleep(1000)
+                    }
+                    Result.success(Unit)
+                }
             )
         }
 
