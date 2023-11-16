@@ -3,6 +3,7 @@ package com.example.readability.ui.models
 import android.content.Context
 import com.example.readability.ReadabilityApplication
 import com.example.readability.ui.PageSplitter
+import com.example.readability.ui.ViewerStyle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -15,6 +16,7 @@ data class PageSplitData(
     var pageSplits: List<Int>,
     val width: Int,
     val height: Int,
+    val viewerStyle: ViewerStyle
 )
 
 data class BookData(
@@ -41,11 +43,16 @@ class BookModel {
     private var splitJob: Job? = null
 
     companion object {
+        @Volatile
         private var instance: BookModel? = null
 
         fun getInstance(): BookModel {
             if (instance == null) {
-                instance = BookModel()
+                synchronized(this) {
+                    if (instance == null) {
+                        instance = BookModel()
+                    }
+                }
             }
             return instance!!
         }
@@ -86,7 +93,7 @@ class BookModel {
     fun setPageSize(width: Int, height: Int, bookId: String) {
         val bookData = bookList.value[bookId] ?: return
         val pageSplitData = bookData.pageSplitData
-        if (pageSplitData != null && pageSplitData.width == width && pageSplitData.height == height) {
+        if (pageSplitData != null && pageSplitData.width == width && pageSplitData.height == height && pageSplitData.viewerStyle == pageSplitter.viewerStyle.value) {
             return
         }
 
@@ -94,7 +101,7 @@ class BookModel {
             it.toMutableMap().apply {
                 this[bookId] = this[bookId]!!.copy(
                     pageSplitData = PageSplitData(
-                        pageSplits = emptyList(), width = width, height = height
+                        pageSplits = emptyList(), width = width, height = height, viewerStyle = pageSplitter.viewerStyle.value
                     )
                 )
             }

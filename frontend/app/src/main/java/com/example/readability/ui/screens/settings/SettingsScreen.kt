@@ -1,10 +1,14 @@
 package com.example.readability.ui.screens.settings
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.readability.ui.animation.SharedAxis
 import com.example.readability.ui.animation.composableSharedAxis
+import com.example.readability.ui.models.BookModel
+import com.example.readability.ui.models.SettingModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -15,7 +19,7 @@ sealed class SettingsScreens(val route: String) {
     object Account : SettingsScreens("account")
     object ChangePassword : SettingsScreens("change_password")
     object Viewer : SettingsScreens("viewer")
-    object About : SettingsScreens("about") {
+    object About : SettingsScreens("about/{type}") {
         fun createRoute(type: String) = "about/$type"
     }
 }
@@ -24,9 +28,10 @@ sealed class SettingsScreens(val route: String) {
 fun SettingsScreen(
     onBack: () -> Unit = {},
     onNavigateAuth: () -> Unit = {},
+    startDestination: String = SettingsScreens.Settings.route
 ) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = SettingsScreens.Settings.route) {
+    NavHost(navController = navController, startDestination = startDestination) {
         composableSharedAxis(SettingsScreens.Settings.route, axis = SharedAxis.X) {
             SettingsView(
                 onBack = { onBack() },
@@ -36,18 +41,14 @@ fun SettingsScreen(
             )
         }
         composableSharedAxis(SettingsScreens.PasswordCheck.route, axis = SharedAxis.X) {
-            PasswordCheckView(
-                onBack = { navController.popBackStack() },
-                onPasswordSubmitted = {
-                    withContext(Dispatchers.IO) {
-                        delay(1000L)
-                    }
-                    Result.success(Unit)
-                },
-                onNavigateAccount = {
-                    navController.navigate(SettingsScreens.Account.route)
+            PasswordCheckView(onBack = { navController.popBackStack() }, onPasswordSubmitted = {
+                withContext(Dispatchers.IO) {
+                    delay(1000L)
                 }
-            )
+                Result.success(Unit)
+            }, onNavigateAccount = {
+                navController.navigate(SettingsScreens.Account.route)
+            })
         }
         composableSharedAxis(SettingsScreens.Account.route, axis = SharedAxis.X) {
             AccountView(
@@ -88,8 +89,20 @@ fun SettingsScreen(
             )
         }
         composableSharedAxis(SettingsScreens.Viewer.route, axis = SharedAxis.X) {
+            val sampleText by SettingModel.getInstance().sampleText.collectAsState()
+            val viewerStyle by BookModel.getInstance().pageSplitter.viewerStyle.collectAsState()
             ViewerView(
-                onBack = { navController.popBackStack() },
+                sampleText = sampleText,
+                viewerStyle = viewerStyle,
+                pageSplitter = BookModel.getInstance().pageSplitter,
+                onViewerStyleChanged = { BookModel.getInstance().pageSplitter.setViewerStyle(it) },
+                onBack = {
+                    if (navController.previousBackStackEntry != null) {
+                        navController.popBackStack()
+                    } else {
+                        onBack()
+                    }
+                },
             )
         }
         composableSharedAxis(SettingsScreens.About.route, axis = SharedAxis.X) {

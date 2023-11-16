@@ -27,11 +27,16 @@ class AddBookModel {
     private val addBookAPI: AddBookAPI
 
     companion object {
+        @Volatile
         private var instance: AddBookModel? = null
 
         fun getInstance(): AddBookModel {
             if (instance == null) {
-                instance = AddBookModel()
+                synchronized(this) {
+                    if (instance == null) {
+                        instance = AddBookModel()
+                    }
+                }
             }
             return instance!!
         }

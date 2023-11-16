@@ -1,6 +1,11 @@
 package com.example.readability.ui.screens.auth
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -43,6 +48,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.readability.R
+import com.example.readability.ui.animation.DURATION_EMPHASIZED
+import com.example.readability.ui.animation.EASING_EMPHASIZED
 import com.example.readability.ui.theme.Gabarito
 import com.example.readability.ui.theme.ReadabilityTheme
 
@@ -67,7 +74,7 @@ fun IntroView(
         controlsVisible = true
     }
 
-    val navPadding = with (LocalDensity.current) {
+    val navPadding = with(LocalDensity.current) {
         WindowInsets.navigationBars.getBottom(this).toDp()
     }
 
@@ -78,8 +85,7 @@ fun IntroView(
             .padding(vertical = navPadding),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom,
         ) {
@@ -89,7 +95,17 @@ fun IntroView(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground_x1_5),
                 contentDescription = "App Logo"
             )
-            AnimatedVisibility(visible = controlsVisible) {
+            AnimatedVisibility(
+                visible = controlsVisible, enter = fadeIn(
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
+                ) + expandVertically(
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
+                ), exit = fadeOut(
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
+                ) + shrinkVertically(
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
+                )
+            ) {
                 Text(
                     "Readability",
                     style = MaterialTheme.typography.displayMedium.copy(
@@ -100,7 +116,17 @@ fun IntroView(
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
-            AnimatedVisibility(visible = controlsVisible) {
+            AnimatedVisibility(
+                visible = controlsVisible, enter = fadeIn(
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
+                ) + expandVertically(
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
+                ), exit = fadeOut(
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
+                ) + shrinkVertically(
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
+                )
+            ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp),

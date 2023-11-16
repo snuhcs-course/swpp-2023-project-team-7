@@ -14,11 +14,16 @@ class SettingModel {
         return content
     }
     companion object {
+        @Volatile
         private var instance: SettingModel? = null
 
         fun getInstance(): SettingModel {
             if (instance == null) {
-                instance = SettingModel()
+                synchronized(this) {
+                    if (instance == null) {
+                        instance = SettingModel()
+                    }
+                }
             }
             return instance!!
         }

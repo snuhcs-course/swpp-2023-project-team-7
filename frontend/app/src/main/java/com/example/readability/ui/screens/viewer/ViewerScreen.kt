@@ -46,7 +46,7 @@ fun ViewerScreen(id: String, onNavigateSettings: () -> Unit, onBack: () -> Unit)
                         navController.navigate(ViewerScreens.Quiz.route)
                     }
                 },
-                onNavigateSettings = { /*onNavigateSettings()*/ },
+                onNavigateSettings = { onNavigateSettings() },
                 onProgressChange = {
                     viewerViewModel.setProgress(it)
                 },

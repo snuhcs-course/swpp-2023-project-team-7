@@ -30,11 +30,16 @@ class QuizModel {
     val quizLoadUrl = "https://swpp.scripter36.com/quiz"
 
     companion object {
+        @Volatile
         private var instance: QuizModel? = null
 
         fun getInstance(): QuizModel {
             if (instance == null) {
-                instance = QuizModel()
+                synchronized(this) {
+                    if (instance == null) {
+                        instance = QuizModel()
+                    }
+                }
             }
             return instance!!
         }
