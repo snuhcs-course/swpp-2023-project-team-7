@@ -62,7 +62,7 @@ def get_quizzes(progress, book_content_url, summary_tree_url):
     content += "\n\n" + book_content[leaf.end_idx:word_index]
 
     for resp in openai.ChatCompletion.create(
-        model="gpt-3.5-turbo", messages=[
+        model="gpt-4", messages=[
             {"role": "system", "content": SYSTEM_QUIZ_PROMPT},
             {"role": "user", "content": content}
         ], stream=True

@@ -133,29 +133,29 @@ async def book_add(req: BookAddRequest, email: str = Depends(get_user_with_acces
     book_uuid = uuid.uuid4()
     image_url = f"{user_dirname}/{book_uuid}.png"
     content_url = f"{user_dirname}/{book_uuid}.txt"
-    summary_path_url = f"{user_dirname}/{book_uuid}_summary.pkl"
-
-    # TODO: handle possible errors from async task
-    asyncio.create_task(generate_summary_tree(summary_path_url, req.content))
 
     with open(content_url, 'w') as book_file:
         book_file.write(req.content)
     # asssumes that the client is sending the image as a byte array.
-    image = Image.open(io.BytesIO(bytearray.fromhex(req.cover_image)))
-    image.save(image_url)
+    # image = Image.open(io.BytesIO(bytearray.fromhex(req.cover_image)))
+    # image.save(image_url)
 
     add_book = (
-        "INSERT INTO Books (email, title, author, progress, cover_image, content, summary_tree)"
-        "VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        "INSERT INTO Books (email, title, author, progress, cover_image, content)"
+        "VALUES (%s, %s, %s, %s, %s, %s)"
     )
     image_url = "/".join(image_url.split("/")[-2:])
     content_url = "/".join(content_url.split("/")[-2:])
-    summary_path_url = "/".join(summary_path_url.split("/")[-2:])
-    book_data = (email, req.title, req.author, 0.0, image_url, content_url, summary_path_url)
+    book_data = (email, req.title, req.author, 0.0, image_url, content_url)
 
     cursor = books_db.cursor()
     cursor.execute(add_book, book_data)
     books_db.commit()
+    book_id = cursor.lastrowid
+
+    # TODO: handle possible errors from async task
+    asyncio.create_task(generate_summary_tree(book_id, req.content))
+
     return {}
 
 @book.get("/book/image")
