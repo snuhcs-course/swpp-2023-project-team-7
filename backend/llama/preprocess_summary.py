@@ -249,35 +249,35 @@ def main():
     print("\n\n*** Generate:")
     sliced_text_dict_list = split_large_text(story)
 
-    # for prompt in sliced_text_dict_list:
-    #     response = ""
-    #     for resp in completion_with_backoff(
-    #         model="gpt-4", messages=[
-    #             {"role": "system", "content": INTERMEDIATE_SYSTEM_PROMPT},
-    #             {"role": "user", "content": prompt["sliced_text"]}
-    #         ], stream=True
-    #     ):
-    #         finished = resp.choices[0].finish_reason is not None
-    #         delta_content = "\n" if (finished) else resp.choices[0].delta.content
-    #         response += delta_content
+    for prompt in sliced_text_dict_list:
+        response = ""
+        for resp in completion_with_backoff(
+            model="gpt-4", messages=[
+                {"role": "system", "content": INTERMEDIATE_SYSTEM_PROMPT},
+                {"role": "user", "content": prompt["sliced_text"]}
+            ], stream=True
+        ):
+            finished = resp.choices[0].finish_reason is not None
+            delta_content = "\n" if (finished) else resp.choices[0].delta.content
+            response += delta_content
 
-    #         sys.stdout.write(delta_content)
-    #         sys.stdout.flush()
-    #         if finished:
-    #             break 
+            sys.stdout.write(delta_content)
+            sys.stdout.flush()
+            if finished:
+                break 
 
-    #     first_level_summary = Summary(summary_content=response,
-    #                             start_idx=prompt["start_idx"],
-    #                             end_idx=prompt["end_idx"])
-    #     summaries_list.append(first_level_summary)
+        first_level_summary = Summary(summary_content=response,
+                                start_idx=prompt["start_idx"],
+                                end_idx=prompt["end_idx"])
+        summaries_list.append(first_level_summary)
 
-    # single_summary = reduce_summaries_list(summaries_list)
-    # print("\n\n*** FINAL Summary:")
-    # print(single_summary)
+    single_summary = reduce_summaries_list(summaries_list)
+    print("\n\n*** FINAL Summary:")
+    print(single_summary)
 
-    # summary_tree_path = f"{story_path.split('.')[0]}_summary.pkl"
-    # with open(summary_tree_path, 'wb') as pickle_file:
-    #     pickle.dump(single_summary, pickle_file)
+    summary_tree_path = f"{story_path.split('.')[0]}_summary.pkl"
+    with open(summary_tree_path, 'wb') as pickle_file:
+        pickle.dump(single_summary, pickle_file)
 
 
 if __name__ == "__main__":

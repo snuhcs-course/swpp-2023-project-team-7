@@ -6,6 +6,17 @@ import tiktoken
 
 tokenizer = tiktoken.get_encoding("cl100k_base")
 
+
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_random_exponential,
+)  # for exponential backoff
+
+@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
+def completion_with_backoff(**kwargs):
+    return openai.ChatCompletion.create(**kwargs)
+
 SYSTEM_QUIZ_PROMPT = '''
 You will be presented with a series of bullet points summarizing key elements of a story. Your task is to generate questions that are crucial for understanding the overall plot and essential aspects of the story. Generate a minimum of 2 and a maximum of 10 questions, ensuring that the questions you choose to create are deeply rooted in the comprehension and analysis of the story's plot, characters, and themes.
 
@@ -61,7 +72,7 @@ def get_quizzes(progress, book_content_url, summary_tree_url):
     content = "\n\n".join([summary.summary_content for summary in available_summary_list])
     content += "\n\n" + book_content[leaf.end_idx:word_index]
 
-    for resp in openai.ChatCompletion.create(
+    for resp in completion_with_backoff(
         model="gpt-4", messages=[
             {"role": "system", "content": SYSTEM_QUIZ_PROMPT},
             {"role": "user", "content": content}
