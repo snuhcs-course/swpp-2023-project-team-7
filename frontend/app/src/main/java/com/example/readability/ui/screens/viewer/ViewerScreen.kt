@@ -73,7 +73,7 @@ fun ViewerScreen(id: String, onNavigateSettings: () -> Unit, onBack: () -> Unit)
                 onNavigateReport = {
                     navController.navigate(
                         ViewerScreens.QuizReport.createRoute(
-                            question = quizList[it].question, answer = quizList[it].answer
+                            question = quizList[it].question ?: "", answer = quizList[it].answer ?: ""
                         )
                     )
                 },

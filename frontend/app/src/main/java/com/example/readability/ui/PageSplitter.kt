@@ -27,7 +27,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.lang.System.lineSeparator
@@ -50,6 +49,7 @@ class PageSplitter {
     private var _viewerStyle = MutableStateFlow(ViewerStyle())
     val viewerStyle = _viewerStyle.asStateFlow()
     private var charWidthArray = FloatArray(65536)
+    private var charWidthOriginalArray = FloatArray(65536)
     private val cacheCharScope = CoroutineScope(Dispatchers.Default)
     private var cacheCharJob: Job? = null
     private val everyChars = CharArray(65536) { it.toChar() }
@@ -66,27 +66,29 @@ class PageSplitter {
 
     private fun cacheCharWidthArray() {
         val textPaint = buildTextPaint()
-        textPaint.getTextWidths(everyChars, 0, 128, charWidthArray)
-        charWidthArray['\n'.code] = Float.POSITIVE_INFINITY
-        charWidthArray['\r'.code] = 0f
-        if (cacheCharJob != null) {
-            cacheCharJob!!.cancel()
-        }
-        cacheCharJob = cacheCharScope.launch {
-            val startTime = System.nanoTime()
-            val buffer = FloatArray(128)
-            for (i in 128 until 65536 step 128) {
-                textPaint.getTextWidths(everyChars, i, 128, buffer)
-                for (j in 0 until 128) {
-                    charWidthArray[i + j] = buffer[j]
-                }
-                if (!isActive) {
-                    break
-                }
+        val density = Resources.getSystem().displayMetrics.density
+        textPaint.textSize = 16f * density
+        textPaint.letterSpacing = 0f
+        val startTime = System.nanoTime()
+        val buffer = FloatArray(128)
+        for (i in 0 until 65536 step 128) {
+            textPaint.getTextWidths(everyChars, i, 128, buffer)
+            for (j in 0 until 128) {
+                charWidthOriginalArray[i + j] = buffer[j]
             }
-            charWidthArray['\n'.code] = Float.POSITIVE_INFINITY
-            charWidthArray['\r'.code] = 0f
-            println("cache char time = ${(System.nanoTime() - startTime) / 1000000f}ms")
+        }
+        charWidthOriginalArray['\n'.code] = Float.POSITIVE_INFINITY
+        charWidthOriginalArray['\r'.code] = 0f
+        // copy
+        buildCharWidthArray()
+        println("cache char time = ${(System.nanoTime() - startTime) / 1000000f}ms")
+    }
+
+    private fun buildCharWidthArray() {
+
+        val density = Resources.getSystem().displayMetrics.density
+        for (i in 0 until 65536) {
+            charWidthArray[i] = charWidthOriginalArray[i] * viewerStyle.value.textSize / 16f + viewerStyle.value.letterSpacing * viewerStyle.value.textSize * density
         }
     }
 
@@ -95,9 +97,11 @@ class PageSplitter {
         val lastTextSize = this.viewerStyle.value.textSize
         val lastLetterSpacing = this.viewerStyle.value.letterSpacing
         _viewerStyle.value = viewerStyle
-        if (viewerStyle.fontFamily != lastFontFamily || viewerStyle.textSize != lastTextSize || viewerStyle.letterSpacing != lastLetterSpacing) {
+        if (viewerStyle.fontFamily != lastFontFamily) {
             // cache charWidthArray
             cacheCharWidthArray()
+        } else if (viewerStyle.textSize != lastTextSize || viewerStyle.letterSpacing != lastLetterSpacing) {
+            buildCharWidthArray()
         }
     }
 

@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -36,13 +35,11 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.PagerSnapDistance
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +48,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -85,6 +83,7 @@ import com.example.readability.ui.PageSplitter
 import com.example.readability.ui.animation.DURATION_EMPHASIZED
 import com.example.readability.ui.animation.EASING_EMPHASIZED
 import com.example.readability.ui.animation.EASING_LEGACY
+import com.example.readability.ui.components.RoundedRectFilledTonalButton
 import com.example.readability.ui.models.BookData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -108,17 +107,28 @@ fun ViewerView(
     var overlayVisible by remember { mutableStateOf(false) }
     var closeLoading by remember { mutableStateOf(true) }
     var transitionDuration by remember { mutableStateOf(0) }
+    var lastBookReady by remember { mutableStateOf(true) }
     val bookReady by rememberUpdatedState(newValue = bookData != null && pageSize > 0 && closeLoading)
 
     // if book is ready within 150ms, don't show loading screen
     // otherwise, show loading screen for at least 700ms
-    LaunchedEffect(Unit) {
-        delay(150)
-        if (bookReady) return@LaunchedEffect
-        closeLoading = false
-        transitionDuration = 300
-        delay(550)
-        closeLoading = true
+    LaunchedEffect(bookReady, lastBookReady) {
+        if (!bookReady && lastBookReady) {
+            transitionDuration = 0
+            delay(150)
+            if (bookReady) return@LaunchedEffect
+            closeLoading = false
+            transitionDuration = 300
+            delay(550)
+            closeLoading = true
+        }
+    }
+
+    SideEffect {
+        lastBookReady = bookReady
+        if (bookReady) {
+            transitionDuration = 0
+        }
     }
 
     val pageIndex = maxOf(minOf((pageSize * (bookData?.progress ?: 0.0)).toInt(), pageSize - 1), 0)
@@ -182,7 +192,12 @@ fun ViewerView(
                     }
                 }
 
-                false -> LoadingScreen(modifier = Modifier.fillMaxSize(), bookData = bookData)
+                false -> if (closeLoading) {
+                    // prevent flickering
+                    Spacer(modifier = Modifier.fillMaxSize())
+                } else {
+                    LoadingScreen(modifier = Modifier.fillMaxSize(), bookData = bookData)
+                }
             }
         }
     }
@@ -297,7 +312,7 @@ fun BookPager(
 
     val shrinkAnimation by animateFloatAsState(
         targetValue = if (overlayVisible) 1f else 0f,
-        label = "ViewerScreen_ViewerView_PageShrinkAnimation",
+        label = "ViewerScreen.ViewerView.PageShrinkAnimation",
         animationSpec = tween(durationMillis = DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
     )
 
@@ -357,7 +372,7 @@ fun BookPager(
     }
 
     HorizontalPager(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.surfaceVariant)
             .pointerInput(pageIndex, pageSize, overlayVisible) {
@@ -490,7 +505,6 @@ fun ViewerSizeMeasurer(
     modifier: Modifier = Modifier,
     onPageSizeChanged: (Int, Int) -> Unit = { _, _ -> },
 ) {
-    val density = LocalDensity.current
     Column(
         modifier = modifier
     ) {
@@ -532,7 +546,6 @@ fun ViewerOverlay(
     onNavigateQuiz: () -> Unit,
     content: @Composable () -> Unit = {}
 ) {
-    var aiButtonsVisible by remember { mutableStateOf(false) }
     val pageIndex = minOf(
         (pageSize * (bookData?.progress ?: 0.0)).toInt(), pageSize - 1
     )
@@ -588,12 +601,10 @@ fun ViewerOverlay(
             visible = visible,
             label = "EbookView.ViewerOverlay.BottomContent",
             enter = fadeIn(tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)) + expandVertically(
-                tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED),
-                expandFrom = Alignment.Top
+                tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED), expandFrom = Alignment.Top
             ),
             exit = fadeOut(tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)) + shrinkVertically(
-                tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED),
-                shrinkTowards = Alignment.Top
+                tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED), shrinkTowards = Alignment.Top
             ),
         ) {
             Box(modifier = Modifier.fillMaxWidth()) {
@@ -607,26 +618,12 @@ fun ViewerOverlay(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        FilledTonalButton(
-                            onClick = {
-                                onNavigateSummary()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
+                        RoundedRectFilledTonalButton(modifier = Modifier.weight(1f),
+                            onClick = { onNavigateSummary() }) {
                             Text("Generate Summary")
                         }
-                        FilledTonalButton(
-                            onClick = {
-                                onNavigateQuiz()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
+                        RoundedRectFilledTonalButton(modifier = Modifier.weight(1f),
+                            onClick = { onNavigateQuiz() }) {
                             Text("Generate Quiz")
                         }
                     }
