@@ -21,6 +21,7 @@ import com.example.readability.ui.screens.Screens
 import com.example.readability.ui.screens.auth.AuthScreen
 import com.example.readability.ui.screens.book.BookScreen
 import com.example.readability.ui.screens.settings.SettingsScreen
+import com.example.readability.ui.screens.settings.SettingsScreens
 import com.example.readability.ui.screens.viewer.ViewerScreen
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.CoroutineScope
@@ -85,7 +86,7 @@ class MainActivity : ComponentActivity() {
                             composableFadeThrough(Screens.Book.route) {
                                 BookScreen(
                                     onNavigateSettings = {
-                                        navController.navigate(Screens.Settings.route)
+                                        navController.navigate(Screens.Settings.createRoute(SettingsScreens.Settings.route))
                                     },
                                     onNavigateViewer = {
                                         navController.navigate(Screens.Viewer.createRoute(it))
@@ -96,7 +97,7 @@ class MainActivity : ComponentActivity() {
                                 ViewerScreen(
                                     id = it.arguments?.getString("book_id") ?: "",
                                     onNavigateSettings = {
-                                        navController.navigate(Screens.Settings.route)
+                                        navController.navigate(Screens.Settings.createRoute(SettingsScreens.Viewer.route))
                                     },
                                     onBack = {
                                         navController.popBackStack()
@@ -104,6 +105,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             composableFadeThrough(Screens.Settings.route) {
+                                val route = it.arguments?.getString("route") ?: ""
                                 SettingsScreen(
                                     onBack = {
                                         navController.popBackStack()
@@ -114,7 +116,8 @@ class MainActivity : ComponentActivity() {
                                                 inclusive = true
                                             }
                                         }
-                                    }
+                                    },
+                                    startDestination = route
                                 )
                             }
                         }

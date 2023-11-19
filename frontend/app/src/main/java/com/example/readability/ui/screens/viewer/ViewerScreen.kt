@@ -46,7 +46,7 @@ fun ViewerScreen(id: String, onNavigateSettings: () -> Unit, onBack: () -> Unit)
                         navController.navigate(ViewerScreens.Quiz.route)
                     }
                 },
-                onNavigateSettings = { /*onNavigateSettings()*/ },
+                onNavigateSettings = { onNavigateSettings() },
                 onProgressChange = {
                     viewerViewModel.setProgress(it)
                 },
@@ -73,7 +73,7 @@ fun ViewerScreen(id: String, onNavigateSettings: () -> Unit, onBack: () -> Unit)
                 onNavigateReport = {
                     navController.navigate(
                         ViewerScreens.QuizReport.createRoute(
-                            question = quizList[it].question, answer = quizList[it].answer
+                            question = quizList[it].question ?: "", answer = quizList[it].answer ?: ""
                         )
                     )
                 },

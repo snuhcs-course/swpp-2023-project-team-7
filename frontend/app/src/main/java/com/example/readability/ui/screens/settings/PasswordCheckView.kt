@@ -5,8 +5,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
@@ -72,19 +75,22 @@ fun PasswordCheckView(
                 onNavigateAccount()
             }.onFailure {
                 loading = false
-                passwordError =
-                    it.message ?: "Unknown error occurred. Please try again."
+                passwordError = it.message ?: "Unknown error occurred. Please try again."
             }
         }
     }
 
-    Scaffold(topBar = {
-        TopAppBar(title = { Text(text = "Account") }, navigationIcon = {
-            IconButton(onClick = { onBack() }) {
-                Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
-            }
-        })
-    }) { innerPadding ->
+    Scaffold(modifier = Modifier
+        .imePadding()
+        .navigationBarsPadding()
+        .statusBarsPadding(),
+        topBar = {
+            TopAppBar(title = { Text(text = "Account") }, navigationIcon = {
+                IconButton(onClick = { onBack() }) {
+                    Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
+                }
+            })
+        }) { innerPadding ->
         LaunchedEffect(Unit) {
             passwordFocusRequester.requestFocus()
         }
@@ -126,7 +132,7 @@ fun PasswordCheckView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(passwordFocusRequester)
-                        .padding(vertical = 32.dp, horizontal = 16.dp),
+                        .padding(top = 32.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
                     password = password,
                     label = "Password",
                     isError = passwordError.isNotEmpty(),

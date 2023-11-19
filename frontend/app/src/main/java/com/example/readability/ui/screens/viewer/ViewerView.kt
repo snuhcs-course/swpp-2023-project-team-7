@@ -1,10 +1,14 @@
 package com.example.readability.ui.screens.viewer
 
 import android.content.res.Configuration
-import android.text.SpannableString
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -13,6 +17,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +28,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -31,13 +35,11 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.PagerSnapDistance
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +48,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -62,7 +65,6 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.changedToUp
@@ -78,7 +80,10 @@ import androidx.compose.ui.util.fastAll
 import coil.compose.AsyncImage
 import com.example.readability.R
 import com.example.readability.ui.PageSplitter
+import com.example.readability.ui.animation.DURATION_EMPHASIZED
 import com.example.readability.ui.animation.EASING_EMPHASIZED
+import com.example.readability.ui.animation.EASING_LEGACY
+import com.example.readability.ui.components.RoundedRectFilledTonalButton
 import com.example.readability.ui.models.BookData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -102,17 +107,28 @@ fun ViewerView(
     var overlayVisible by remember { mutableStateOf(false) }
     var closeLoading by remember { mutableStateOf(true) }
     var transitionDuration by remember { mutableStateOf(0) }
+    var lastBookReady by remember { mutableStateOf(true) }
     val bookReady by rememberUpdatedState(newValue = bookData != null && pageSize > 0 && closeLoading)
 
     // if book is ready within 150ms, don't show loading screen
     // otherwise, show loading screen for at least 700ms
-    LaunchedEffect(Unit) {
-        delay(150)
-        if (bookReady) return@LaunchedEffect
-        closeLoading = false
-        transitionDuration = 300
-        delay(550)
-        closeLoading = true
+    LaunchedEffect(bookReady, lastBookReady) {
+        if (!bookReady && lastBookReady) {
+            transitionDuration = 0
+            delay(150)
+            if (bookReady) return@LaunchedEffect
+            closeLoading = false
+            transitionDuration = 300
+            delay(550)
+            closeLoading = true
+        }
+    }
+
+    SideEffect {
+        lastBookReady = bookReady
+        if (bookReady) {
+            transitionDuration = 0
+        }
     }
 
     val pageIndex = maxOf(minOf((pageSize * (bookData?.progress ?: 0.0)).toInt(), pageSize - 1), 0)
@@ -140,10 +156,10 @@ fun ViewerView(
             transitionSpec = {
                 slideInHorizontally(
                     initialOffsetX = { it },
-                    animationSpec = tween(durationMillis = transitionDuration, 0, EASING_EMPHASIZED)
+                    animationSpec = tween(durationMillis = transitionDuration, 0, EASING_LEGACY)
                 ) togetherWith slideOutHorizontally(
                     targetOffsetX = { -it },
-                    animationSpec = tween(durationMillis = transitionDuration, 0, EASING_EMPHASIZED)
+                    animationSpec = tween(durationMillis = transitionDuration, 0, EASING_LEGACY)
                 )
             }) {
             when (it) {
@@ -176,7 +192,12 @@ fun ViewerView(
                     }
                 }
 
-                false -> LoadingScreen(modifier = Modifier.fillMaxSize(), bookData = bookData)
+                false -> if (closeLoading) {
+                    // prevent flickering
+                    Spacer(modifier = Modifier.fillMaxSize())
+                } else {
+                    LoadingScreen(modifier = Modifier.fillMaxSize(), bookData = bookData)
+                }
             }
         }
     }
@@ -195,7 +216,7 @@ fun LoadingScreen(modifier: Modifier = Modifier, bookData: BookData?) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (bookData != null) {
-                    Column (
+                    Column(
                     ) {
                         Spacer(modifier = Modifier.weight(1f))
                         AsyncImage(
@@ -205,9 +226,10 @@ fun LoadingScreen(modifier: Modifier = Modifier, bookData: BookData?) {
                         )
                         Spacer(modifier = Modifier.weight(1f))
                     }
-                    Column (
-                        verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
-                        horizontalAlignment = Alignment.Start
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(
+                            24.dp, Alignment.CenterVertically
+                        ), horizontalAlignment = Alignment.Start
                     ) {
                         Text(
                             text = bookData.title,
@@ -223,7 +245,8 @@ fun LoadingScreen(modifier: Modifier = Modifier, bookData: BookData?) {
                 }
             }
         }
-        Configuration.ORIENTATION_PORTRAIT -> {
+
+        else -> {
             Column(
                 modifier = modifier
                     .background(color = MaterialTheme.colorScheme.background)
@@ -241,9 +264,10 @@ fun LoadingScreen(modifier: Modifier = Modifier, bookData: BookData?) {
                         )
                         Spacer(modifier = Modifier.weight(1f))
                     }
-                    Column (
-                        verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(
+                            24.dp, Alignment.CenterVertically
+                        ), horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             modifier = Modifier.fillMaxWidth(),
@@ -288,8 +312,8 @@ fun BookPager(
 
     val shrinkAnimation by animateFloatAsState(
         targetValue = if (overlayVisible) 1f else 0f,
-        label = "ViewerScreen_ViewerView_PageShrinkAnimation",
-        animationSpec = tween(durationMillis = 300, 0, EASING_EMPHASIZED)
+        label = "ViewerScreen.ViewerView.PageShrinkAnimation",
+        animationSpec = tween(durationMillis = DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
     )
 
     LaunchedEffect(pagerState.currentPage) {
@@ -306,7 +330,9 @@ fun BookPager(
             println("isMovingByAnimation = true")
             mutex.withLock { animationCount++ }
             try {
-                pagerState.animateScrollToPage(pageIndex, animationSpec = tween(300, 0, EASING_EMPHASIZED))
+                pagerState.animateScrollToPage(
+                    pageIndex, animationSpec = tween(300, 0, EASING_LEGACY)
+                )
             } finally {
                 println("isMovingByAnimation = false")
                 mutex.withLock { animationCount-- }
@@ -346,7 +372,7 @@ fun BookPager(
     }
 
     HorizontalPager(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.surfaceVariant)
             .pointerInput(pageIndex, pageSize, overlayVisible) {
@@ -388,7 +414,7 @@ fun BookPager(
         state = pagerState,
         flingBehavior = PagerDefaults.flingBehavior(
             state = pagerState,
-            lowVelocityAnimationSpec = tween(durationMillis = 300, 0, EASING_EMPHASIZED),
+            lowVelocityAnimationSpec = tween(durationMillis = 300, 0, EASING_LEGACY),
             snapPositionalThreshold = 0.1f,
             pagerSnapDistance = PagerSnapDistance.atMost(if (overlayVisible) pageSize else 1)
         ),
@@ -415,27 +441,7 @@ fun BookPage(
     pageSize: Int,
     pageIndex: Int,
 ) {
-    val onBackground = MaterialTheme.colorScheme.onBackground
-    val dynamicLayout = remember(
-        pageIndex,
-        if (pageSize <= pageIndex) 0 else bookData?.pageSplitData?.pageSplits?.get(pageIndex)
-    ) {
-        if (bookData == null) return@remember null
-        val textPaint = pageSplitter.buildTextPaint()
-        textPaint.color = onBackground.toArgb()
-        val startIndex = if (pageIndex == 0) 0 else bookData.pageSplitData?.pageSplits?.get(
-            pageIndex - 1
-        ) ?: 0
-        val endIndex =
-            if (pageIndex == pageSize) bookData.content.length else bookData.pageSplitData?.pageSplits?.get(
-                pageIndex
-            ) ?: 0
-        pageSplitter.buildDynamicLayout(
-            SpannableString(bookData.content.subSequence(startIndex, endIndex)),
-            textPaint,
-            bookData.pageSplitData?.width ?: 0
-        )
-    }
+    val isDarkTheme = isSystemInDarkTheme()
 
     val padding = with(LocalDensity.current) { 16.dp.toPx() }
 
@@ -470,7 +476,9 @@ fun BookPage(
                                     scale = ratio, pivot = Offset(0f, 0f)
                                 ) {
                                     translate(left = 16.dp.toPx(), top = 16.dp.toPx()) {
-                                        dynamicLayout?.draw(canvas.nativeCanvas)
+                                        pageSplitter.drawPage(
+                                            canvas.nativeCanvas, bookData, pageIndex, isDarkTheme
+                                        )
                                     }
                                 }
                             }
@@ -497,19 +505,16 @@ fun ViewerSizeMeasurer(
     modifier: Modifier = Modifier,
     onPageSizeChanged: (Int, Int) -> Unit = { _, _ -> },
 ) {
-    val density = LocalDensity.current
     Column(
         modifier = modifier
     ) {
         Box(modifier = Modifier
             .weight(1f)
             .fillMaxWidth()
+            .padding(16.dp)
             .onGloballyPositioned {
-                val padding = with(density) {
-                    16.dp.toPx()
-                }
                 onPageSizeChanged(
-                    it.size.width - (padding * 2).toInt(), it.size.height - (padding * 2).toInt()
+                    it.size.width, it.size.height
                 )
             })
         Row(
@@ -541,7 +546,6 @@ fun ViewerOverlay(
     onNavigateQuiz: () -> Unit,
     content: @Composable () -> Unit = {}
 ) {
-    var aiButtonsVisible by remember { mutableStateOf(false) }
     val pageIndex = minOf(
         (pageSize * (bookData?.progress ?: 0.0)).toInt(), pageSize - 1
     )
@@ -549,42 +553,40 @@ fun ViewerOverlay(
     Column(
         modifier = modifier
     ) {
-        AnimatedContent(
-            targetState = visible, label = "EbookView.ViewerOverlay.TopContent"
+        AnimatedVisibility(
+            visible = visible, label = "EbookView.ViewerOverlay.TopContent",
+            enter = fadeIn(tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)) + expandVertically(
+                tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
+            ),
+            exit = fadeOut(tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)) + shrinkVertically(
+                tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
+            ),
         ) {
-            when (it) {
-                true -> CenterAlignedTopAppBar(windowInsets = WindowInsets(0, 0, 0, 0), title = {
-                    Text(
-                        text = bookData?.title ?: "",
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center
-                    )
-                }, navigationIcon = {
-                    IconButton(onClick = {
-                        onBack()
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }, actions = {
-                    IconButton(onClick = {
-                        onNavigateSettings()
-                    }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.settings),
-                            contentDescription = "Settings"
-                        )
-                    }
-                })
-
-                false -> Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(0.dp)
+            CenterAlignedTopAppBar(windowInsets = WindowInsets(0, 0, 0, 0), title = {
+                Text(
+                    text = bookData?.title ?: "",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
                 )
-            }
+            }, navigationIcon = {
+                IconButton(onClick = {
+                    onBack()
+                }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
+            }, actions = {
+                IconButton(onClick = {
+                    onNavigateSettings()
+                }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.settings),
+                        contentDescription = "Settings"
+                    )
+                }
+            })
         }
 
         Box(
@@ -595,98 +597,53 @@ fun ViewerOverlay(
             content()
         }
 
-        AnimatedContent(
-            targetState = visible, label = "EbookView.ViewerOverlay.BottomContent"
-        ) { it ->
-            when (it) {
-                true -> Column(
+        AnimatedVisibility(
+            visible = visible,
+            label = "EbookView.ViewerOverlay.BottomContent",
+            enter = fadeIn(tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)) + expandVertically(
+                tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED), expandFrom = Alignment.Top
+            ),
+            exit = fadeOut(tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)) + shrinkVertically(
+                tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED), shrinkTowards = Alignment.Top
+            ),
+        ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(color = MaterialTheme.colorScheme.surface),
                 ) {
-                    AnimatedContent(
-                        targetState = aiButtonsVisible,
-                        label = "EbookView.ViewerOverlay.BottomTopContent"
-                    ) {
-                        when (it) {
-                            false -> Slider(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                value = bookData?.progress?.toFloat() ?: 0f,
-                                onValueChange = onProgressChange
-                            )
-
-                            true -> Row(
-                                modifier = Modifier.padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                FilledTonalButton(
-                                    onClick = {
-                                        onNavigateSummary()
-                                    },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(48.dp),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Text("Generate Summary")
-                                }
-                                FilledTonalButton(
-                                    onClick = {
-                                        onNavigateQuiz()
-                                    },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(48.dp),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Text("Generate Quiz")
-                                }
-                            }
-                        }
-                    }
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 0.dp),
                         verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                        ) {
-                            IconButton(onClick = { aiButtonsVisible = !aiButtonsVisible }) {
-                                Icon(
-                                    painter = if (aiButtonsVisible) painterResource(id = R.drawable.sparkle_filled) else painterResource(
-                                        id = R.drawable.sparkle
-                                    ),
-                                    contentDescription = "AI Button",
-                                    tint = if (aiButtonsVisible) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                )
-                            }
+                        RoundedRectFilledTonalButton(modifier = Modifier.weight(1f),
+                            onClick = { onNavigateSummary() }) {
+                            Text("Generate Summary")
                         }
-                        Text(
-                            text = "${pageIndex + 1} / $pageSize"
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
+                        RoundedRectFilledTonalButton(modifier = Modifier.weight(1f),
+                            onClick = { onNavigateQuiz() }) {
+                            Text("Generate Quiz")
+                        }
                     }
-                }
-
-                false -> Row(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "${pageIndex + 1} / $pageSize",
-                        style = MaterialTheme.typography.labelLarge
+                    Slider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        value = bookData?.progress?.toFloat() ?: 0f,
+                        onValueChange = onProgressChange
                     )
                 }
             }
         }
+
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            text = "${pageIndex + 1} / $pageSize",
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 
 

@@ -16,11 +16,16 @@ enum class SummaryLoadState {
 
 class SummaryModel {
     companion object {
+        @Volatile
         private var instance: SummaryModel? = null
 
         fun getInstance(): SummaryModel {
             if (instance == null) {
-                instance = SummaryModel()
+                synchronized(this) {
+                    if (instance == null) {
+                        instance = SummaryModel()
+                    }
+                }
             }
             return instance!!
         }

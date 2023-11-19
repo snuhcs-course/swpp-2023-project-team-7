@@ -7,8 +7,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -113,8 +116,7 @@ fun AccountView(
     if (showDeleteAccountDialog) {
         AlertDialog(icon = {
             Icon(
-                Icons.Default.Info,
-                contentDescription = "Info"
+                Icons.Default.Info, contentDescription = "Info"
             )
         }, onDismissRequest = { showDeleteAccountDialog = false }, confirmButton = {
             Button(colors = ButtonColors(
@@ -148,13 +150,17 @@ fun AccountView(
         })
     }
 
-    Scaffold(topBar = {
-        TopAppBar(title = { Text(text = "Account") }, navigationIcon = {
-            IconButton(onClick = { onBack() }) {
-                Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
-            }
-        })
-    }) { innerPadding ->
+    Scaffold(modifier = Modifier
+        .imePadding()
+        .navigationBarsPadding()
+        .systemBarsPadding(),
+        topBar = {
+            TopAppBar(title = { Text(text = "Account") }, navigationIcon = {
+                IconButton(onClick = { onBack() }) {
+                    Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
+                }
+            })
+        }) { innerPadding ->
         LaunchedEffect(Unit) {
             emailError = checkEmailError()
             usernameError = checkUsernameError()
