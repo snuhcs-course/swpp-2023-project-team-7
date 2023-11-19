@@ -1,19 +1,17 @@
 package com.example.readability.ui.screens.viewer
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.readability.ui.animation.SharedAxis
 import com.example.readability.ui.animation.composableSharedAxis
-import com.example.readability.ui.models.QuizModel
-import com.example.readability.ui.models.SummaryModel
 import com.example.readability.ui.viewmodels.QuizViewModel
 import com.example.readability.ui.viewmodels.SummaryViewModel
 import com.example.readability.ui.viewmodels.ViewerViewModel
-import com.example.readability.ui.viewmodels.ViewerViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -29,39 +27,44 @@ sealed class ViewerScreens(val route: String) {
 }
 
 @Composable
-fun ViewerScreen(id: String, onNavigateSettings: () -> Unit, onBack: () -> Unit) {
+fun ViewerScreen(id: Int, onNavigateSettings: () -> Unit, onBack: () -> Unit) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = ViewerScreens.Viewer.route) {
         composableSharedAxis(ViewerScreens.Viewer.route, axis = SharedAxis.X) {
-            val viewerViewModel: ViewerViewModel = viewModel(factory = ViewerViewModelFactory(id))
-            val bookData by viewerViewModel.bookData.collectAsState(initial = null)
-            val pageSize by viewerViewModel.pageSize.collectAsState(initial = 0)
+            val viewerViewModel: ViewerViewModel = hiltViewModel()
+            val quizViewModel: QuizViewModel = hiltViewModel()
+            val summaryViewModel: SummaryViewModel = hiltViewModel()
+            val bookData by viewerViewModel.getBookData(id).collectAsState(initial = null)
+            val pageSplitData by viewerViewModel.pageSplitData.collectAsState(initial = null)
+            val isDarkTheme = isSystemInDarkTheme()
             ViewerView(bookData = bookData,
-                pageSize = pageSize,
-                pageSplitter = viewerViewModel.pageSplitter,
+                pageSplitData = pageSplitData,
                 onBack = onBack,
                 onNavigateQuiz = {
                     if (bookData != null) {
-                        QuizModel.getInstance().loadQuiz(id, bookData!!.progress)
+                        quizViewModel.loadQuiz(id, bookData!!.progress)
                         navController.navigate(ViewerScreens.Quiz.route)
                     }
                 },
                 onNavigateSettings = { onNavigateSettings() },
                 onProgressChange = {
-                    viewerViewModel.setProgress(it)
+                    viewerViewModel.setProgress(id, it)
                 },
                 onNavigateSummary = {
                     if (bookData != null) {
-                        SummaryModel.getInstance().loadSummary(id, bookData!!.progress)
+                        summaryViewModel.loadSummary(id, bookData!!.progress)
                         navController.navigate(ViewerScreens.Summary.route)
                     }
                 },
                 onPageSizeChanged = { width, height ->
-                    viewerViewModel.setPageSize(width, height)
+                    viewerViewModel.setPageSize(id, width, height)
+                },
+                onPageDraw = { canvas, pageIndex ->
+                    viewerViewModel.drawPage(id, canvas, pageIndex, isDarkTheme)
                 })
         }
         composableSharedAxis(ViewerScreens.Quiz.route, axis = SharedAxis.X) {
-            val quizViewModel: QuizViewModel = viewModel()
+            val quizViewModel: QuizViewModel = hiltViewModel()
             val quizList by quizViewModel.quizList.collectAsState()
             val quizSize by quizViewModel.quizSize.collectAsState()
             val quizLoadState by quizViewModel.quizLoadState.collectAsState()
@@ -73,7 +76,8 @@ fun ViewerScreen(id: String, onNavigateSettings: () -> Unit, onBack: () -> Unit)
                 onNavigateReport = {
                     navController.navigate(
                         ViewerScreens.QuizReport.createRoute(
-                            question = quizList[it].question ?: "", answer = quizList[it].answer ?: ""
+                            question = quizList[it].question,
+                            answer = quizList[it].answer
                         )
                     )
                 },
@@ -92,8 +96,8 @@ fun ViewerScreen(id: String, onNavigateSettings: () -> Unit, onBack: () -> Unit)
                 })
         }
         composableSharedAxis(ViewerScreens.Summary.route, axis = SharedAxis.X) {
-            val summaryViewModel: SummaryViewModel = viewModel()
-            val summary by summaryViewModel.summaryState.collectAsState()
+            val summaryViewModel: SummaryViewModel = hiltViewModel()
+            val summary by summaryViewModel.summary.collectAsState()
             SummaryView(summary = summary, onBack = {
                 navController.popBackStack()
             })

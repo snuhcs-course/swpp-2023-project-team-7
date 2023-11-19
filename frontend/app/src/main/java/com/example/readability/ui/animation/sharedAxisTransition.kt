@@ -1,5 +1,6 @@
 package com.example.readability.ui.animation
 
+import android.content.res.Resources
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -14,7 +15,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDeepLink
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.example.readability.ReadabilityApplication
+import kotlin.math.roundToInt
 
 enum class SharedAxis {
     X, Y, Z
@@ -30,9 +31,7 @@ fun NavGraphBuilder.composableSharedAxis(
     content: @Composable() (AnimatedContentScope.(NavBackStackEntry) -> Unit)
 ) {
 
-    val distancePx =
-        ((ReadabilityApplication.instance?.applicationContext?.resources?.displayMetrics?.density
-            ?: 0f) * distance.value).toInt()
+    val distancePx = (Resources.getSystem().displayMetrics.density * distance.value).roundToInt()
 
     if (axis == SharedAxis.X) {
         composable(

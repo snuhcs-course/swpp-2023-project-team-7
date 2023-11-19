@@ -55,14 +55,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.R
+import com.example.readability.data.ai.Quiz
+import com.example.readability.data.ai.QuizLoadState
 import com.example.readability.ui.animation.DURATION_EMPHASIZED_DECELERATE
 import com.example.readability.ui.animation.DURATION_STANDARD
 import com.example.readability.ui.animation.EASING_EMPHASIZED_DECELERATE
 import com.example.readability.ui.animation.EASING_STANDARD
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.components.RoundedRectFilledTonalButton
-import com.example.readability.ui.models.Quiz
-import com.example.readability.ui.models.QuizLoadState
 import com.example.readability.ui.theme.Gabarito
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.launch
@@ -75,7 +75,6 @@ fun QuizPreview() {
         QuizView(
             quizList = listOf(
                 Quiz(
-                    "1",
                     "What initially bores Alice by the riverbank?",
                     "Alice is tired of sitting by the riverbank and being bored by her sister's book with no pictures or conversations."
                 ),
@@ -122,6 +121,7 @@ fun QuizView(
                 if (it < quizList.size) {
                     QuizCard(
                         modifier = Modifier.padding(32.dp),
+                        index = it,
                         quiz = quizList[it],
                         quizLoaded = quizLoadState == QuizLoadState.LOADED || it < quizList.size - 1,
                         onNavigateReport = {
@@ -215,6 +215,7 @@ enum class BlindAnchors {
 @Composable
 fun QuizCard(
     modifier: Modifier = Modifier,
+    index: Int,
     quiz: Quiz,
     quizLoaded: Boolean,
     onNavigateReport: () -> Unit = {},
@@ -285,7 +286,7 @@ fun QuizCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "Quiz ${quiz.id}",
+                        text = "Quiz ${index + 1}",
                         style = MaterialTheme.typography.titleMedium.copy(
                             color = MaterialTheme.colorScheme.onBackground,
                             fontFamily = Gabarito,
@@ -305,7 +306,7 @@ fun QuizCard(
                     modifier = Modifier
                         .padding(horizontal = 24.dp, vertical = 32.dp)
                         .fillMaxWidth(),
-                    text = quiz.question ?: "",
+                    text = quiz.question,
                     style = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onBackground),
                     textAlign = TextAlign.Center
                 )
@@ -330,7 +331,7 @@ fun QuizCard(
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxWidth(),
-                    text = quiz.answer ?: "",
+                    text = quiz.answer,
                     style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
                     textAlign = TextAlign.Center
                 )

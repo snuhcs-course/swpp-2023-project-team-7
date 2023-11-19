@@ -2,7 +2,7 @@
 #include <cctype>
 #include <vector>
 
-extern "C" JNIEXPORT jintArray JNICALL Java_com_example_readability_ui_PageSplitter_splitPageNative(
+extern "C" JNIEXPORT jintArray JNICALL Java_com_example_readability_data_viewer_PageSplitDataSource_splitPageNative(
         JNIEnv *env, jobject thiz, jstring content, jfloatArray charWidths, jfloat lineHeight,
         jfloat width,
         jfloat height, jfloat paragraphSpacing) {
@@ -128,7 +128,7 @@ extern "C" JNIEXPORT jintArray JNICALL Java_com_example_readability_ui_PageSplit
     return result;
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_example_readability_ui_PageSplitter_drawPageNative(
+extern "C" JNIEXPORT void JNICALL Java_com_example_readability_data_viewer_PageSplitDataSource_drawPageNative(
         JNIEnv *env, jobject thiz, jstring content, jfloatArray charWidths, jfloat lineHeight,
         jfloat offset, jfloat width, jfloat paragraphSpacing, jobject textDrawer) {
     // retrive drawText method in TextDrawer

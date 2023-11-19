@@ -15,7 +15,6 @@ import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.readability.ui.PageSplitter
 import com.example.readability.ui.models.BookData
 import com.example.readability.ui.models.BookModel
 import com.example.readability.ui.models.Quiz

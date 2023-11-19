@@ -7,6 +7,6 @@ sealed class Screens (val route: String) {
         fun createRoute(route: String) = "settings/$route"
     }
     object Viewer : Screens("viewer/{book_id}") {
-        fun createRoute(bookId: String) = "viewer/$bookId"
+        fun createRoute(bookId: Int) = "viewer/$bookId"
     }
 }

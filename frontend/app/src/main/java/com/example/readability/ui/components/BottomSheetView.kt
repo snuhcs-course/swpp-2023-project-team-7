@@ -1,3 +1,4 @@
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,14 +24,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.example.readability.R
-import com.example.readability.ui.models.BookCardData
-import com.example.readability.ui.models.BookModel
+import com.example.readability.data.book.BookCardData
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -38,7 +38,7 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomSheet(bookCardData: BookCardData, onDismiss: () -> Unit) {
+fun BottomSheet(bookCardData: BookCardData, onDismiss: () -> Unit, onProgressChanged: (Int, Double) -> Unit) {
     val modalBottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
@@ -49,14 +49,14 @@ fun BottomSheet(bookCardData: BookCardData, onDismiss: () -> Unit) {
         sheetState = modalBottomSheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
 
-    ) {
+        ) {
         BottomSheetContent(
             modifier = Modifier.fillMaxWidth(), bookCardData = bookCardData, onDismiss = {
                 closeScope.launch {
                     modalBottomSheetState.hide()
                     onDismiss()
                 }
-            }
+            }, onProgressChanged = onProgressChanged
         )
     }
 }
@@ -73,11 +73,13 @@ fun BottomSheetPreview() {
         ) {
             BottomSheetContent(
                 modifier = Modifier.fillMaxSize(), bookCardData = BookCardData(
-                    id = "1",
+                    id = 1,
                     title = "The Open Boat",
                     author = "Stephen Crane",
                     coverImage = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/TheOpenBoat.jpg/220px-TheOpenBoat.jpg",
-                    progress = 0.5
+                    progress = 0.5,
+                    coverImageData = null,
+                    content = "asd"
                 )
             )
         }
@@ -86,16 +88,20 @@ fun BottomSheetPreview() {
 
 @Composable
 fun BottomSheetContent(
-    modifier: Modifier = Modifier, bookCardData: BookCardData, onDismiss: () -> Unit = {}
+    modifier: Modifier = Modifier,
+    bookCardData: BookCardData,
+    onDismiss: () -> Unit = {},
+    onProgressChanged: (Int, Double) -> Unit = { _, _ -> }
 ) {
     Column(
+        modifier = modifier,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         BookInfo(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            coverImage = bookCardData.coverImage,
+            coverImage = bookCardData.coverImageData,
             title = bookCardData.title,
             author = bookCardData.author
         )
@@ -108,12 +114,12 @@ fun BottomSheetContent(
         Actions(modifier = Modifier.fillMaxWidth(), onActionClicked = {
             when (it) {
                 BookAction.ClearProgress -> {
-                    BookModel.getInstance().setProgress(0.0, bookCardData.id)
+                    onProgressChanged(bookCardData.id, 0.0)
                     onDismiss()
                 }
 
                 BookAction.MarkAsCompleted -> {
-                    BookModel.getInstance().setProgress(1.0, bookCardData.id)
+                    onProgressChanged(bookCardData.id, 1.0)
                     onDismiss()
                 }
 
@@ -128,14 +134,21 @@ fun BottomSheetContent(
 
 @Composable
 fun BookInfo(
-    modifier: Modifier = Modifier, coverImage: String, title: String, author: String
+    modifier: Modifier = Modifier, coverImage: ImageBitmap?, title: String, author: String
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier
     ) {
-        AsyncImage(
-            model = coverImage, contentDescription = "Book Image", modifier = Modifier.width(90.dp)
-        )
+        if (coverImage == null) {
+            Box(
+                modifier = Modifier.height(120.dp)
+            )
+        } else {
+            Image(
+                bitmap = coverImage,
+                contentDescription = "Book Image", modifier = Modifier.width(90.dp)
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             modifier = Modifier.fillMaxWidth(),
@@ -196,7 +209,7 @@ enum class BookAction {
 
 @Composable
 fun Actions(modifier: Modifier = Modifier, onActionClicked: (BookAction) -> Unit = {}) {
-    Column(modifier = Modifier) {
+    Column(modifier = modifier) {
         Text(
             "Actions",
             style = MaterialTheme.typography.titleMedium,

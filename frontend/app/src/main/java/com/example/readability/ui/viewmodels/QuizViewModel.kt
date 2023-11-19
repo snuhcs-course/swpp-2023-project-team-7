@@ -1,14 +1,25 @@
 package com.example.readability.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
-import com.example.readability.ui.models.QuizModel
+import androidx.lifecycle.viewModelScope
+import com.example.readability.data.ai.QuizRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class QuizViewModel : ViewModel() {
-    val quizList = QuizModel.getInstance().quizList
-    val quizSize = QuizModel.getInstance().quizSize
-    val quizLoadState = QuizModel.getInstance().quizLoadState
+@HiltViewModel
+class QuizViewModel @Inject constructor(
+    private val quizRepository: QuizRepository
 
-    fun loadQuiz() {
-        QuizModel.getInstance().loadQuiz("1", 0.98)
+) : ViewModel() {
+    val quizList = quizRepository.quizList
+    val quizSize = quizRepository.quizCount
+    val quizLoadState = quizRepository.quizLoadState
+
+    fun loadQuiz(bookId: Int, progress: Double) {
+        viewModelScope.launch(Dispatchers.IO) {
+            quizRepository.getQuiz(bookId, progress)
+        }
     }
 }

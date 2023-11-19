@@ -50,8 +50,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.LocalSnackbarHost
 import com.example.readability.R
+import com.example.readability.data.book.AddBookRequest
 import com.example.readability.ui.components.RoundedRectButton
-import com.example.readability.ui.models.AddBookRequest
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
@@ -90,7 +90,7 @@ private fun queryName(resolver: ContentResolver, uri: Uri): String {
 fun AddBookView(
     onBack: () -> Unit = {},
     onBookUploaded: () -> Unit = {},
-    onAddBookClicked: suspend (AddBookRequest) -> Result<Unit> = { Result.success(Unit) }
+    onAddBookClicked: suspend (req: AddBookRequest) -> Result<Unit> = { Result.success(Unit) }
 ) {
     val context = LocalContext.current
     var title by remember { mutableStateOf("") }
@@ -120,11 +120,11 @@ fun AddBookView(
 
             if (bitmap != null) {
                 // convert bitmap to hex string
-                val stream = ByteArrayOutputStream()
-                bitmap!!.compress(Bitmap.CompressFormat.JPEG, 95, stream)
-                val bytes = stream.toByteArray()
-                imageString = bytesToHex(bytes)
-                stream.close()
+                ByteArrayOutputStream().use {
+                    bitmap!!.compress(Bitmap.CompressFormat.JPEG, 95, it)
+                    val bytes = it.toByteArray()
+                    imageString = bytesToHex(bytes)
+                }
             }
         }
     }
@@ -142,8 +142,9 @@ fun AddBookView(
                 }
             val inputStream = contentResolver.openInputStream(uri)
             if (inputStream != null) {
-                content = inputStream.bufferedReader().use { it.readText() }
-                inputStream.close()
+                inputStream.use {
+                    content = it.bufferedReader().use { it.readText() }
+                }
             } else {
                 // Go back to main activity
                 onBack()

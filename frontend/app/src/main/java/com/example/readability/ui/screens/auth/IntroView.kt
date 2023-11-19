@@ -52,6 +52,7 @@ import com.example.readability.ui.animation.DURATION_EMPHASIZED
 import com.example.readability.ui.animation.EASING_EMPHASIZED
 import com.example.readability.ui.theme.Gabarito
 import com.example.readability.ui.theme.ReadabilityTheme
+import kotlinx.coroutines.delay
 
 @Composable
 @Preview(showBackground = true, device = "id:pixel_5")
@@ -71,6 +72,7 @@ fun IntroView(
     var controlsVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
+        delay(500L)
         controlsVisible = true
     }
 

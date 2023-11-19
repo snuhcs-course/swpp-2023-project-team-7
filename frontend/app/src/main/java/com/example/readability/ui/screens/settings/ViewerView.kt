@@ -5,7 +5,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +45,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.NativeCanvas
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.onSizeChanged
@@ -56,10 +57,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.R
-import com.example.readability.ui.PageSplitter
-import com.example.readability.ui.ViewerStyle
-import com.example.readability.ui.models.BookData
-import com.example.readability.ui.models.PageSplitData
+import com.example.readability.data.viewer.FontDataSource
+import com.example.readability.data.viewer.ViewerStyle
 import com.example.readability.ui.theme.Gabarito
 import com.example.readability.ui.theme.ReadabilityTheme
 import com.example.readability.ui.theme.md_theme_dark_outline
@@ -72,9 +71,7 @@ import kotlin.math.roundToInt
 fun ViewerPreview() {
     ReadabilityTheme {
         ViewerView(
-            sampleText = "A quick brown fox jumps over the lazy dog\nTestTest",
             viewerStyle = ViewerStyle(),
-            pageSplitter = PageSplitter()
         )
     }
 }
@@ -94,9 +91,9 @@ fun ViewerOptionsPreview() {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ViewerView(
-    sampleText: String,
     viewerStyle: ViewerStyle,
-    pageSplitter: PageSplitter,
+    fontMap: Map<String, Int> = FontDataSource.fontMap,
+    onDrawPage: (canvas: NativeCanvas, width: Int) -> Unit = { _, _ -> },
     onBack: () -> Unit = {},
     onViewerStyleChanged: (viewerStyle: ViewerStyle) -> Unit = {},
 ) {
@@ -105,31 +102,12 @@ fun ViewerView(
     val pageHorizontalPadding =
         with(LocalDensity.current) { viewerStyle.horizontalPadding.dp.toPx() }
 
-    val bookData = remember(sampleText, viewerStyle, width, padding, pageHorizontalPadding) {
-        BookData(
-            id = "1",
-            progress = 0.0,
-            coverImage = "",
-            pageSplitData = PageSplitData(
-                pageSplits = listOf(sampleText.length),
-                viewerStyle = viewerStyle,
-                width = (width - padding * 2 - pageHorizontalPadding * 2).roundToInt(),
-                height = 0
-            ),
-            author = "",
-            content = sampleText,
-            title = ""
-        )
-    }
-
     val pagerState = rememberPagerState(initialPage = 0) {
         2
     }
     val pagerScope = rememberCoroutineScope()
     var maxHeight by remember { mutableStateOf(0.dp) }
     val density = LocalDensity.current
-
-    val isDarkTheme = isSystemInDarkTheme()
 
     Scaffold(topBar = {
         TopAppBar(title = { Text(text = "Viewer Settings") }, navigationIcon = {
@@ -163,7 +141,7 @@ fun ViewerView(
                         .clipToBounds()
                 ) {
                     drawIntoCanvas {
-                        pageSplitter.drawPage(it.nativeCanvas, bookData, 0, isDarkTheme, false)
+                        onDrawPage(it.nativeCanvas, (width - padding * 2 - pageHorizontalPadding * 2).roundToInt())
                     }
                 }
             }
@@ -198,6 +176,7 @@ fun ViewerView(
                                 maxHeight = maxHeight.coerceAtLeast(height)
                             },
                         viewerStyle = viewerStyle,
+                        fontMap = fontMap,
                         onViewerStyleChanged = onViewerStyleChanged
                     )
 
@@ -223,6 +202,7 @@ fun ViewerView(
 fun TextOptions(
     modifier: Modifier = Modifier,
     viewerStyle: ViewerStyle,
+    fontMap: Map<String, Int>,
     onViewerStyleChanged: (viewerStyle: ViewerStyle) -> Unit
 ) {
     var fontFamilyExpanded by remember { mutableStateOf(false) }
@@ -261,7 +241,7 @@ fun TextOptions(
                 ExposedDropdownMenu(expanded = fontFamilyExpanded, onDismissRequest = {
                     fontFamilyExpanded = false
                 }) {
-                    PageSplitter.fontMap.forEach { selectionOption ->
+                    fontMap.forEach { selectionOption ->
                         DropdownMenuItem(onClick = {
                             onViewerStyleChanged(viewerStyle.copy(fontFamily = selectionOption.key))
                             fontFamilyExpanded = false
@@ -380,14 +360,14 @@ fun ViewerOptions(
                     modifier = Modifier
                         .size(40.dp)
                         .border(1.dp, md_theme_light_outline, RoundedCornerShape(4.dp))
-                        .background(viewerStyle.brightBackgroundColor, RoundedCornerShape(4.dp))
+                        .background(Color(viewerStyle.brightBackgroundColor), RoundedCornerShape(4.dp))
                 )
                 Icon(painter = painterResource(id = R.drawable.moon), contentDescription = "Moon")
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .border(1.dp, md_theme_dark_outline, RoundedCornerShape(4.dp))
-                        .background(viewerStyle.darkBackgroundColor, RoundedCornerShape(4.dp))
+                        .background(Color(viewerStyle.darkBackgroundColor), RoundedCornerShape(4.dp))
                 )
             }
         }
@@ -406,14 +386,14 @@ fun ViewerOptions(
                     modifier = Modifier
                         .size(40.dp)
                         .border(1.dp, md_theme_light_outline, RoundedCornerShape(4.dp))
-                        .background(viewerStyle.brightTextColor, RoundedCornerShape(4.dp))
+                        .background(Color(viewerStyle.brightTextColor), RoundedCornerShape(4.dp))
                 )
                 Icon(painter = painterResource(id = R.drawable.moon), contentDescription = "Moon")
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .border(1.dp, md_theme_dark_outline, RoundedCornerShape(4.dp))
-                        .background(viewerStyle.darkTextColor, RoundedCornerShape(4.dp))
+                        .background(Color(viewerStyle.darkTextColor), RoundedCornerShape(4.dp))
                 )
             }
         }

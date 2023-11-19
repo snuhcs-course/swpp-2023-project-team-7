@@ -61,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.NativeCanvas
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
@@ -79,12 +80,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAll
 import coil.compose.AsyncImage
 import com.example.readability.R
-import com.example.readability.ui.PageSplitter
+import com.example.readability.data.book.Book
+import com.example.readability.data.viewer.PageSplitData
 import com.example.readability.ui.animation.DURATION_EMPHASIZED
 import com.example.readability.ui.animation.EASING_EMPHASIZED
 import com.example.readability.ui.animation.EASING_LEGACY
 import com.example.readability.ui.components.RoundedRectFilledTonalButton
-import com.example.readability.ui.models.BookData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -94,9 +95,9 @@ import kotlinx.coroutines.sync.withLock
 
 @Composable
 fun ViewerView(
-    bookData: BookData?,
-    pageSplitter: PageSplitter,
-    pageSize: Int,
+    bookData: Book?,
+    pageSplitData: PageSplitData?,
+    onPageDraw: (canvas: NativeCanvas, pageIndex: Int) -> Unit = { _, _ -> },
     onBack: () -> Unit = {},
     onProgressChange: (Double) -> Unit = {},
     onPageSizeChanged: (Int, Int) -> Unit = { _, _ -> },
@@ -108,7 +109,7 @@ fun ViewerView(
     var closeLoading by remember { mutableStateOf(true) }
     var transitionDuration by remember { mutableStateOf(0) }
     var lastBookReady by remember { mutableStateOf(true) }
-    val bookReady by rememberUpdatedState(newValue = bookData != null && pageSize > 0 && closeLoading)
+    val bookReady by rememberUpdatedState(newValue = bookData != null && pageSplitData != null && pageSplitData.pageSplits.isNotEmpty() && closeLoading)
 
     // if book is ready within 150ms, don't show loading screen
     // otherwise, show loading screen for at least 700ms
@@ -131,8 +132,8 @@ fun ViewerView(
         }
     }
 
+    val pageSize = pageSplitData?.pageSplits?.size ?: 0
     val pageIndex = maxOf(minOf((pageSize * (bookData?.progress ?: 0.0)).toInt(), pageSize - 1), 0)
-
 
     Scaffold(
         modifier = Modifier
@@ -179,8 +180,11 @@ fun ViewerView(
                     if (bookData != null && pageSize > 0) {
                         BookPager(modifier = Modifier.fillMaxSize(),
                             bookData = bookData,
+                            pageSplitData = pageSplitData,
                             pageSize = pageSize,
-                            pageSplitter = pageSplitter,
+                            onPageDraw = { canvas, pageIndex ->
+                                onPageDraw(canvas, pageIndex)
+                            },
                             pageIndex = pageIndex,
                             overlayVisible = overlayVisible,
                             onPageChanged = { pageIndex ->
@@ -204,7 +208,7 @@ fun ViewerView(
 }
 
 @Composable
-fun LoadingScreen(modifier: Modifier = Modifier, bookData: BookData?) {
+fun LoadingScreen(modifier: Modifier = Modifier, bookData: Book?) {
     val configuration = LocalConfiguration.current
     when (configuration.orientation) {
         Configuration.ORIENTATION_LANDSCAPE -> {
@@ -292,11 +296,12 @@ fun LoadingScreen(modifier: Modifier = Modifier, bookData: BookData?) {
 @Composable
 fun BookPager(
     modifier: Modifier = Modifier,
-    bookData: BookData,
-    pageSplitter: PageSplitter,
+    bookData: Book,
+    pageSplitData: PageSplitData?,
     pageSize: Int,
     pageIndex: Int,
     overlayVisible: Boolean,
+    onPageDraw: (canvas: NativeCanvas, pageIndex: Int) -> Unit = { _, _ -> },
     onPageChanged: (Int) -> Unit = {},
     onOverlayVisibleChanged: (Boolean) -> Unit = {},
 ) {
@@ -344,8 +349,8 @@ fun BookPager(
     var width by remember { mutableStateOf(0) }
     var height by remember { mutableStateOf(0) }
     val padding = with(LocalDensity.current) { 16.dp.toPx() }
-    val pageWidth = (bookData.pageSplitData?.width ?: 0) + padding * 2
-    val pageHeight = (bookData.pageSplitData?.height ?: 0) + padding * 2
+    val pageWidth = (pageSplitData?.width ?: 0) + padding * 2
+    val pageHeight = (pageSplitData?.height ?: 0) + padding * 2
     val density = LocalDensity.current
 
     val pagePadding = remember(width, height, pageWidth, pageHeight) {
@@ -425,10 +430,10 @@ fun BookPager(
         userScrollEnabled = animationCount == 0,
     ) { pageIndex ->
         BookPage(
-            bookData = bookData,
+            pageSplitData = pageSplitData,
             pageSize = pageSize,
             pageIndex = pageIndex,
-            pageSplitter = pageSplitter,
+            onPageDraw = onPageDraw
         )
     }
 }
@@ -436,18 +441,15 @@ fun BookPager(
 @Composable
 fun BookPage(
     modifier: Modifier = Modifier,
-    bookData: BookData?,
-    pageSplitter: PageSplitter,
+    pageSplitData: PageSplitData?,
     pageSize: Int,
     pageIndex: Int,
+    onPageDraw: (canvas: NativeCanvas, pageIndex: Int) -> Unit = { _, _ -> },
 ) {
-    val isDarkTheme = isSystemInDarkTheme()
-
     val padding = with(LocalDensity.current) { 16.dp.toPx() }
 
     val ratio =
-        ((bookData?.pageSplitData?.width ?: 0) + padding * 2) / ((bookData?.pageSplitData?.height
-            ?: 0) + padding * 2)
+        ((pageSplitData?.width ?: 0) + padding * 2) / ((pageSplitData?.height ?: 0) + padding * 2)
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -469,16 +471,13 @@ fun BookPage(
                         ) {
                             drawIntoCanvas { canvas ->
                                 // red background
-                                val ratio =
-                                    size.width / (bookData!!.pageSplitData!!.width + 32.dp.toPx())
+                                val ratio = size.width / (pageSplitData!!.width + 32.dp.toPx())
                                 // scale with pivot left top
                                 scale(
                                     scale = ratio, pivot = Offset(0f, 0f)
                                 ) {
                                     translate(left = 16.dp.toPx(), top = 16.dp.toPx()) {
-                                        pageSplitter.drawPage(
-                                            canvas.nativeCanvas, bookData, pageIndex, isDarkTheme
-                                        )
+                                        onPageDraw(canvas.nativeCanvas, pageIndex)
                                     }
                                 }
                             }
@@ -537,7 +536,7 @@ fun ViewerSizeMeasurer(
 fun ViewerOverlay(
     modifier: Modifier = Modifier,
     visible: Boolean,
-    bookData: BookData?,
+    bookData: Book?,
     pageSize: Int,
     onProgressChange: (Float) -> Unit,
     onBack: () -> Unit,
@@ -618,11 +617,13 @@ fun ViewerOverlay(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        RoundedRectFilledTonalButton(modifier = Modifier.weight(1f),
+                        RoundedRectFilledTonalButton(
+                            modifier = Modifier.weight(1f),
                             onClick = { onNavigateSummary() }) {
                             Text("Generate Summary")
                         }
-                        RoundedRectFilledTonalButton(modifier = Modifier.weight(1f),
+                        RoundedRectFilledTonalButton(
+                            modifier = Modifier.weight(1f),
                             onClick = { onNavigateQuiz() }) {
                             Text("Generate Quiz")
                         }

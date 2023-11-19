@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -66,16 +67,22 @@ android {
 }
 
 dependencies {
+    val hilt_version = "2.48"
+    ksp("com.google.dagger:hilt-compiler:$hilt_version")
+    ksp("com.google.dagger:hilt-android-compiler:$hilt_version")
+    implementation("com.google.dagger:hilt-android:$hilt_version")
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+
     val room_version = "2.5.0"
     ksp("androidx.room:room-compiler:$room_version")
     annotationProcessor("androidx.room:room-compiler:$room_version")
-
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
     implementation("androidx.room:room-rxjava2:$room_version")
     implementation("androidx.room:room-rxjava3:$room_version")
     implementation("androidx.room:room-guava:$room_version")
     implementation("androidx.room:room-paging:$room_version")
+
     implementation("androidx.core:core-splashscreen:1.1.0-alpha02")
     implementation("androidx.navigation:navigation-compose:2.7.5")
     implementation("androidx.compose.material3:material3:1.2.0-alpha10")
@@ -86,7 +93,7 @@ dependencies {
     implementation("androidx.compose.ui:ui:1.5.4")
     implementation("androidx.compose.ui:ui-graphics:1.5.4")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.4")
-    implementation("androidx.compose.foundation:foundation-android:1.6.0-beta01")
+    implementation("androidx.compose.foundation:foundation-android:1.5.4")
     implementation("io.coil-kt:coil:2.4.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

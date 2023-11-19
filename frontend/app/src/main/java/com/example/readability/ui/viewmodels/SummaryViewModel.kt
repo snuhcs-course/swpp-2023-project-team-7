@@ -1,13 +1,24 @@
 package com.example.readability.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
-import com.example.readability.ui.models.SummaryModel
+import androidx.lifecycle.viewModelScope
+import com.example.readability.data.ai.SummaryRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class SummaryViewModel : ViewModel() {
-    val summaryState = SummaryModel.getInstance().summaryState
-    val summaryLoadState = SummaryModel.getInstance().summaryLoadState
+@HiltViewModel
+class SummaryViewModel @Inject constructor(
+    private val summaryRepository: SummaryRepository
+) : ViewModel() {
+    val summary = summaryRepository.summary
 
-    fun loadSummary() {
-        SummaryModel.getInstance().loadSummary("1", 0.98)
+    fun loadSummary(bookId: Int, progress: Double) {
+        viewModelScope.launch(Dispatchers.IO) {
+            summaryRepository.getSummary(bookId, progress).onFailure {
+                it.printStackTrace()
+            }
+        }
     }
 }
