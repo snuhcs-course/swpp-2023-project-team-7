@@ -13,6 +13,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.runtime.Composable
@@ -63,7 +64,7 @@ fun RoundedRectButton(
                 .compositeOver(MaterialTheme.colorScheme.primary)
         } else {
             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-        }, label = "RoundedRectButton_disabledContainerColor"
+        }, label = "RoundedRectButton.DisabledContainerColor"
     )
 
     val imeDp = imeAnimation?.value ?: 1.dp
@@ -75,6 +76,50 @@ fun RoundedRectButton(
         enabled = enabled && !loading,
         shape = RoundedCornerShape(12 * imeDp),
         colors = ButtonDefaults.buttonColors(
+            disabledContainerColor = disabledContainerColor,
+        ),
+        elevation = elevation,
+        border = border,
+        contentPadding = contentPadding,
+        interactionSource = interactionSource,
+        content = if (loading) {
+            { CircularProgressIndicatorInButton(
+                color = MaterialTheme.colorScheme.onPrimary,
+            ) }
+        } else content)
+}
+
+@Composable
+fun RoundedRectFilledTonalButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    elevation: ButtonElevation? = ButtonDefaults.buttonElevation(),
+    border: BorderStroke? = null,
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    imeAnimation: State<Dp>? = null,
+    loading: Boolean = false,
+    content: @Composable RowScope.() -> Unit,
+) {
+    val disabledContainerColor by animateColorAsState(
+        targetValue = if (loading) {
+            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.48f)
+                .compositeOver(MaterialTheme.colorScheme.onSecondaryContainer)
+        } else {
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+        }, label = "RoundedRectFilledTonalButton.DisabledContainerColor"
+    )
+
+    val imeDp = imeAnimation?.value ?: 1.dp
+    val imePaddingDp = imeAnimation?.value ?: 0.dp
+    FilledTonalButton(onClick = onClick,
+        modifier = modifier
+            .padding(16 * imePaddingDp)
+            .height(48.dp),
+        enabled = enabled && !loading,
+        shape = RoundedCornerShape(12 * imeDp),
+        colors = ButtonDefaults.filledTonalButtonColors(
             disabledContainerColor = disabledContainerColor,
         ),
         elevation = elevation,

@@ -7,5 +7,5 @@ fun AboutView (
     type: String,
     onBack: () -> Unit = {}
 ) {
-
+    // TODO: implement AboutView, which displays static text based on the type parameter
 }

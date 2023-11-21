@@ -1,5 +1,6 @@
 package com.example.readability.ui.screens.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -64,7 +67,7 @@ fun SignUpPreview() {
 @Composable
 fun SignUpView(
     onBack: () -> Unit = {},
-    onSubmitted: suspend (String) -> Result<Unit> = { Result.success(Unit) },
+    onSubmitted: suspend (String, String, String) -> Result<Unit> = { _, _, _ -> Result.success(Unit) },
     onNavigateVerify: (String) -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
@@ -74,8 +77,10 @@ fun SignUpView(
     var loading by remember { mutableStateOf(false) }
 
     val emailFocusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
 
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     var showError by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf(false) }
@@ -93,26 +98,33 @@ fun SignUpView(
     }
 
     val submit = {
+        focusManager.clearFocus()
         if (checkError()) {
             showError = true
         } else {
             loading = true
             scope.launch {
-                onSubmitted(email).onSuccess {
+                onSubmitted(email, username, password).onSuccess {
                     withContext(Dispatchers.Main) { onNavigateVerify(email) }
                 }.onFailure {
                     loading = false
-                    showError = true
+                    println(it.message)
+                    Toast.makeText(
+                        context,
+                        it.message ?: "Unknown error occurred. Please try again.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
     }
 
 
-    Scaffold(modifier = Modifier
-        .imePadding()
-        .navigationBarsPadding()
-        .systemBarsPadding(),
+    Scaffold(
+        modifier = Modifier
+            .imePadding()
+            .navigationBarsPadding()
+            .systemBarsPadding(),
         topBar = {
             TopAppBar(title = { Text("Sign up") }, navigationIcon = {
                 IconButton(onClick = { onBack() }) {

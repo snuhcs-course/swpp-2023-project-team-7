@@ -15,8 +15,8 @@ import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.readability.ui.PageSplitter
 import com.example.readability.ui.models.BookData
+import com.example.readability.ui.models.BookModel
 import com.example.readability.ui.models.Quiz
 import com.example.readability.ui.models.QuizLoadState
 import com.example.readability.ui.screens.viewer.QuizReportView
@@ -79,11 +79,14 @@ class ViewerScreenTest {
         openBoatBookData =
             openBoatBookData.copy(progress = (1.5 / openBoatBookData.pageSplitData!!.pageSplits.size))
         composeTestRule.setContent {
-            ViewerView(bookData = openBoatBookData,
+            ViewerView(
+                bookData = openBoatBookData,
                 pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
                 onProgressChange = {
                     openBoatBookData = openBoatBookData.copy(progress = it)
-                })
+                },
+                pageSplitter = BookModel.getInstance().pageSplitter
+            )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
                 height = LocalConfiguration.current.screenHeightDp.dp.toPx()
@@ -107,11 +110,14 @@ class ViewerScreenTest {
         var height = 0f
         openBoatBookData = openBoatBookData.copy(progress = 0.0)
         composeTestRule.setContent {
-            ViewerView(bookData = openBoatBookData,
+            ViewerView(
+                bookData = openBoatBookData,
                 pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
                 onProgressChange = {
                     openBoatBookData = openBoatBookData.copy(progress = it)
-                })
+                },
+                pageSplitter = BookModel.getInstance().pageSplitter
+            )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
                 height = LocalConfiguration.current.screenHeightDp.dp.toPx()
@@ -135,6 +141,7 @@ class ViewerScreenTest {
             ViewerView(
                 bookData = openBoatBookData,
                 pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
+                pageSplitter = BookModel.getInstance().pageSplitter
             )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
@@ -154,11 +161,14 @@ class ViewerScreenTest {
     fun viewerView_LeftSwipe() {
         openBoatBookData = openBoatBookData.copy(progress = 0.0)
         composeTestRule.setContent {
-            ViewerView(bookData = openBoatBookData,
+            ViewerView(
+                bookData = openBoatBookData,
                 pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
                 onProgressChange = {
                     openBoatBookData = openBoatBookData.copy(progress = it)
-                })
+                },
+                pageSplitter = BookModel.getInstance().pageSplitter,
+            )
         }
         // swipe left
         composeTestRule.onRoot().performTouchInput {
@@ -173,11 +183,14 @@ class ViewerScreenTest {
         openBoatBookData =
             openBoatBookData.copy(progress = (1.5 / openBoatBookData.pageSplitData!!.pageSplits.size))
         composeTestRule.setContent {
-            ViewerView(bookData = openBoatBookData,
+            ViewerView(
+                bookData = openBoatBookData,
                 pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
                 onProgressChange = {
                     openBoatBookData = openBoatBookData.copy(progress = it)
-                })
+                },
+                pageSplitter = BookModel.getInstance().pageSplitter,
+            )
         }
         // swipe right
         composeTestRule.onRoot().performTouchInput {
@@ -193,11 +206,14 @@ class ViewerScreenTest {
         var height = 0f
         var onBack = false
         composeTestRule.setContent {
-            ViewerView(bookData = openBoatBookData,
+            ViewerView(
+                bookData = openBoatBookData,
                 pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
                 onBack = {
                     onBack = true
-                })
+                },
+                pageSplitter = BookModel.getInstance().pageSplitter,
+            )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
                 height = LocalConfiguration.current.screenHeightDp.dp.toPx()
@@ -220,11 +236,14 @@ class ViewerScreenTest {
         var height = 0f
         var onNavigateSettings = false
         composeTestRule.setContent {
-            ViewerView(bookData = openBoatBookData,
+            ViewerView(
+                bookData = openBoatBookData,
                 pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
                 onNavigateSettings = {
                     onNavigateSettings = true
-                })
+                },
+                pageSplitter = BookModel.getInstance().pageSplitter,
+            )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
                 height = LocalConfiguration.current.screenHeightDp.dp.toPx()
@@ -246,8 +265,11 @@ class ViewerScreenTest {
         var width = 0f
         var height = 0f
         composeTestRule.setContent {
-            ViewerView(bookData = openBoatBookData,
-                pageSize = openBoatBookData.pageSplitData!!.pageSplits.size)
+            ViewerView(
+                bookData = openBoatBookData,
+                pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
+                pageSplitter = BookModel.getInstance().pageSplitter,
+            )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
                 height = LocalConfiguration.current.screenHeightDp.dp.toPx()
@@ -271,11 +293,14 @@ class ViewerScreenTest {
         var height = 0f
         var onNavigateSummary = false
         composeTestRule.setContent {
-            ViewerView(bookData = openBoatBookData,
+            ViewerView(
+                bookData = openBoatBookData,
                 pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
                 onNavigateSummary = {
                     onNavigateSummary = true
-                })
+                },
+                pageSplitter = BookModel.getInstance().pageSplitter,
+            )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
                 height = LocalConfiguration.current.screenHeightDp.dp.toPx()
@@ -300,11 +325,14 @@ class ViewerScreenTest {
         var height = 0f
         var onNavigateQuiz = false
         composeTestRule.setContent {
-            ViewerView(bookData = openBoatBookData,
+            ViewerView(
+                bookData = openBoatBookData,
                 pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
                 onNavigateQuiz = {
                     onNavigateQuiz = true
-                })
+                },
+                pageSplitter = BookModel.getInstance().pageSplitter,
+            )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
                 height = LocalConfiguration.current.screenHeightDp.dp.toPx()
