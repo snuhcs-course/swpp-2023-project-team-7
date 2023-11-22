@@ -1,42 +1,76 @@
 package com.example.readability.ui.models
+import com.example.readability.data.user.UserRepository
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
+import dagger.hilt.android.testing.HiltTestApplication
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import org.junit.Assert
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import javax.inject.Inject
+import kotlin.time.Duration
 
+@HiltAndroidTest
+@RunWith(RobolectricTestRunner::class)
+@Config(application = HiltTestApplication::class)
 class AuthDBTest {
 
-    private val userModel = UserModel()
+    @get:Rule
+    var hiltRule = HiltAndroidRule(this)
+
+    @Inject
+    lateinit var userRepository: UserRepository
+
+    @Before
+    fun init() {
+        hiltRule.inject()
+    }
 
     @Test
-    fun signUp_SignIn_success() = runTest {
+    fun signUp_SignIn_success() = runTest(timeout = Duration.parse("30s")) {
         // Arrange
         val email = "dbtesting@test.com"
         val username = "testuser"
         val password = "testpassword"
 
         // Act
-        userModel.signUp(email, username, password)
-        val signInResult = userModel.signIn(email, password)
-        val signInFail = userModel.signIn(email, "wrongpassword")
-        val emailsignUpFail = userModel.signUp(email, "newuser", password)
-        val usersignUpFail = userModel.signUp("newemail@test.com", username, password)
+        withContext(Dispatchers.IO) { userRepository.signUp(email, username, password) }
+        val signInSuccess = withContext(Dispatchers.IO) { userRepository.signIn(email, password) }
+        val signInFail = withContext(Dispatchers.IO) { userRepository.signIn(email, "wrongpassword") }
+        val emailSignUpFail = withContext(Dispatchers.IO) { userRepository.signUp(email, "newuser", password) }
+        val userSignUpFail =
+            withContext(Dispatchers.IO) { userRepository.signUp("asdadasdasdsadasdsd@test.com", username, password) }
 
         // Assert
 
         // SignIn Success case
-        assertTrue(signInResult.isSuccess, "SignIn should succeed")
-        assertEquals("Success", signInResult.getOrNull(), "SignIn result should be 'Success'")
+        assertTrue(signInSuccess.isSuccess, "SignIn should succeed")
 
         // SignIn in wrong password
-        assertTrue(signInFail.isFailure)
+        assertTrue(signInFail.isFailure, "SignIn should fail since password is wrong")
 
         // SignUp in duplicated email
-        Assert.assertTrue(emailsignUpFail.isSuccess)
-        assertEquals("SignUp failed", emailsignUpFail.getOrNull(), "SignUp failed since email already exists")
+        Assert.assertTrue(emailSignUpFail.isFailure)
+        assertEquals(
+            "Email already exists",
+            emailSignUpFail.exceptionOrNull()?.message,
+            "SignUp failed since email already exists",
+        )
 
         // SignUp in duplicated username
-        Assert.assertTrue(usersignUpFail.isSuccess)
-        assertEquals("SignUp failed", usersignUpFail.getOrNull(), "SignUp failed since username already exists")
+        Assert.assertTrue(userSignUpFail.isFailure)
+        assertEquals(
+            "Username already exists",
+            userSignUpFail.exceptionOrNull()?.message,
+            "SignUp failed since username already exists",
+        )
     }
 }

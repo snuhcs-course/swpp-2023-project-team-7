@@ -4,7 +4,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -15,15 +14,16 @@ import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.readability.ui.models.BookData
-import com.example.readability.ui.models.BookModel
-import com.example.readability.ui.models.Quiz
-import com.example.readability.ui.models.QuizLoadState
+import com.example.readability.data.ai.Quiz
+import com.example.readability.data.ai.QuizLoadState
+import com.example.readability.data.book.Book
+import com.example.readability.data.viewer.PageSplitData
+import com.example.readability.data.viewer.ViewerStyle
+import com.example.readability.data.viewer.getPageIndex
 import com.example.readability.ui.screens.viewer.QuizReportView
 import com.example.readability.ui.screens.viewer.QuizView
 import com.example.readability.ui.screens.viewer.SummaryView
 import com.example.readability.ui.screens.viewer.ViewerView
-import kotlinx.coroutines.runBlocking
 import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
@@ -33,93 +33,82 @@ import org.junit.runner.RunWith
 class ViewerScreenTest {
     companion object {
 
-        lateinit var openBoatBookData: BookData
-        val pageSplitter = PageSplitter()
+        lateinit var openBoatBookData: Book
+        lateinit var pageSplitData: PageSplitData
 
         @JvmStatic
         @BeforeClass
         fun initOpenBoatBookData() {
             val content = javaClass.classLoader!!.getResource("the_open_boat.txt")!!.readText()
-            openBoatBookData = BookData(
-                id = "1",
+            openBoatBookData = Book(
+                bookId = 1,
                 title = "The Open Boat",
                 author = "Stephen Crane",
-                content = content,
-                coverImage = "",
+                content = "",
+                contentData = content,
                 progress = 0.0,
-                pageSplitData = null,
+                coverImage = "",
             )
-            // wait until page cache is built
-            runBlocking {
-                pageSplitter.splitPage(
-                    300,
-                    300,
-                    openBoatBookData,
-                ) {
-                    openBoatBookData = openBoatBookData.copy(pageSplitData = it)
-                }
+            val pageSplits = mutableListOf<Int>()
+            for (i in 0..content.length step 100) {
+                pageSplits.add(i)
             }
+            if (pageSplits.last() != content.length) {
+                pageSplits.add(content.length)
+            }
+            pageSplitData = PageSplitData(
+                pageSplits = pageSplits,
+                width = 300,
+                height = 300,
+                viewerStyle = ViewerStyle(),
+            )
         }
     }
 
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    fun getPageIndex(bookData: BookData): Int {
-        return maxOf(
-            minOf(
-                (bookData.pageSplitData!!.pageSplits.size * bookData.progress).toInt(),
-                bookData.pageSplitData!!.pageSplits.size - 1,
-            ),
-            0,
-        )
-    }
-
     @Test
     fun viewerView_LeftClick() {
         var width = 0f
         var height = 0f
         openBoatBookData =
-            openBoatBookData.copy(progress = (1.5 / openBoatBookData.pageSplitData!!.pageSplits.size))
+            openBoatBookData.copy(progress = (1.5 / pageSplitData.pageSplits.size))
         composeTestRule.setContent {
             ViewerView(
                 bookData = openBoatBookData,
-                pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
+                pageSplitData = pageSplitData,
                 onProgressChange = {
                     openBoatBookData = openBoatBookData.copy(progress = it)
                 },
-                pageSplitter = BookModel.getInstance().pageSplitter,
             )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
                 height = LocalConfiguration.current.screenHeightDp.dp.toPx()
             }
         }
-        println("page: ${getPageIndex(openBoatBookData)}")
-        println("click: ${width * 0.1f}, ${height * 0.5f}")
         // click left side of screen
         composeTestRule.onRoot().performTouchInput {
             down(Offset(width * 0.1f, height * 0.5f))
             up()
         }
         // check if progress is decreased by one page
-        println("page: ${getPageIndex(openBoatBookData)}")
-        assert(getPageIndex(openBoatBookData) == 0)
+        assert(pageSplitData.getPageIndex(openBoatBookData.progress) == 0)
     }
 
     @Test
     fun viewerView_RightClick() {
         var width = 0f
         var height = 0f
-        openBoatBookData = openBoatBookData.copy(progress = 0.0)
+        openBoatBookData =
+            openBoatBookData.copy(progress = 0.0)
         composeTestRule.setContent {
             ViewerView(
                 bookData = openBoatBookData,
-                pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
+                pageSplitData = pageSplitData,
                 onProgressChange = {
                     openBoatBookData = openBoatBookData.copy(progress = it)
                 },
-                pageSplitter = BookModel.getInstance().pageSplitter,
             )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
@@ -132,19 +121,22 @@ class ViewerScreenTest {
             up()
         }
         // check if progress is increased by one page
-        assert(getPageIndex(openBoatBookData) == 1)
+        assert(pageSplitData.getPageIndex(openBoatBookData.progress) == 1)
     }
 
     @Test
     fun viewerView_CenterClick() {
         var width = 0f
         var height = 0f
-        openBoatBookData = openBoatBookData.copy(progress = 0.0)
+        openBoatBookData =
+            openBoatBookData.copy(progress = (1.5 / pageSplitData.pageSplits.size))
         composeTestRule.setContent {
             ViewerView(
                 bookData = openBoatBookData,
-                pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
-                pageSplitter = BookModel.getInstance().pageSplitter,
+                pageSplitData = pageSplitData,
+                onProgressChange = {
+                    openBoatBookData = openBoatBookData.copy(progress = it)
+                },
             )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
@@ -166,11 +158,10 @@ class ViewerScreenTest {
         composeTestRule.setContent {
             ViewerView(
                 bookData = openBoatBookData,
-                pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
+                pageSplitData = pageSplitData,
                 onProgressChange = {
                     openBoatBookData = openBoatBookData.copy(progress = it)
                 },
-                pageSplitter = BookModel.getInstance().pageSplitter,
             )
         }
         // swipe left
@@ -178,21 +169,20 @@ class ViewerScreenTest {
             swipeLeft()
         }
         // check if progress is increased by one page
-        assert(getPageIndex(openBoatBookData) == 1)
+        assert(pageSplitData.getPageIndex(openBoatBookData.progress) == 1)
     }
 
     @Test
     fun viewerView_RightSwipe() {
         openBoatBookData =
-            openBoatBookData.copy(progress = (1.5 / openBoatBookData.pageSplitData!!.pageSplits.size))
+            openBoatBookData.copy(progress = (1.5 / pageSplitData.pageSplits.size))
         composeTestRule.setContent {
             ViewerView(
                 bookData = openBoatBookData,
-                pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
+                pageSplitData = pageSplitData,
                 onProgressChange = {
                     openBoatBookData = openBoatBookData.copy(progress = it)
                 },
-                pageSplitter = BookModel.getInstance().pageSplitter,
             )
         }
         // swipe right
@@ -200,7 +190,7 @@ class ViewerScreenTest {
             swipeRight()
         }
         // check if progress is decreased by one page
-        assert(getPageIndex(openBoatBookData) == 0)
+        assert(pageSplitData.getPageIndex(openBoatBookData.progress) == 0)
     }
 
     @Test
@@ -211,11 +201,10 @@ class ViewerScreenTest {
         composeTestRule.setContent {
             ViewerView(
                 bookData = openBoatBookData,
-                pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
+                pageSplitData = pageSplitData,
                 onBack = {
                     onBack = true
                 },
-                pageSplitter = BookModel.getInstance().pageSplitter,
             )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
@@ -241,11 +230,10 @@ class ViewerScreenTest {
         composeTestRule.setContent {
             ViewerView(
                 bookData = openBoatBookData,
-                pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
+                pageSplitData = pageSplitData,
                 onNavigateSettings = {
                     onNavigateSettings = true
                 },
-                pageSplitter = BookModel.getInstance().pageSplitter,
             )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
@@ -264,33 +252,6 @@ class ViewerScreenTest {
     }
 
     @Test
-    fun viewerView_AIButtonClicked() {
-        var width = 0f
-        var height = 0f
-        composeTestRule.setContent {
-            ViewerView(
-                bookData = openBoatBookData,
-                pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
-                pageSplitter = BookModel.getInstance().pageSplitter,
-            )
-            with(LocalDensity.current) {
-                width = LocalConfiguration.current.screenWidthDp.dp.toPx()
-                height = LocalConfiguration.current.screenHeightDp.dp.toPx()
-            }
-        }
-        // click center of screen
-        composeTestRule.onRoot().performTouchInput {
-            down(Offset(width * 0.5f, height * 0.5f))
-            up()
-        }
-        // click AI button
-        composeTestRule.onNodeWithContentDescription("AI Button").performClick()
-        // check if buttons are displayed
-        composeTestRule.onNodeWithText("Generate Summary").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Generate Quiz").assertIsDisplayed()
-    }
-
-    @Test
     fun viewerView_GenerateSummaryClicked() {
         var width = 0f
         var height = 0f
@@ -298,11 +259,10 @@ class ViewerScreenTest {
         composeTestRule.setContent {
             ViewerView(
                 bookData = openBoatBookData,
-                pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
+                pageSplitData = pageSplitData,
                 onNavigateSummary = {
                     onNavigateSummary = true
                 },
-                pageSplitter = BookModel.getInstance().pageSplitter,
             )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
@@ -314,8 +274,6 @@ class ViewerScreenTest {
             down(Offset(width * 0.5f, height * 0.5f))
             up()
         }
-        // click AI button
-        composeTestRule.onNodeWithContentDescription("AI Button").performClick()
         // click generate summary
         composeTestRule.onNodeWithText("Generate Summary").performClick()
         // check if onNavigateSummary is true
@@ -330,11 +288,10 @@ class ViewerScreenTest {
         composeTestRule.setContent {
             ViewerView(
                 bookData = openBoatBookData,
-                pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
+                pageSplitData = pageSplitData,
                 onNavigateQuiz = {
                     onNavigateQuiz = true
                 },
-                pageSplitter = BookModel.getInstance().pageSplitter,
             )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
@@ -346,8 +303,6 @@ class ViewerScreenTest {
             down(Offset(width * 0.5f, height * 0.5f))
             up()
         }
-        // click AI button
-        composeTestRule.onNodeWithContentDescription("AI Button").performClick()
         // click generate quiz
         composeTestRule.onNodeWithText("Generate Quiz").performClick()
         // check if onNavigateQuiz is true
@@ -359,7 +314,7 @@ class ViewerScreenTest {
         composeTestRule.setContent {
             QuizView(
                 quizList = listOf(
-                    Quiz(id = "1", question = "question1", answer = "answer1"),
+                    Quiz(question = "question1", answer = "answer1"),
                 ),
                 quizSize = 1,
                 quizLoadState = QuizLoadState.LOADED,
@@ -368,9 +323,6 @@ class ViewerScreenTest {
 
         // check if quiz is displayed and answer is not displayed
         composeTestRule.onNodeWithText("question1").assertIsDisplayed()
-        composeTestRule.onNodeWithText("answer1").assertIsNotDisplayed()
-        // check is answer is displayed when Show Answer is clicked
-        composeTestRule.onNodeWithText("See Answer").performClick()
         composeTestRule.onNodeWithText("answer1").assertIsDisplayed()
     }
 
@@ -380,7 +332,7 @@ class ViewerScreenTest {
         composeTestRule.setContent {
             QuizView(
                 quizList = listOf(
-                    Quiz(id = "1", question = "question1", answer = "answer1"),
+                    Quiz(question = "question1", answer = "answer1"),
                 ),
                 quizSize = 1,
                 quizLoadState = QuizLoadState.LOADED,
@@ -389,7 +341,7 @@ class ViewerScreenTest {
         }
 
         // click back button
-        composeTestRule.onNodeWithContentDescription("Arrow Back").performClick()
+        composeTestRule.onNodeWithContentDescription("Close").performClick()
         // check if onBack is true
         assert(onBack)
     }
@@ -400,7 +352,7 @@ class ViewerScreenTest {
         composeTestRule.setContent {
             QuizView(
                 quizList = listOf(
-                    Quiz(id = "1", question = "question1", answer = "answer1"),
+                    Quiz(question = "question1", answer = "answer1"),
                 ),
                 quizSize = 1,
                 quizLoadState = QuizLoadState.LOADED,
@@ -409,8 +361,7 @@ class ViewerScreenTest {
         }
 
         // click report button
-        composeTestRule.onNodeWithContentDescription("Menu").performClick()
-        composeTestRule.onNodeWithText("Report This Quiz").performClick()
+        composeTestRule.onNodeWithContentDescription("Report").performClick()
         // check if onNavigateReport is true
         assert(onNavigateReport)
     }

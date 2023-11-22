@@ -16,6 +16,11 @@ data class PageSplitData(
     val viewerStyle: ViewerStyle,
 )
 
+fun PageSplitData.getPageIndex(progress: Double): Int {
+    assert(progress in 0.0..1.0)
+    return (pageSplits.size * progress).toInt()
+}
+
 @Singleton
 class PageSplitRepository @Inject constructor(
     private val pageSplitDataSource: PageSplitDataSource,

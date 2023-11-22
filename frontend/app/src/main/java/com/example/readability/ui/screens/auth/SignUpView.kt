@@ -109,11 +109,13 @@ fun SignUpView(
                 }.onFailure {
                     loading = false
                     println(it.message)
-                    Toast.makeText(
-                        context,
-                        it.message ?: "Unknown error occurred. Please try again.",
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            it.message ?: "Unknown error occurred. Please try again.",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }
                 }
             }
         }

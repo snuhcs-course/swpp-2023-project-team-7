@@ -1,5 +1,6 @@
 package com.example.readability.screens
 
+import androidx.activity.compose.setContent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -8,7 +9,7 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -18,6 +19,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.readability.MainActivity
 import com.example.readability.ui.screens.auth.AuthScreen
 import com.example.readability.ui.screens.auth.EmailView
 import com.example.readability.ui.screens.auth.ForgotPasswordView
@@ -27,6 +29,9 @@ import com.example.readability.ui.screens.auth.SignInView
 import com.example.readability.ui.screens.auth.SignUpView
 import com.example.readability.ui.screens.auth.VerifyEmailView
 import com.example.readability.ui.theme.ReadabilityTheme
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -44,15 +49,25 @@ fun ComposeContentTestRule.onNodeWithTextAndError(text: String): SemanticsNodeIn
 }
 
 @RunWith(AndroidJUnit4::class)
+@HiltAndroidTest
 class AuthScreenTest {
 
     @get:Rule
-    val composeTestRule = createComposeRule()
+    val composeTestRule = createAndroidComposeRule<MainActivity>()
 
+    @get:Rule
+    var hiltRule = HiltAndroidRule(this)
+
+    @Before
+    fun setup() {
+        hiltRule.inject()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
     @Test
     fun introView_ContinueWithEmailClicked() {
         var onContinueWithEmailCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 IntroView(
                     onContinueWithEmailClicked = { onContinueWithEmailCalled = true },
@@ -60,6 +75,7 @@ class AuthScreenTest {
             }
         }
 
+        composeTestRule.waitUntilAtLeastOneExists(hasText("Continue with email"), 2500L)
         composeTestRule.onNodeWithText("Continue with email").performClick()
         assert(onContinueWithEmailCalled)
     }
@@ -67,7 +83,7 @@ class AuthScreenTest {
     @Test
     fun emailView_NextClicked_WithEmptyEmail() {
         var onNavigateSignInCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 EmailView(onNavigateSignIn = {
                     onNavigateSignInCalled = true
@@ -85,7 +101,7 @@ class AuthScreenTest {
     @Test
     fun emailView_NextClicked_WithInvalidEmail() {
         var onNavigateSignInCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 EmailView(onNavigateSignIn = {
                     onNavigateSignInCalled = true
@@ -104,7 +120,7 @@ class AuthScreenTest {
     @Test
     fun emailView_NextClicked_WithValidEmail() {
         var onNavigateSignInCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 EmailView(onNavigateSignIn = {
                     onNavigateSignInCalled = true
@@ -121,7 +137,7 @@ class AuthScreenTest {
     @Test
     fun emailView_SignUpClicked() {
         var onNavigateSignUpCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 EmailView(onNavigateSignUp = {
                     onNavigateSignUpCalled = true
@@ -137,7 +153,7 @@ class AuthScreenTest {
     @Test
     fun emailView_ForgotPasswordClicked() {
         var onNavigateForgotPasswordCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 EmailView(onNavigateForgotPassword = {
                     onNavigateForgotPasswordCalled = true
@@ -153,7 +169,7 @@ class AuthScreenTest {
     @Test
     fun emailView_BackButtonClicked() {
         var onBackCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 EmailView(onBack = {
                     onBackCalled = true
@@ -169,7 +185,7 @@ class AuthScreenTest {
     @Test
     fun signInView_SignInClicked_WithEmptyPassword() {
         var onPasswordSubmittedCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 SignInView(email = "test@example.com", onPasswordSubmitted = {
                     onPasswordSubmittedCalled = true
@@ -187,7 +203,7 @@ class AuthScreenTest {
 
     @Test
     fun signInView_SignInClicked_WithInvalidPassword() {
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 SignInView(email = "test@example.com", onPasswordSubmitted = {
                     Result.failure(Exception("Invalid password"))
@@ -204,7 +220,7 @@ class AuthScreenTest {
     @Test
     fun signInView_SignInClicked_WithValidPassword() {
         var onNavigateBookListCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 SignInView(email = "test@example.com", onPasswordSubmitted = {
                     Result.success(Unit)
@@ -225,7 +241,7 @@ class AuthScreenTest {
     @Test
     fun signInView_ForgotPasswordClicked() {
         var onNavigateForgotPasswordCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 SignInView(email = "test@example.com", onNavigateForgotPassword = {
                     onNavigateForgotPasswordCalled = true
@@ -241,7 +257,7 @@ class AuthScreenTest {
     @Test
     fun signInView_BackButtonClicked() {
         var onBackCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 SignInView(email = "test@example.com", onBack = {
                     onBackCalled = true
@@ -256,7 +272,7 @@ class AuthScreenTest {
 
     @Test
     fun signUpView_SignUpClicked_WithEmptyArguments() {
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 SignUpView()
             }
@@ -274,7 +290,7 @@ class AuthScreenTest {
 
     @Test
     fun signUpView_SignUpClicked_WithInvalidArguments() {
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 SignUpView()
             }
@@ -297,7 +313,7 @@ class AuthScreenTest {
     @Test
     fun signUpView_SignUpClicked_WithValidArguments() {
         var onNavigateVerifyCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 SignUpView(onNavigateVerify = {
                     onNavigateVerifyCalled = true
@@ -319,7 +335,7 @@ class AuthScreenTest {
     @Test
     fun signUpView_BackButtonClicked() {
         var onBackCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 SignUpView(onBack = {
                     onBackCalled = true
@@ -335,7 +351,7 @@ class AuthScreenTest {
     @Test
     fun verifyEmailView_NextClicked_WithEmptyVerificationCode() {
         var onVerificationCodeSubmittedCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 VerifyEmailView(
                     email = "test@example.com",
@@ -357,7 +373,7 @@ class AuthScreenTest {
         var onVerificationCodeSubmittedCalled = false
         var onNavigateBookListCalled = false
         var onNavigateResetPasswordCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 VerifyEmailView(
                     email = "test@example.com",
@@ -391,7 +407,7 @@ class AuthScreenTest {
         var onVerificationCodeSubmittedCalled = false
         var onNavigateBookListCalled = false
         var onNavigateResetPasswordCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 VerifyEmailView(
                     email = "test@example.com",
@@ -423,7 +439,7 @@ class AuthScreenTest {
     @Test
     fun verifyEmailView_BackButtonClicked() {
         var onBackCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 VerifyEmailView(email = "test@example.com", fromSignUp = false, onBack = {
                     onBackCalled = true
@@ -439,7 +455,7 @@ class AuthScreenTest {
     @Test
     fun forgotPasswordView_NextClicked_WithEmptyEmail() {
         var onEmailSubmittedCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 ForgotPasswordView(
                     onEmailSubmitted = {
@@ -460,7 +476,7 @@ class AuthScreenTest {
     @Test
     fun forgotPasswordView_NextClicked_WithInvalidEmail() {
         var onEmailSubmittedCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 ForgotPasswordView(
                     onEmailSubmitted = {
@@ -482,7 +498,7 @@ class AuthScreenTest {
     @Test
     fun forgotPasswordView_NextClicked_WithValidEmail() {
         var onEmailSubmittedCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 ForgotPasswordView(
                     onEmailSubmitted = {
@@ -501,7 +517,7 @@ class AuthScreenTest {
     @Test
     fun forgotPasswordView_BackButtonClicked() {
         var onBackCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 ForgotPasswordView(
                     onBack = {
@@ -518,7 +534,7 @@ class AuthScreenTest {
 
     @Test
     fun resetPasswordView_ResetPasswordClicked_WithEmptyInputs() {
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 ResetPasswordView()
             }
@@ -533,7 +549,7 @@ class AuthScreenTest {
 
     @Test
     fun resetPasswordView_ResetPasswordClicked_WithInvalidInputs() {
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 ResetPasswordView()
             }
@@ -553,7 +569,7 @@ class AuthScreenTest {
     @Test
     fun resetPasswordView_ResetPasswordClicked_WithValidInputs() {
         var onResetPasswordSubmittedCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 ResetPasswordView(
                     onPasswordSubmitted = {
@@ -574,7 +590,7 @@ class AuthScreenTest {
     @Test
     fun resetPasswordView_BackButtonClicked() {
         var onBackCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 ResetPasswordView(
                     onBack = {
@@ -593,7 +609,7 @@ class AuthScreenTest {
     @Test
     fun authScreen_SignIn() {
         var onNavigateBookListCalled = false
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             ReadabilityTheme {
                 AuthScreen(
                     onNavigateBookList = {
@@ -604,6 +620,7 @@ class AuthScreenTest {
         }
 
         // 1. Continue with Email
+        composeTestRule.waitUntilAtLeastOneExists(hasText("Continue with email"), 2500L)
         composeTestRule.onNodeWithText("Continue with email").performClick()
         // 2. write email
         composeTestRule.onNodeWithTag("EmailTextField").performTextInput("testexample.com")
@@ -614,7 +631,7 @@ class AuthScreenTest {
             .assertIsDisplayed()
         // 5. rewrite email
         composeTestRule.onNodeWithTag("EmailTextField").performTextClearance()
-        composeTestRule.onNodeWithTag("EmailTextField").performTextInput("test@example.com")
+        composeTestRule.onNodeWithTag("EmailTextField").performTextInput("test11@example.com")
         // 6. click Sign in
         composeTestRule.onNodeWithTag("SignInButton").performClick()
         // 7. write password
@@ -623,13 +640,12 @@ class AuthScreenTest {
         composeTestRule.onNodeWithTag("SignInButton").performClick()
         // 9. see error
         composeTestRule.waitUntilAtLeastOneExists(
-            hasTextWithError("Password is incorrect"),
+            hasTextWithError("Incorrect email or password"),
             2500L,
         )
-        composeTestRule.onNodeWithText("Password is incorrect").assertIsDisplayed()
         // 10. rewrite password
         composeTestRule.onNodeWithTag("PasswordTextField").performTextClearance()
-        composeTestRule.onNodeWithTag("PasswordTextField").performTextInput("testtest")
+        composeTestRule.onNodeWithTag("PasswordTextField").performTextInput("testtest1")
         // 11. click Sign in
         composeTestRule.onNodeWithTag("SignInButton").performClick()
         composeTestRule.waitUntil(2500L) {
@@ -643,7 +659,7 @@ class AuthScreenTest {
     @Test
     fun authScreen_ForgotPassword() {
         lateinit var navController: TestNavHostController
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             navController = TestNavHostController(LocalContext.current)
             navController.navigatorProvider.addNavigator(ComposeNavigator())
             ReadabilityTheme {
@@ -652,6 +668,7 @@ class AuthScreenTest {
         }
 
         // 1. Continue with Email
+        composeTestRule.waitUntilAtLeastOneExists(hasText("Continue with email"), 2500L)
         composeTestRule.onNodeWithText("Continue with email").performClick()
         // 2. click Forgot password
         composeTestRule.onNodeWithTag("ForgotPasswordButton").performClick()
@@ -710,7 +727,7 @@ class AuthScreenTest {
     fun authScreen_SignUp() {
         var onNavigateBookListCalled = false
         lateinit var navController: TestNavHostController
-        composeTestRule.setContent {
+        composeTestRule.activity.setContent {
             navController = TestNavHostController(LocalContext.current)
             navController.navigatorProvider.addNavigator(ComposeNavigator())
             ReadabilityTheme {
@@ -721,6 +738,7 @@ class AuthScreenTest {
         }
 
         // 1. Continue with Email
+        composeTestRule.waitUntilAtLeastOneExists(hasText("Continue with email"), 2500L)
         composeTestRule.onNodeWithText("Continue with email").performClick()
         // 2. click Sign up
         composeTestRule.onNodeWithTag("SignUpButton").performClick()
@@ -748,10 +766,10 @@ class AuthScreenTest {
             .assertIsDisplayed()
         // 11. rewrite email
         composeTestRule.onNodeWithTag("EmailTextField").performTextClearance()
-        composeTestRule.onNodeWithTag("EmailTextField").performTextInput("test@example.com")
+        composeTestRule.onNodeWithTag("EmailTextField").performTextInput("test15@example.com")
         // 12. rewrite username
         composeTestRule.onNodeWithTag("UsernameTextField").performTextClearance()
-        composeTestRule.onNodeWithTag("UsernameTextField").performTextInput("test")
+        composeTestRule.onNodeWithTag("UsernameTextField").performTextInput("test15")
         // 13. rewrite password and repeat password
         composeTestRule.onNodeWithTag("PasswordTextField").performTextClearance()
         composeTestRule.onNodeWithTag("PasswordTextField").performTextInput("testtest1")

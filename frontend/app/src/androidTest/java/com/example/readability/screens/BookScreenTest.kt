@@ -6,7 +6,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.readability.ui.models.BookCardData
+import com.example.readability.data.book.BookCardData
 import com.example.readability.ui.screens.book.BookListView
 import com.example.readability.ui.theme.ReadabilityTheme
 import org.junit.Rule
@@ -37,20 +37,24 @@ class BookScreenTest {
     @OptIn(ExperimentalTestApi::class)
     @Test
     fun bookListView_displayBookCardItems() {
+        var loadImageCalled = 0
+        var loadContentCalled = 0
         val bookCardDataList = listOf(
             BookCardData(
-                id = "1",
+                id = 1,
                 title = "Book 1",
                 author = "Author 1",
-                coverImage = "https://i.imgur.com/3ZwvWYF1.jpeg",
+                content = "",
                 progress = 0.1,
+                coverImage = "asd",
             ),
             BookCardData(
-                id = "2",
+                id = 2,
                 title = "Book 2",
                 author = "Author 2",
-                coverImage = "https://i.imgur.com/3ZwvWYF2.jpeg",
+                content = "",
                 progress = 0.2,
+                coverImage = "asd",
             ),
         )
         composeTestRule.setContent {
@@ -58,6 +62,14 @@ class BookScreenTest {
                 BookListView(
                     bookCardDataList = bookCardDataList,
                     onNavigateAddBook = { },
+                    onLoadImage = {
+                        loadImageCalled++
+                        Result.success(Unit)
+                    },
+                    onLoadContent = {
+                        loadContentCalled++
+                        Result.success(Unit)
+                    },
                 )
             }
         }
@@ -66,7 +78,15 @@ class BookScreenTest {
             composeTestRule.onNodeWithText(bookCardData.title).assertExists()
             composeTestRule.onNodeWithText(bookCardData.author).assertExists()
             composeTestRule.onNodeWithText("${(bookCardData.progress * 100).toInt()}%").assertExists()
-            composeTestRule.onNodeWithTag(bookCardData.coverImage, useUnmergedTree = true).assertExists()
+        }
+        composeTestRule.waitUntil {
+            loadImageCalled == bookCardDataList.size
+        }
+        // click on the first book card
+        composeTestRule.onNodeWithText(bookCardDataList[0].title).performClick()
+        // check if the content is loaded
+        composeTestRule.waitUntil {
+            loadContentCalled == 1
         }
     }
 
