@@ -1,6 +1,7 @@
 package com.example.readability.data.viewer
 
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.text.TextPaint
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -15,6 +16,9 @@ private class TextDrawer(
     }
 }
 
+val Paint.FontMetrics.lineHeight: Float
+    get() = (bottom - top + leading)
+
 @Singleton
 class PageSplitDataSource @Inject constructor() {
     private external fun splitPageNative(
@@ -23,7 +27,7 @@ class PageSplitDataSource @Inject constructor() {
         lineHeight: Float,
         width: Float,
         height: Float,
-        paragraphSpacing: Float
+        paragraphSpacing: Float,
     ): IntArray
 
     private external fun drawPageNative(
@@ -33,7 +37,7 @@ class PageSplitDataSource @Inject constructor() {
         offset: Float,
         width: Float,
         paragraphSpacing: Float,
-        textDrawer: TextDrawer
+        textDrawer: TextDrawer,
     )
 
     /**
@@ -52,10 +56,9 @@ class PageSplitDataSource @Inject constructor() {
         content: String,
         viewerStyle: ViewerStyle,
         charWidths: FloatArray,
-        textPaint: TextPaint
+        textPaint: TextPaint,
     ): IntArray {
-        val lineHeight =
-            (textPaint.fontMetrics.bottom - textPaint.fontMetrics.top + textPaint.fontMetrics.leading) * viewerStyle.lineHeight
+        val lineHeight = textPaint.fontMetrics.lineHeight * viewerStyle.lineHeight
 
         return splitPageNative(
             content,
@@ -63,7 +66,7 @@ class PageSplitDataSource @Inject constructor() {
             lineHeight,
             width.toFloat(),
             height.toFloat(),
-            viewerStyle.paragraphSpacing
+            viewerStyle.paragraphSpacing,
         )
     }
 
@@ -84,10 +87,9 @@ class PageSplitDataSource @Inject constructor() {
         pageContent: String,
         viewerStyle: ViewerStyle,
         charWidths: FloatArray,
-        textPaint: TextPaint
+        textPaint: TextPaint,
     ) {
-        val lineHeight =
-            (textPaint.fontMetrics.bottom - textPaint.fontMetrics.top + textPaint.fontMetrics.leading) * viewerStyle.lineHeight
+        val lineHeight = textPaint.fontMetrics.lineHeight * viewerStyle.lineHeight
         val offset = -textPaint.fontMetrics.top
 
         val textDrawer = TextDrawer(textPaint, pageContent, canvas)
@@ -98,7 +100,7 @@ class PageSplitDataSource @Inject constructor() {
             offset,
             width.toFloat(),
             viewerStyle.paragraphSpacing,
-            textDrawer
+            textDrawer,
         )
     }
 }

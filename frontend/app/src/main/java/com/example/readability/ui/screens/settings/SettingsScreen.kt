@@ -30,7 +30,7 @@ sealed class SettingsScreens(val route: String) {
 fun SettingsScreen(
     onBack: () -> Unit = {},
     onNavigateAuth: () -> Unit = {},
-    startDestination: String = SettingsScreens.Settings.route
+    startDestination: String = SettingsScreens.Settings.route,
 ) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = startDestination) {

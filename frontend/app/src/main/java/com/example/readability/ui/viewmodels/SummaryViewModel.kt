@@ -10,7 +10,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SummaryViewModel @Inject constructor(
-    private val summaryRepository: SummaryRepository
+    private val summaryRepository: SummaryRepository,
 ) : ViewModel() {
     val summary = summaryRepository.summary
 

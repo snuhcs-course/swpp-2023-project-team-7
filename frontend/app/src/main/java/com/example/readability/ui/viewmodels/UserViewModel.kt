@@ -7,13 +7,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class UserViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) : ViewModel() {
     suspend fun isSignedIn(): Boolean {
         return userRepository.getAccessToken() != null
     }
     suspend fun signIn(username: String, password: String) = userRepository.signIn(username, password)
-    suspend fun signUp(email: String, username: String, password: String) = userRepository.signUp(email, username, password)
+    suspend fun signUp(email: String, username: String, password: String) =
+        userRepository.signUp(email, username, password)
     suspend fun signOut() = userRepository.signOut()
-
 }

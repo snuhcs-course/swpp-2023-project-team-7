@@ -62,12 +62,11 @@ fun IntroPreview() {
     }
 }
 
-
 @Composable
 fun IntroView(
     onContinueWithEmailClicked: () -> Unit = {},
     onPrivacyPolicyClicked: () -> Unit = {},
-    onTermsOfUseClicked: () -> Unit = {}
+    onTermsOfUseClicked: () -> Unit = {},
 ) {
     var controlsVisible by remember { mutableStateOf(false) }
 
@@ -95,39 +94,43 @@ fun IntroView(
             Image(
                 modifier = Modifier.size(192.dp),
                 painter = painterResource(id = R.drawable.ic_launcher_foreground_x1_5),
-                contentDescription = "App Logo"
+                contentDescription = "App Logo",
             )
             AnimatedVisibility(
-                visible = controlsVisible, enter = fadeIn(
-                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
+                visible = controlsVisible,
+                enter = fadeIn(
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED),
                 ) + expandVertically(
-                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
-                ), exit = fadeOut(
-                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED),
+                ),
+                exit = fadeOut(
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED),
                 ) + shrinkVertically(
-                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
-                )
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED),
+                ),
             ) {
                 Text(
                     "Readability",
                     style = MaterialTheme.typography.displayMedium.copy(
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         fontWeight = FontWeight.Normal,
-                        fontFamily = Gabarito
+                        fontFamily = Gabarito,
                     ),
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
             AnimatedVisibility(
-                visible = controlsVisible, enter = fadeIn(
-                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
+                visible = controlsVisible,
+                enter = fadeIn(
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED),
                 ) + expandVertically(
-                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
-                ), exit = fadeOut(
-                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED),
+                ),
+                exit = fadeOut(
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED),
                 ) + shrinkVertically(
-                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)
-                )
+                    tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED),
+                ),
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -135,7 +138,7 @@ fun IntroView(
                 ) {
                     InformText(
                         onPrivacyPolicyClicked = onPrivacyPolicyClicked,
-                        onTermsOfUseClicked = onTermsOfUseClicked
+                        onTermsOfUseClicked = onTermsOfUseClicked,
                     )
                     Button(
                         onClick = onContinueWithEmailClicked,
@@ -144,27 +147,23 @@ fun IntroView(
                             .padding(16.dp)
                             .height(48.dp)
                             .testTag("ContinueWithEmailButton"),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.email),
-                            contentDescription = "email"
+                            contentDescription = "email",
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Continue with email")
                     }
                 }
             }
-
         }
     }
-
 }
 
 @Composable
-fun InformText(
-    onPrivacyPolicyClicked: () -> Unit = {}, onTermsOfUseClicked: () -> Unit = {}
-) {
+fun InformText(onPrivacyPolicyClicked: () -> Unit = {}, onTermsOfUseClicked: () -> Unit = {}) {
     val textStyle = TextStyle(
         fontSize = 12.sp,
         lineHeight = 16.sp,
@@ -201,5 +200,3 @@ fun InformText(
             }
     }, style = textStyle)
 }
-
-

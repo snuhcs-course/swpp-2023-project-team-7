@@ -24,19 +24,25 @@ data class TokenResponse(
 )
 
 data class SignUpRequest(
-    val email: String, val username: String, val password: String
+    val email: String,
+    val username: String,
+    val password: String,
 )
 
 data class SignUpResponse(
-    val success: Boolean
+    val success: Boolean,
 )
 
 data class RefreshTokenResponse(
-    val access_token: String, val token_type: String
+    val access_token: String,
+    val token_type: String,
 )
 
 data class UserInfoResponse(
-    val username: String, val email: String, val created_at: String, val verified: Int
+    val username: String,
+    val email: String,
+    val created_at: String,
+    val verified: Int,
 )
 
 interface UserAPI {
@@ -47,23 +53,22 @@ interface UserAPI {
         @Field("grant_type") grantType: String,
         @Field("username") username: String,
         @Field("password") password: String,
-        @Field("scope") scope: String? = null, // Optional field with default null
-        @Field("client_id") clientId: String? = null, // Optional field with default null
-        @Field("client_secret") clientSecret: String? = null // Optional field with default null
+        // Optional field with default null
+        @Field("scope") scope: String? = null,
+        // Optional field with default null
+        @Field("client_id") clientId: String? = null,
+        // Optional field with default null
+        @Field("client_secret") clientSecret: String? = null,
     ): Call<TokenResponse>
 
     @POST("/token/refresh")
-    fun refreshAccessToken(
-        @Query("refresh_token") refreshToken: String
-    ): Call<RefreshTokenResponse>
+    fun refreshAccessToken(@Query("refresh_token") refreshToken: String): Call<RefreshTokenResponse>
 
     @POST("/user/signup")
     fun signUp(@Body signUpRequest: SignUpRequest): Call<SignUpResponse>
 
     @POST("/user/info")
-    fun getUserInfo(
-        @Query("access_token") accessToken: String
-    ): Call<UserInfoResponse>
+    fun getUserInfo(@Query("access_token") accessToken: String): Call<UserInfoResponse>
 }
 
 @InstallIn(SingletonComponent::class)
@@ -82,7 +87,7 @@ class UserAPIProviderModule {
 
 @Singleton
 class UserRemoteDataSource @Inject constructor(
-    private val userApi: UserAPI
+    private val userApi: UserAPI,
 ) {
     suspend fun signIn(email: String, password: String): Result<TokenResponse> {
         val result = userApi.signIn(
@@ -91,7 +96,7 @@ class UserRemoteDataSource @Inject constructor(
             clientId = "",
             clientSecret = "",
             username = email,
-            password = password
+            password = password,
         ).execute()
         if (result.isSuccessful) {
             val responseBody = result.body()
@@ -108,8 +113,10 @@ class UserRemoteDataSource @Inject constructor(
     suspend fun signUp(email: String, username: String, password: String): Result<Unit> {
         val result = userApi.signUp(
             SignUpRequest(
-                email = email, username = username, password = password
-            )
+                email = email,
+                username = username,
+                password = password,
+            ),
         ).execute()
         if (result.isSuccessful) {
             val responseBody = result.body()

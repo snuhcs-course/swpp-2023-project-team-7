@@ -24,7 +24,7 @@ enum class QuizLoadState {
 @Singleton
 class QuizRepository @Inject constructor(
     private val quizRemoteDataSource: QuizRemoteDataSource,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) {
     private val _quizList = MutableStateFlow(listOf<Quiz>())
     private val _quizCount = MutableStateFlow(0)
@@ -36,7 +36,8 @@ class QuizRepository @Inject constructor(
     suspend fun getQuiz(bookId: Int, progress: Double): Result<Unit> {
         return withContext(Dispatchers.IO) {
             _quizLoadState.update { QuizLoadState.LOADING }
-            val accessToken = userRepository.getAccessToken() ?: return@withContext Result.failure(UserNotSignedInException())
+            val accessToken = userRepository.getAccessToken()
+                ?: return@withContext Result.failure(UserNotSignedInException())
             _quizList.update { listOf() }
             _quizCount.update { 0 }
             try {

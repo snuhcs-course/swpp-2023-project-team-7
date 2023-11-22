@@ -56,7 +56,6 @@ import com.example.readability.ui.theme.Gabarito
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.launch
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookListView(
@@ -66,7 +65,7 @@ fun BookListView(
     onProgressChanged: (Int, Double) -> Unit = { _, _ -> },
     onNavigateSettings: () -> Unit = {},
     onNavigateAddBook: () -> Unit = {},
-    onNavigateViewer: (id: Int) -> Unit = {}
+    onNavigateViewer: (id: Int) -> Unit = {},
 ) {
     val contentLoadScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -79,13 +78,14 @@ fun BookListView(
             }) {
                 Icon(
                     painter = painterResource(id = R.drawable.settings),
-                    contentDescription = "Settings"
+                    contentDescription = "Settings",
                 )
             }
         })
     }, floatingActionButton = {
         FloatingActionButton(
-            onClick = { onNavigateAddBook() }, modifier = Modifier.testTag("Floating action button")
+            onClick = { onNavigateAddBook() },
+            modifier = Modifier.testTag("Floating action button"),
         ) {
             Icon(Icons.Filled.Add, "Floating action button.")
         }
@@ -95,41 +95,42 @@ fun BookListView(
                 .padding(innerPadding)
                 .fillMaxSize(),
             targetState = bookCardDataList.isEmpty(),
-            label = "BookScreen.BookListView.Content"
+            label = "BookScreen.BookListView.Content",
         ) {
             when (it) {
                 true -> Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Icon(
                         modifier = Modifier.size(96.dp),
                         painter = painterResource(id = R.drawable.file_dashed_thin),
                         contentDescription = "No File",
-                        tint = MaterialTheme.colorScheme.secondary
+                        tint = MaterialTheme.colorScheme.secondary,
                     )
                     Text(
                         text = "Library is Empty",
                         color = MaterialTheme.colorScheme.secondary,
                         style = MaterialTheme.typography.titleLarge,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                     Text(
                         text = "Press the button below\nto add books to your library.",
                         color = MaterialTheme.colorScheme.secondary,
                         style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                 }
 
                 false -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Top,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     items(bookCardDataList.size) { index ->
-                        BookCard(modifier = Modifier.fillMaxWidth(),
+                        BookCard(
+                            modifier = Modifier.fillMaxWidth(),
                             bookCardData = bookCardDataList[index],
                             onClick = {
                                 // TODO: show download status
@@ -141,7 +142,7 @@ fun BookListView(
                                         Toast.makeText(
                                             context,
                                             "Failed to load content. ${it.message}",
-                                            Toast.LENGTH_SHORT
+                                            Toast.LENGTH_SHORT,
                                         ).show()
                                     }
                                 }
@@ -151,9 +152,10 @@ fun BookListView(
                             },
                             onProgressChanged = { id, progress ->
                                 onProgressChanged(id, progress)
-                            })
+                            },
+                        )
                         HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier.padding(horizontal = 16.dp),
                         )
                     }
                 }
@@ -172,12 +174,11 @@ fun BookCardPreview() {
                 .background(MaterialTheme.colorScheme.background),
             bookCardData = BookCardData(
                 id = 1,
-                coverImage = "https://images-na.ssl-images-amazon.com/images/I/51ZU%2BCvkTyL._SX331_BO1,204,203,200_.jpg",
                 title = "The Great Gatsby",
                 author = "F. Scott Fitzgerald",
                 progress = 0.5,
-                content = "aasdasd"
-            )
+                content = "aasdasd",
+            ),
         )
     }
 }
@@ -189,7 +190,7 @@ fun BookCard(
     bookCardData: BookCardData,
     onClick: () -> Unit = {},
     onLoadImage: suspend () -> Unit = {},
-    onProgressChanged: (Int, Double) -> Unit = { _, _ -> }
+    onProgressChanged: (Int, Double) -> Unit = { _, _ -> },
 ) {
     var showSheet by remember { mutableStateOf(false) }
     var loadingImage by remember { mutableStateOf(false) }
@@ -216,14 +217,14 @@ fun BookCard(
             .height(IntrinsicSize.Min)
             .clickable { onClick() },
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         if (bookCardData.coverImageData == null) {
             Box(
                 Modifier
                     .padding(16.dp, 16.dp, 0.dp, 16.dp)
                     .fillMaxHeight()
-                    .width(64.dp)
+                    .width(64.dp),
             ) {
                 // TODO: Add placeholder image
             }
@@ -236,13 +237,13 @@ fun BookCard(
                     .testTag(bookCardData.coverImage ?: ""),
                 bitmap = bookCardData.coverImageData,
                 contentDescription = "Book Cover Image",
-                contentScale = ContentScale.FillWidth
+                contentScale = ContentScale.FillWidth,
             )
         }
         Column(
             modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight()
+                .fillMaxHeight(),
         ) {
             Row(
                 modifier = Modifier
@@ -253,8 +254,9 @@ fun BookCard(
                     modifier = Modifier.weight(1f),
                     text = bookCardData.title,
                     style = MaterialTheme.typography.titleMedium.copy(
-                        fontFamily = Gabarito, fontWeight = FontWeight.Medium
-                    )
+                        fontFamily = Gabarito,
+                        fontWeight = FontWeight.Medium,
+                    ),
                 )
             }
             Text(
@@ -263,8 +265,8 @@ fun BookCard(
                 style = MaterialTheme.typography.titleSmall.copy(
                     color = MaterialTheme.colorScheme.secondary,
                     fontFamily = Gabarito,
-                    fontWeight = FontWeight.Medium
-                )
+                    fontWeight = FontWeight.Medium,
+                ),
             )
             Spacer(modifier = Modifier.weight(1f))
             Row(
@@ -278,23 +280,23 @@ fun BookCard(
                         .weight(1f)
                         .padding(bottom = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Icon(
                         modifier = Modifier.size(with(LocalDensity.current) { 24.sp.toDp() }),
                         painter = painterResource(id = R.drawable.cloud_check),
                         contentDescription = "Uploaded",
-                        tint = MaterialTheme.colorScheme.onBackground
+                        tint = MaterialTheme.colorScheme.onBackground,
                     )
                     Text(
                         text = "${(bookCardData.progress * 100).toInt()}%",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
                 IconButton(onClick = { showSheet = true }) {
                     Icon(
                         painter = painterResource(id = R.drawable.dots_three),
-                        contentDescription = "More"
+                        contentDescription = "More",
                     )
                 }
             }

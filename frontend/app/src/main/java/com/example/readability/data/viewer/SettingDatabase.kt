@@ -72,7 +72,9 @@ class SettingDatabaseProviderModule {
     @Singleton
     fun provideSettingDatabase(@ApplicationContext context: Context): SettingDatabase {
         return Room.databaseBuilder(
-            context, SettingDatabase::class.java, "Setting"
+            context,
+            SettingDatabase::class.java,
+            "Setting",
         ).build()
     }
 }

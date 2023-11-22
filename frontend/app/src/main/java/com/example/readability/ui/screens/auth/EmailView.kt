@@ -36,7 +36,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.R
-import com.example.readability.ui.animation.animateIMEDp
+import com.example.readability.ui.animation.animateImeDp
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
 
@@ -56,7 +56,7 @@ fun EmailView(
     onBack: () -> Unit = {},
     onNavigateSignIn: (String) -> Unit = {},
     onNavigateSignUp: () -> Unit = {},
-    onNavigateForgotPassword: () -> Unit = {}
+    onNavigateForgotPassword: () -> Unit = {},
 ) {
     var showError by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf(false) }
@@ -78,7 +78,6 @@ fun EmailView(
         }
     }
 
-
     Scaffold(
         modifier = Modifier
             .imePadding()
@@ -92,12 +91,14 @@ fun EmailView(
                 navigationIcon = {
                     IconButton(onClick = { onBack() }) {
                         Icon(
-                            Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Arrow Back"
+                            Icons.AutoMirrored.Default.ArrowBack,
+                            contentDescription = "Arrow Back",
                         )
                     }
                 },
             )
-        }) { innerPadding ->
+        },
+    ) { innerPadding ->
         LaunchedEffect(Unit) {
             emailFocusRequester.requestFocus()
             emailError = checkEmailError()
@@ -107,7 +108,7 @@ fun EmailView(
                 .padding(innerPadding)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(
                 modifier = Modifier
@@ -138,20 +139,25 @@ fun EmailView(
                     isError = showError && emailError,
                     supportingText = if (showError && emailError) {
                         { Text(text = "Please enter a valid email address") }
-                    } else null,
+                    } else {
+                        null
+                    },
                     keyboardActions = KeyboardActions(onDone = { submit() }),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 )
             }
 
-            TextButton(modifier = Modifier.testTag("ForgotPasswordButton"),
-                onClick = { onNavigateForgotPassword() }) {
+            TextButton(
+                modifier = Modifier.testTag("ForgotPasswordButton"),
+                onClick = { onNavigateForgotPassword() },
+            ) {
                 Text("Forgot password?")
             }
 
             TextButton(
                 modifier = Modifier.testTag("SignUpButton"),
-                onClick = { onNavigateSignUp() }) {
+                onClick = { onNavigateSignUp() },
+            ) {
                 Text("Sign up")
             }
 
@@ -160,13 +166,12 @@ fun EmailView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("SignInButton"),
-                imeAnimation = animateIMEDp(
+                imeAnimation = animateImeDp(
                     label = "EmailView_SignInButton_IMEDp",
-                )
+                ),
             ) {
                 Text("Sign in")
             }
-
         }
     }
 }

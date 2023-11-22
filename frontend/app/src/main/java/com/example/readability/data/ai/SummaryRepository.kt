@@ -12,14 +12,14 @@ import javax.inject.Singleton
 @Singleton
 class SummaryRepository @Inject constructor(
     private val summaryRemoteDataSource: SummaryRemoteDataSource,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) {
     val summary = MutableStateFlow("")
 
     suspend fun getSummary(bookId: Int, progress: Double): Result<Unit> {
         return withContext(Dispatchers.IO) {
             val accessToken = userRepository.getAccessToken() ?: return@withContext Result.failure(
-                UserNotSignedInException()
+                UserNotSignedInException(),
             )
             try {
                 summaryRemoteDataSource.getSummary(bookId, progress, accessToken).collect { response ->

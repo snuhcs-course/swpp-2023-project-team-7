@@ -22,7 +22,7 @@ interface QuizAPI {
     fun getQuiz(
         @Query("book_id") bookId: Int,
         @Query("progress") progress: Double,
-        @Query("access_token") accessToken: String
+        @Query("access_token") accessToken: String,
     ): Call<ResponseBody>
 }
 
@@ -38,16 +38,20 @@ class QuizAPIProviderModule {
 }
 
 enum class QuizResponseType {
-    COUNT, QUESTION, ANSWER
+    COUNT,
+    QUESTION,
+    ANSWER,
 }
 
 data class QuizResponse(
-    val type: QuizResponseType, val data: String, val intData: Int
+    val type: QuizResponseType,
+    val data: String,
+    val intData: Int,
 )
 
 @Singleton
 class QuizRemoteDataSource @Inject constructor(
-    private val quizAPI: QuizAPI
+    private val quizAPI: QuizAPI,
 ) {
     fun getQuiz(bookId: Int, progress: Double, accessToken: String) = flow {
         val response = quizAPI.getQuiz(bookId, progress, accessToken).execute()

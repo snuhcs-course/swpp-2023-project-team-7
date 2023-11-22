@@ -16,7 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingViewModel @Inject constructor(
     private val settingRepository: SettingRepository,
-    private val pageSplitRepository: PageSplitRepository
+    private val pageSplitRepository: PageSplitRepository,
 ) : ViewModel() {
     val sampleText = settingRepository.sampleText.asStateFlow()
     val viewerStyle = settingRepository.viewerStyle
@@ -35,7 +35,7 @@ class SettingViewModel @Inject constructor(
             viewerStyle = viewerStyle.value,
             pageContent = sampleText.value,
             width = width,
-            isDarkMode = isDarkMode
+            isDarkMode = isDarkMode,
         )
     }
 }

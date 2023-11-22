@@ -55,9 +55,7 @@ data class BooksResponse(
 interface BookAPI {
     @Headers("Accept: application/json")
     @GET("/books")
-    fun getBooks(
-        @Query("access_token") accessToken: String,
-    ): Call<BooksResponse>
+    fun getBooks(@Query("access_token") accessToken: String): Call<BooksResponse>
 
     @Streaming
     @GET("/book/image")
@@ -74,10 +72,7 @@ interface BookAPI {
     ): Call<ResponseBody>
 
     @POST("/book/add")
-    fun addBook(
-        @Query("access_token") accessToken: String,
-        @Body book: AddBookRequest
-    ): Call<Unit>
+    fun addBook(@Query("access_token") accessToken: String, @Body book: AddBookRequest): Call<Unit>
 }
 
 @InstallIn(SingletonComponent::class)
@@ -101,16 +96,18 @@ class BookRemoteDataSource @Inject constructor(
             val response = bookAPI.getBooks(accessToken).execute()
             if (response.isSuccessful) {
                 val responseBody = response.body() ?: return Result.failure(Throwable("No body"))
-                return Result.success(responseBody.books.map {
-                    BookCardData(
-                        id = it.bookId,
-                        title = it.title,
-                        author = it.author,
-                        progress = it.progress,
-                        coverImage = it.cover_image,
-                        content = it.content,
-                    )
-                })
+                return Result.success(
+                    responseBody.books.map {
+                        BookCardData(
+                            id = it.bookId,
+                            title = it.title,
+                            author = it.author,
+                            progress = it.progress,
+                            coverImage = it.cover_image,
+                            content = it.content,
+                        )
+                    },
+                )
             } else {
                 return Result.failure(Throwable(parseErrorBody(response.errorBody())))
             }
@@ -124,10 +121,12 @@ class BookRemoteDataSource @Inject constructor(
             val response = bookAPI.getBookCoverImage(coverImage, accessToken).execute()
             if (response.isSuccessful) {
                 val responseBody = response.body() ?: return Result.failure(Throwable("No body"))
-                return Result.success(responseBody.byteStream().use {
-                    val byteArray = it.readBytes()
-                    BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size).asImageBitmap()
-                })
+                return Result.success(
+                    responseBody.byteStream().use {
+                        val byteArray = it.readBytes()
+                        BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size).asImageBitmap()
+                    },
+                )
             } else {
                 return Result.failure(Throwable(parseErrorBody(response.errorBody())))
             }

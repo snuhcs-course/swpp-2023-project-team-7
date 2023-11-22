@@ -53,7 +53,7 @@ class FontDataSource @Inject constructor(
         if (viewerStyle.fontFamily != customTypefaceName) {
             customTypefaceName = viewerStyle.fontFamily
             customTypeface = ResourcesCompat.getFont(
-                context, fontMap[viewerStyle.fontFamily] ?: R.font.garamond
+                context, fontMap[viewerStyle.fontFamily] ?: R.font.garamond,
             )
             calculateReferenceCharWidth(viewerStyle)
         } else if (viewerStyle.textSize != lastTextSize || viewerStyle.letterSpacing != lastLetterSpacing) {
@@ -112,9 +112,11 @@ class FontDataSource @Inject constructor(
      */
     fun calculateCharWidth(viewerStyle: ViewerStyle) {
         val density = Resources.getSystem().displayMetrics.density
+        val textSizeRatio = viewerStyle.textSize / 16f
+        val letterSpacing = viewerStyle.letterSpacing * viewerStyle.textSize * density
         for (i in 0 until 65536) {
             charWidthArray[i] =
-                charWidthReferenceArray[i] * viewerStyle.textSize / 16f + viewerStyle.letterSpacing * viewerStyle.textSize * density
+                charWidthReferenceArray[i] * textSizeRatio + letterSpacing
         }
     }
 }

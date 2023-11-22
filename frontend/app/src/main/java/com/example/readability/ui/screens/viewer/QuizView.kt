@@ -76,9 +76,13 @@ fun QuizPreview() {
             quizList = listOf(
                 Quiz(
                     "What initially bores Alice by the riverbank?",
-                    "Alice is tired of sitting by the riverbank and being bored by her sister's book with no pictures or conversations."
+                    "Alice is tired of sitting by the riverbank " +
+                        "and being bored by her sister's book " +
+                        "with no pictures or conversations.",
                 ),
-            ), quizSize = 5, quizLoadState = QuizLoadState.LOADED
+            ),
+            quizSize = 5,
+            quizLoadState = QuizLoadState.LOADED,
         )
     }
 }
@@ -99,17 +103,19 @@ fun QuizView(
             .background(MaterialTheme.colorScheme.background)
             .imePadding()
             .navigationBarsPadding()
-            .systemBarsPadding()
+            .systemBarsPadding(),
     ) { innerPadding ->
         Column(
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
         ) {
-            QuizProgress(modifier = Modifier.fillMaxWidth(),
+            QuizProgress(
+                modifier = Modifier.fillMaxWidth(),
                 progress = (pagerState.currentPage + 1) / quizSize.toFloat(),
                 onBack = onBack,
                 onNavigateReport = {
                     onNavigateReport(pagerState.currentPage)
-                })
+                },
+            )
             HorizontalPager(
                 modifier = Modifier
                     .weight(1f)
@@ -132,18 +138,23 @@ fun QuizView(
             }
             Row(
                 modifier = Modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 RoundedRectFilledTonalButton(
-                    modifier = Modifier.weight(1f), onClick = {
+                    modifier = Modifier.weight(1f),
+                    onClick = {
                         pagerScope.launch {
                             pagerState.animateScrollToPage(
-                                pagerState.currentPage - 1, animationSpec = tween(
-                                    DURATION_STANDARD, 0, EASING_STANDARD
-                                )
+                                pagerState.currentPage - 1,
+                                animationSpec = tween(
+                                    DURATION_STANDARD,
+                                    0,
+                                    EASING_STANDARD,
+                                ),
                             )
                         }
-                    }, enabled = pagerState.currentPage > 0
+                    },
+                    enabled = pagerState.currentPage > 0,
                 ) {
                     Text(text = "Previous")
                 }
@@ -155,14 +166,17 @@ fun QuizView(
                         } else {
                             pagerScope.launch {
                                 pagerState.animateScrollToPage(
-                                    pagerState.currentPage + 1, animationSpec = tween(
-                                        DURATION_STANDARD, 0, EASING_STANDARD
-                                    )
+                                    pagerState.currentPage + 1,
+                                    animationSpec = tween(
+                                        DURATION_STANDARD,
+                                        0,
+                                        EASING_STANDARD,
+                                    ),
                                 )
                             }
                         }
                     },
-                    enabled = pagerState.currentPage < quizList.size - 1 || pagerState.currentPage == quizSize - 1
+                    enabled = pagerState.currentPage < quizList.size - 1 || pagerState.currentPage == quizSize - 1,
                 ) {
                     Text(text = if (pagerState.currentPage == quizSize - 1) "Finish" else "Next")
                 }
@@ -184,13 +198,13 @@ fun QuizProgress(
     Row(
         modifier = modifier.padding(horizontal = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = { onBack() }) {
             Icon(
                 painter = painterResource(id = R.drawable.x),
                 contentDescription = "Close",
-                tint = MaterialTheme.colorScheme.onSurface
+                tint = MaterialTheme.colorScheme.onSurface,
             )
         }
         LinearProgressIndicator(
@@ -201,14 +215,15 @@ fun QuizProgress(
             Icon(
                 painter = painterResource(id = R.drawable.dots_three),
                 contentDescription = "More",
-                tint = MaterialTheme.colorScheme.onSurface
+                tint = MaterialTheme.colorScheme.onSurface,
             )
         }
     }
 }
 
 enum class BlindAnchors {
-    Start, End
+    Start,
+    End,
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -232,8 +247,8 @@ fun QuizCard(
         animationSpec = tween(
             DURATION_EMPHASIZED_DECELERATE * animationDurationMultiplier,
             0,
-            EASING_EMPHASIZED_DECELERATE
-        )
+            EASING_EMPHASIZED_DECELERATE,
+        ),
     )
 
     var lastAnswerCardHeight by remember { mutableIntStateOf(0) }
@@ -245,7 +260,7 @@ fun QuizCard(
         initialValue = 0f,
         targetValue = 3f,
         animationSpec = infiniteRepeatable(tween(durationMillis = 1000, easing = { it })),
-        label = "ViewerScreen.QuizView.ThreeDotsAnimation"
+        label = "ViewerScreen.QuizView.ThreeDotsAnimation",
     )
 
     val density = LocalDensity.current
@@ -262,7 +277,8 @@ fun QuizCard(
             positionalThreshold = { lastAnswerCardHeight / 2f },
             velocityThreshold = { with(density) { 125.dp.toPx() } },
             animationSpec = tween(
-                durationMillis = DURATION_STANDARD, easing = EASING_STANDARD
+                durationMillis = DURATION_STANDARD,
+                easing = EASING_STANDARD,
             ),
         )
     }
@@ -279,7 +295,7 @@ fun QuizCard(
                 modifier = Modifier
                     .padding(8.dp)
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Row(
                     modifier = Modifier.padding(start = 16.dp, end = 4.dp),
@@ -290,7 +306,7 @@ fun QuizCard(
                         style = MaterialTheme.typography.titleMedium.copy(
                             color = MaterialTheme.colorScheme.onBackground,
                             fontFamily = Gabarito,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
                         ),
                     )
                     Spacer(modifier = Modifier.weight(1f))
@@ -298,7 +314,7 @@ fun QuizCard(
                         Icon(
                             painter = painterResource(id = R.drawable.siren),
                             contentDescription = "Report",
-                            tint = MaterialTheme.colorScheme.secondary
+                            tint = MaterialTheme.colorScheme.secondary,
                         )
                     }
                 }
@@ -308,7 +324,7 @@ fun QuizCard(
                         .fillMaxWidth(),
                     text = quiz.question,
                     style = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onBackground),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
             // Answer
@@ -316,7 +332,7 @@ fun QuizCard(
                 modifier = Modifier
                     .padding(8.dp)
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -324,7 +340,7 @@ fun QuizCard(
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = MaterialTheme.colorScheme.onBackground,
                         fontFamily = Gabarito,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
                     ),
                 )
                 Text(
@@ -333,7 +349,7 @@ fun QuizCard(
                         .fillMaxWidth(),
                     text = quiz.answer,
                     style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
                 Spacer(modifier = Modifier.height(48.dp))
             }
@@ -361,13 +377,19 @@ fun QuizCard(
                 }
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = if (quizLoaded) "Swipe down to see answer" else "Generating answer${
-                        ".".repeat(
-                            dotCount.toInt() + 1
-                        )
-                    }",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSecondaryContainer),
-                    textAlign = TextAlign.Center
+                    text = if (quizLoaded) {
+                        "Swipe down to see answer"
+                    } else {
+                        "Generating answer${
+                            ".".repeat(
+                                dotCount.toInt() + 1,
+                            )
+                        }"
+                    },
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    ),
+                    textAlign = TextAlign.Center,
                 )
                 Spacer(modifier = Modifier.weight(1f))
             }
@@ -376,7 +398,9 @@ fun QuizCard(
             val answerCardPlaceable = measurables[1].measure(constraints)
 
             val animatedHeight = animatedCardHeight.value.roundToInt()
-            if (isQuestionCardHeightChanged && lastAnswerCardHeight != 0 && lastAnswerCardHeight != answerCardPlaceable.height) {
+            if (isQuestionCardHeightChanged && lastAnswerCardHeight != 0 &&
+                lastAnswerCardHeight != answerCardPlaceable.height
+            ) {
                 isQuestionCardHeightChanged = false
             }
             lastAnswerCardHeight = answerCardPlaceable.height
@@ -385,9 +409,16 @@ fun QuizCard(
                 constraints.copy(
                     minWidth = 0,
                     minHeight = 0,
-                    maxHeight = maxOf(0, if (isQuestionCardHeightChanged) answerCardPlaceable.height else animatedHeight - questionCardPlaceable.height),
-                    maxWidth = answerCardPlaceable.width
-                )
+                    maxHeight = maxOf(
+                        0,
+                        if (isQuestionCardHeightChanged) {
+                            answerCardPlaceable.height
+                        } else {
+                            animatedHeight - questionCardPlaceable.height
+                        },
+                    ),
+                    maxWidth = answerCardPlaceable.width,
+                ),
             )
 
             val height = questionCardPlaceable.height + answerCardPlaceable.height
@@ -401,8 +432,11 @@ fun QuizCard(
             cardHeight = height
 
             val swipeCardMaxY = animatedHeight - blindMinHeight
-            val swipeCardMinY =
-                if (isQuestionCardHeightChanged) animatedHeight - answerCardPlaceable.height else questionCardPlaceable.height
+            val swipeCardMinY = if (isQuestionCardHeightChanged) {
+                animatedHeight - answerCardPlaceable.height
+            } else {
+                questionCardPlaceable.height
+            }
 
             var progress = (blindDraggableState.offset / blindDraggableState.anchors.maxAnchor())
             if (progress.isNaN()) {
@@ -415,10 +449,10 @@ fun QuizCard(
                 questionCardPlaceable.placeRelative(0, 0)
                 answerCardPlaceable.placeRelative(0, questionCardPlaceable.height)
                 swipeCardPlaceable.placeRelative(
-                    0, blindHeight
+                    0,
+                    blindHeight,
                 )
             }
-
         }
     }
 }

@@ -23,7 +23,7 @@ fun SettingTitlePreview() {
         Surface(
             modifier = Modifier
                 .background(color = MaterialTheme.colorScheme.background)
-                .padding(16.dp)
+                .padding(16.dp),
         ) {
             SettingTitle(text = "General")
         }
@@ -31,24 +31,23 @@ fun SettingTitlePreview() {
 }
 
 @Composable
-fun SettingTitle(
-    modifier: Modifier = Modifier, text: String
-) {
-    Column (
-        modifier = modifier
+fun SettingTitle(modifier: Modifier = Modifier, text: String) {
+    Column(
+        modifier = modifier,
     ) {
         Text(
             modifier = Modifier.padding(16.dp, 8.dp)
                 .fillMaxWidth(),
             text = text,
             style = MaterialTheme.typography.titleMedium.copy(
-                fontFamily = Gabarito, fontWeight = FontWeight.Medium
-            )
+                fontFamily = Gabarito,
+                fontWeight = FontWeight.Medium,
+            ),
         )
         HorizontalDivider(
             modifier = Modifier.padding(16.dp, 0.dp),
             thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant
+            color = MaterialTheme.colorScheme.outlineVariant,
         )
     }
 }

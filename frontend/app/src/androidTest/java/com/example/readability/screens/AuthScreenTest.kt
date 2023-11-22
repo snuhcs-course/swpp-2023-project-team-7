@@ -33,16 +33,15 @@ import org.junit.runner.RunWith
 
 fun hasTextWithError(text: String): SemanticsMatcher {
     return hasText(text).and(
-        SemanticsMatcher.keyIsDefined(SemanticsProperties.Error)
+        SemanticsMatcher.keyIsDefined(SemanticsProperties.Error),
     )
 }
 
 fun ComposeContentTestRule.onNodeWithTextAndError(text: String): SemanticsNodeInteraction {
     return onNode(
-        hasTextWithError(text)
+        hasTextWithError(text),
     )
 }
-
 
 @RunWith(AndroidJUnit4::class)
 class AuthScreenTest {
@@ -344,7 +343,8 @@ class AuthScreenTest {
                     onVerificationCodeSubmitted = {
                         onVerificationCodeSubmittedCalled = true
                         Result.success(Unit)
-                    })
+                    },
+                )
             }
         }
 
@@ -371,14 +371,15 @@ class AuthScreenTest {
                     },
                     onNavigateResetPassword = {
                         onNavigateResetPasswordCalled = true
-                    })
+                    },
+                )
             }
         }
 
         composeTestRule.onNodeWithTag("VerificationCodeTextField").performTextInput("123456")
         composeTestRule.onNodeWithText("Next").performClick()
         assert(onVerificationCodeSubmittedCalled)
-        composeTestRule.waitUntil (2500L) {
+        composeTestRule.waitUntil(2500L) {
             onNavigateBookListCalled || onNavigateResetPasswordCalled
         }
         assert(onNavigateBookListCalled)
@@ -404,14 +405,15 @@ class AuthScreenTest {
                     },
                     onNavigateResetPassword = {
                         onNavigateResetPasswordCalled = true
-                    })
+                    },
+                )
             }
         }
 
         composeTestRule.onNodeWithTag("VerificationCodeTextField").performTextInput("123456")
         composeTestRule.onNodeWithText("Next").performClick()
         assert(onVerificationCodeSubmittedCalled)
-        composeTestRule.waitUntil (2500L) {
+        composeTestRule.waitUntil(2500L) {
             onNavigateBookListCalled || onNavigateResetPasswordCalled
         }
         assert(!onNavigateBookListCalled)
@@ -443,7 +445,7 @@ class AuthScreenTest {
                     onEmailSubmitted = {
                         onEmailSubmittedCalled = true
                         Result.success(Unit)
-                    }
+                    },
                 )
             }
         }
@@ -464,7 +466,7 @@ class AuthScreenTest {
                     onEmailSubmitted = {
                         onEmailSubmittedCalled = true
                         Result.success(Unit)
-                    }
+                    },
                 )
             }
         }
@@ -486,7 +488,7 @@ class AuthScreenTest {
                     onEmailSubmitted = {
                         onEmailSubmittedCalled = true
                         Result.success(Unit)
-                    }
+                    },
                 )
             }
         }
@@ -504,7 +506,7 @@ class AuthScreenTest {
                 ForgotPasswordView(
                     onBack = {
                         onBackCalled = true
-                    }
+                    },
                 )
             }
         }
@@ -557,7 +559,7 @@ class AuthScreenTest {
                     onPasswordSubmitted = {
                         onResetPasswordSubmittedCalled = true
                         Result.success(Unit)
-                    }
+                    },
                 )
             }
         }
@@ -577,7 +579,7 @@ class AuthScreenTest {
                 ResetPasswordView(
                     onBack = {
                         onBackCalled = true
-                    }
+                    },
                 )
             }
         }
@@ -596,7 +598,7 @@ class AuthScreenTest {
                 AuthScreen(
                     onNavigateBookList = {
                         onNavigateBookListCalled = true
-                    }
+                    },
                 )
             }
         }
@@ -622,7 +624,7 @@ class AuthScreenTest {
         // 9. see error
         composeTestRule.waitUntilAtLeastOneExists(
             hasTextWithError("Password is incorrect"),
-            2500L
+            2500L,
         )
         composeTestRule.onNodeWithText("Password is incorrect").assertIsDisplayed()
         // 10. rewrite password

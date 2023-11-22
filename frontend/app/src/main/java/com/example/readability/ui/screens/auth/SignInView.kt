@@ -41,7 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.LocalSnackbarHost
 import com.example.readability.R
-import com.example.readability.ui.animation.animateIMEDp
+import com.example.readability.ui.animation.animateImeDp
 import com.example.readability.ui.components.PasswordTextField
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
@@ -64,7 +64,7 @@ fun SignInView(
     onBack: () -> Unit = {},
     onPasswordSubmitted: suspend (String) -> Result<Unit> = { Result.success(Unit) },
     onNavigateBookList: () -> Unit = {},
-    onNavigateForgotPassword: (String) -> Unit = {}
+    onNavigateForgotPassword: (String) -> Unit = {},
 ) {
     var password by remember { mutableStateOf("") }
     var passwordError by remember { mutableStateOf<String?>(null) }
@@ -103,16 +103,19 @@ fun SignInView(
             .navigationBarsPadding()
             .statusBarsPadding(),
         topBar = {
-            TopAppBar(title = { Text("Sign in", style = MaterialTheme.typography.headlineSmall) },
+            TopAppBar(
+                title = { Text("Sign in", style = MaterialTheme.typography.headlineSmall) },
                 navigationIcon = {
                     IconButton(onClick = { onBack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Arrow Back"
+                            contentDescription = "Arrow Back",
                         )
                     }
-                })
-        }) { innerPadding ->
+                },
+            )
+        },
+    ) { innerPadding ->
         LaunchedEffect(Unit) {
             passwordFocusRequester.requestFocus()
         }
@@ -156,7 +159,7 @@ fun SignInView(
                     submit()
                 }),
                 isError = passwordError != null,
-                supportingText = passwordError
+                supportingText = passwordError,
             )
             Spacer(modifier = Modifier.weight(1f))
             TextButton(onClick = { onNavigateForgotPassword(email) }) {
@@ -167,8 +170,8 @@ fun SignInView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("SignInButton"),
-                imeAnimation = animateIMEDp(
-                    label = "AuthView_SignInView_imeAnimation"
+                imeAnimation = animateImeDp(
+                    label = "AuthView_SignInView_imeAnimation",
                 ),
                 loading = loading,
             ) {
@@ -176,7 +179,4 @@ fun SignInView(
             }
         }
     }
-
-
 }
-

@@ -69,7 +69,9 @@ class UserDatabaseModule {
     @Singleton
     fun provideUserDatabase(@ApplicationContext appContext: Context): UserDatabase {
         return Room.databaseBuilder(
-            appContext, UserDatabase::class.java, "User"
+            appContext,
+            UserDatabase::class.java,
+            "User",
         ).build()
     }
 }

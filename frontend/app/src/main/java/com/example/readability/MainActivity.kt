@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
 
         window.setFlags(
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
         )
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
@@ -82,12 +82,12 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     CompositionLocalProvider(
                         LocalSnackbarHost provides SnackBarState(
-                            state = snackbarHostState, scope = snackbarScope
-                        )
+                            state = snackbarHostState, scope = snackbarScope,
+                        ),
                     ) {
                         NavHost(
                             navController = navController,
-                            startDestination = if (isSignedIn) Screens.Book.route else Screens.Auth.route
+                            startDestination = if (isSignedIn) Screens.Book.route else Screens.Auth.route,
                         ) {
                             composableFadeThrough(Screens.Auth.route) {
                                 AuthScreen(onNavigateBookList = {
@@ -102,40 +102,49 @@ class MainActivity : ComponentActivity() {
                                 BookScreen(onNavigateSettings = {
                                     navController.navigate(
                                         Screens.Settings.createRoute(
-                                            SettingsScreens.Settings.route
-                                        )
+                                            SettingsScreens.Settings.route,
+                                        ),
                                     )
                                 }, onNavigateViewer = {
                                     navController.navigate(Screens.Viewer.createRoute(it))
                                 })
                             }
-                            composableFadeThrough(Screens.Viewer.route,
-                                listOf(navArgument("book_id") {
-                                    type = NavType.IntType
-                                })) {
-                                ViewerScreen(id = it.arguments?.getInt("book_id") ?: -1,
+                            composableFadeThrough(
+                                Screens.Viewer.route,
+                                listOf(
+                                    navArgument("book_id") {
+                                        type = NavType.IntType
+                                    },
+                                ),
+                            ) {
+                                ViewerScreen(
+                                    id = it.arguments?.getInt("book_id") ?: -1,
                                     onNavigateSettings = {
                                         navController.navigate(
                                             Screens.Settings.createRoute(
-                                                SettingsScreens.Viewer.route
-                                            )
+                                                SettingsScreens.Viewer.route,
+                                            ),
                                         )
                                     },
                                     onBack = {
                                         navController.popBackStack()
-                                    })
+                                    },
+                                )
                             }
                             composableFadeThrough(Screens.Settings.route) {
                                 val route = it.arguments?.getString("route") ?: ""
-                                SettingsScreen(onBack = {
-                                    navController.popBackStack()
-                                }, onNavigateAuth = {
-                                    navController.navigate(Screens.Auth.route) {
-                                        popUpTo(Screens.Auth.route) {
-                                            inclusive = true
+                                SettingsScreen(
+                                    onBack = {
+                                        navController.popBackStack()
+                                    },
+                                    onNavigateAuth = {
+                                        navController.navigate(Screens.Auth.route) {
+                                            popUpTo(Screens.Auth.route) {
+                                                inclusive = true
+                                            }
                                         }
-                                    }
-                                }, startDestination = route
+                                    },
+                                    startDestination = route,
                                 )
                             }
                         }

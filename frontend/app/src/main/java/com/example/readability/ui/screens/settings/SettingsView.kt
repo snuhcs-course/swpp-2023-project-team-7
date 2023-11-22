@@ -62,7 +62,7 @@ fun SettingsView(
         })
     }) { innerPadding ->
         Column(
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
         ) {
             SettingTitle(text = "General")
             ListItem(
@@ -75,7 +75,7 @@ fun SettingsView(
                             .size(40.dp)
                             .clip(RoundedCornerShape(20.dp)),
                         model = "https://picsum.photos/200/200",
-                        contentDescription = "Profile Picture"
+                        contentDescription = "Profile Picture",
                     )
                 },
                 headlineContent = {
@@ -84,66 +84,95 @@ fun SettingsView(
                 supportingContent = {
                     Text(
                         text = "Account Settings",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
                     )
                 },
                 trailingContent = {
                     Icon(
                         Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "Navigate"
+                        contentDescription = "Navigate",
                     )
                 },
             )
-            ListItem(modifier = Modifier.clickable {
-                onNavigateViewer()
-            }, headlineContent = {
-                Text(text = "Viewer Settings", style = MaterialTheme.typography.bodyLarge)
-            }, trailingContent = {
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Navigate"
-                )
-            })
+            ListItem(
+                modifier = Modifier.clickable {
+                    onNavigateViewer()
+                },
+                headlineContent = {
+                    Text(text = "Viewer Settings", style = MaterialTheme.typography.bodyLarge)
+                },
+                trailingContent = {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "Navigate",
+                    )
+                },
+            )
             SettingTitle(modifier = Modifier.padding(top = 24.dp), text = "About")
-            ListItem(modifier = Modifier.clickable {
-                onNavigateAbout("privacy_policy")
-            }, headlineContent = {
-                Text(text = "Privacy Policy", style = MaterialTheme.typography.bodyLarge)
-            }, trailingContent = {
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Navigate"
-                )
-            })
-            ListItem(modifier = Modifier.clickable {
-                onNavigateAbout("terms_of_use")
-            }, headlineContent = {
-                Text(text = "Terms of Use", style = MaterialTheme.typography.bodyLarge)
-            }, trailingContent = {
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Navigate"
-                )
-            })
-            ListItem(modifier = Modifier.clickable {
-                onNavigateAbout("open_source_licenses")
-            }, headlineContent = {
-                Text(text = "Open Source Licenses", style = MaterialTheme.typography.bodyLarge)
-            }, trailingContent = {
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Navigate"
-                )
-            })
-            Box(modifier = Modifier
-                .padding(16.dp, 40.dp, 16.dp, 16.dp)
-                .fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
+            ListItem(
+                modifier = Modifier.clickable {
+                    onNavigateAbout("privacy_policy")
+                },
+                headlineContent = {
+                    Text(text = "Privacy Policy", style = MaterialTheme.typography.bodyLarge)
+                },
+                trailingContent = {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "Navigate",
+                    )
+                },
+            )
+            ListItem(
+                modifier = Modifier.clickable {
+                    onNavigateAbout("terms_of_use")
+                },
+                headlineContent = {
+                    Text(text = "Terms of Use", style = MaterialTheme.typography.bodyLarge)
+                },
+                trailingContent = {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "Navigate",
+                    )
+                },
+            )
+            ListItem(
+                modifier = Modifier.clickable {
+                    onNavigateAbout("open_source_licenses")
+                },
+                headlineContent = {
+                    Text(text = "Open Source Licenses", style = MaterialTheme.typography.bodyLarge)
+                },
+                trailingContent = {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "Navigate",
+                    )
+                },
+            )
+            Box(
+                modifier = Modifier
+                    .padding(16.dp, 40.dp, 16.dp, 16.dp)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.BottomCenter,
+            ) {
                 TextButton(onClick = {
                     logoutScope.launch {
                         onSignOut().onSuccess {
                             Toast.makeText(
-                                context, "Logout Success", Toast.LENGTH_SHORT
+                                context,
+                                "Logout Success",
+                                Toast.LENGTH_SHORT,
                             ).show()
                             onNavigateIntro()
                         }.onFailure {
                             Toast.makeText(
-                                context, "Logout Failed", Toast.LENGTH_SHORT
+                                context,
+                                "Logout Failed",
+                                Toast.LENGTH_SHORT,
                             ).show()
                         }
                     }
@@ -154,4 +183,3 @@ fun SettingsView(
         }
     }
 }
-

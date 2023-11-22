@@ -47,12 +47,14 @@ class ViewerScreenTest {
                 content = content,
                 coverImage = "",
                 progress = 0.0,
-                pageSplitData = null
+                pageSplitData = null,
             )
             // wait until page cache is built
             runBlocking {
                 pageSplitter.splitPage(
-                    300, 300, openBoatBookData
+                    300,
+                    300,
+                    openBoatBookData,
                 ) {
                     openBoatBookData = openBoatBookData.copy(pageSplitData = it)
                 }
@@ -67,8 +69,9 @@ class ViewerScreenTest {
         return maxOf(
             minOf(
                 (bookData.pageSplitData!!.pageSplits.size * bookData.progress).toInt(),
-                bookData.pageSplitData!!.pageSplits.size - 1
-            ), 0
+                bookData.pageSplitData!!.pageSplits.size - 1,
+            ),
+            0,
         )
     }
 
@@ -85,7 +88,7 @@ class ViewerScreenTest {
                 onProgressChange = {
                     openBoatBookData = openBoatBookData.copy(progress = it)
                 },
-                pageSplitter = BookModel.getInstance().pageSplitter
+                pageSplitter = BookModel.getInstance().pageSplitter,
             )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
@@ -116,7 +119,7 @@ class ViewerScreenTest {
                 onProgressChange = {
                     openBoatBookData = openBoatBookData.copy(progress = it)
                 },
-                pageSplitter = BookModel.getInstance().pageSplitter
+                pageSplitter = BookModel.getInstance().pageSplitter,
             )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()
@@ -141,7 +144,7 @@ class ViewerScreenTest {
             ViewerView(
                 bookData = openBoatBookData,
                 pageSize = openBoatBookData.pageSplitData!!.pageSplits.size,
-                pageSplitter = BookModel.getInstance().pageSplitter
+                pageSplitter = BookModel.getInstance().pageSplitter,
             )
             with(LocalDensity.current) {
                 width = LocalConfiguration.current.screenWidthDp.dp.toPx()

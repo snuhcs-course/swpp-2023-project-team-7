@@ -21,7 +21,7 @@ interface SummaryAPI {
     fun getSummary(
         @Query("book_id") bookId: Int,
         @Query("progress") progress: Double,
-        @Query("access_token") accessToken: String
+        @Query("access_token") accessToken: String,
     ): Call<ResponseBody>
 }
 
@@ -39,7 +39,7 @@ class SummaryAPIProviderModule {
 }
 
 class SummaryRemoteDataSource @Inject constructor(
-    private val summaryAPI: SummaryAPI
+    private val summaryAPI: SummaryAPI,
 ) {
     fun getSummary(bookId: Int, progress: Double, accessToken: String) = flow {
         val response = summaryAPI.getSummary(bookId, progress, accessToken).execute()
@@ -61,5 +61,4 @@ class SummaryRemoteDataSource @Inject constructor(
             throw Throwable(parseErrorBody(response.errorBody()))
         }
     }
-
 }

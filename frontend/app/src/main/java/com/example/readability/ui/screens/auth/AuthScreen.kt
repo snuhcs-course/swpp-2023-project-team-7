@@ -34,16 +34,12 @@ sealed class AuthScreens(val route: String) {
     object Email : AuthScreens("email")
 }
 
-
 @Composable
-fun AuthScreen(
-    navController: NavHostController = rememberNavController(),
-    onNavigateBookList: () -> Unit = {},
-) {
+fun AuthScreen(navController: NavHostController = rememberNavController(), onNavigateBookList: () -> Unit = {}) {
     NavHost(navController = navController, startDestination = AuthScreens.Intro.route) {
         composableSharedAxis(AuthScreens.Intro.route, axis = SharedAxis.X) {
             IntroView(
-                onContinueWithEmailClicked = { navController.navigate(AuthScreens.Email.route) }
+                onContinueWithEmailClicked = { navController.navigate(AuthScreens.Email.route) },
             )
         }
         composableSharedAxis(AuthScreens.Email.route, axis = SharedAxis.X) {
@@ -101,8 +97,9 @@ fun AuthScreen(
                 onNavigateVerify = {
                     navController.navigate(
                         AuthScreens.VerifyEmail.createRoute(
-                            it, false
-                        )
+                            it,
+                            false,
+                        ),
                     )
                 },
             )
@@ -110,14 +107,18 @@ fun AuthScreen(
         composableSharedAxis(
             AuthScreens.VerifyEmail.route,
             axis = SharedAxis.X,
-            arguments = listOf(navArgument("fromSignUp") { defaultValue = false },
-                navArgument("email") { defaultValue = "" })
-        ) {
-            VerifyEmailView(email = String(
-                Base64.decode(
-                    it.arguments?.getString("email") ?: "", URL_SAFE
-                )
+            arguments = listOf(
+                navArgument("fromSignUp") { defaultValue = false },
+                navArgument("email") { defaultValue = "" },
             ),
+        ) {
+            VerifyEmailView(
+                email = String(
+                    Base64.decode(
+                        it.arguments?.getString("email") ?: "",
+                        URL_SAFE,
+                    ),
+                ),
                 fromSignUp = it.arguments?.getBoolean("fromSignUp") ?: false,
                 onBack = { navController.popBackStack() },
                 onNavigateBookList = { onNavigateBookList() },
@@ -127,18 +128,20 @@ fun AuthScreen(
                         sleep(1000)
                     }
                     Result.success(Unit)
-                })
+                },
+            )
         }
         composableSharedAxis(AuthScreens.ResetPassword.route, axis = SharedAxis.X) {
-            ResetPasswordView(onBack = { navController.popBackStack() },
+            ResetPasswordView(
+                onBack = { navController.popBackStack() },
                 onNavigateEmail = { navController.navigate(AuthScreens.Email.route) },
                 onPasswordSubmitted = {
                     withContext(Dispatchers.IO) {
                         sleep(1000)
                     }
                     Result.success(Unit)
-                })
+                },
+            )
         }
-
     }
 }

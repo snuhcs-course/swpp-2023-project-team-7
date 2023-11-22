@@ -24,8 +24,8 @@ class UserRepository @Inject constructor(
                     accessToken = it.access_token,
                     accessTokenLife = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(30),
                     createdAt = null,
-                    verified = null
-                )
+                    verified = null,
+                ),
             )
             return Result.success(Unit)
         }, onFailure = {
@@ -62,7 +62,8 @@ class UserRepository @Inject constructor(
         val refreshToken = getRefreshToken() ?: return Result.failure(UserNotSignedInException())
         userRemoteDataSource.refreshAccessToken(refreshToken).fold(onSuccess = {
             userDao.updateAccessToken(
-                it, System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(30)
+                it,
+                System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(30),
             )
             return Result.success(Unit)
         }, onFailure = {
@@ -77,7 +78,7 @@ class UserRepository @Inject constructor(
                 username = it.username,
                 email = it.email,
                 createdAt = it.created_at,
-                verified = it.verified
+                verified = it.verified,
             )
             return Result.success(it)
         }, onFailure = {

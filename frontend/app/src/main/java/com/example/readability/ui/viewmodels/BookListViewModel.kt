@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BookListViewModel @Inject constructor(
-    private val bookRepository: BookRepository
+    private val bookRepository: BookRepository,
 ) : ViewModel() {
     val bookCardDataList = bookRepository.bookList.map {
         it.map { book ->

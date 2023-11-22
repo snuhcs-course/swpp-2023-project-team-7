@@ -116,32 +116,38 @@ fun AccountView(
     if (showDeleteAccountDialog) {
         AlertDialog(icon = {
             Icon(
-                Icons.Default.Info, contentDescription = "Info"
+                Icons.Default.Info,
+                contentDescription = "Info",
             )
         }, onDismissRequest = { showDeleteAccountDialog = false }, confirmButton = {
-            Button(colors = ButtonColors(
-                containerColor = MaterialTheme.colorScheme.error,
-                contentColor = MaterialTheme.colorScheme.onError,
-                disabledContentColor = MaterialTheme.colorScheme.onError,
-                disabledContainerColor = MaterialTheme.colorScheme.error
-            ), onClick = {
-                scope.launch {
-                    onDeleteAccount().onSuccess {
-                        snackbarHost.showSnackbar("Account deleted")
-                        onNavigateIntro()
-                    }.onFailure {
-                        snackbarHost.showSnackbar("Failed to delete account: " + it.message)
+            Button(
+                colors = ButtonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                    disabledContentColor = MaterialTheme.colorScheme.onError,
+                    disabledContainerColor = MaterialTheme.colorScheme.error,
+                ),
+                onClick = {
+                    scope.launch {
+                        onDeleteAccount().onSuccess {
+                            snackbarHost.showSnackbar("Account deleted")
+                            onNavigateIntro()
+                        }.onFailure {
+                            snackbarHost.showSnackbar("Failed to delete account: " + it.message)
+                        }
                     }
-                }
-            }) {
+                },
+            ) {
                 Text(text = "Delete My Account")
             }
         }, title = {
             Text(text = "Delete Account")
         }, text = {
             Text(
-                text = "WARNING: By deleting your account, all books will be deleted PERMANENTLY.\n" + "\n" + "This CANNOT be undone.",
-                color = MaterialTheme.colorScheme.error
+                text = "WARNING: By deleting your account, all books will be deleted PERMANENTLY.\n" +
+                    "\n" +
+                    "This CANNOT be undone.",
+                color = MaterialTheme.colorScheme.error,
             )
         }, dismissButton = {
             TextButton(onClick = { showDeleteAccountDialog = false }) {
@@ -150,17 +156,19 @@ fun AccountView(
         })
     }
 
-    Scaffold(modifier = Modifier
-        .imePadding()
-        .navigationBarsPadding()
-        .systemBarsPadding(),
+    Scaffold(
+        modifier = Modifier
+            .imePadding()
+            .navigationBarsPadding()
+            .systemBarsPadding(),
         topBar = {
             TopAppBar(title = { Text(text = "Account") }, navigationIcon = {
                 IconButton(onClick = { onBack() }) {
                     Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
                 }
             })
-        }) { innerPadding ->
+        },
+    ) { innerPadding ->
         LaunchedEffect(Unit) {
             emailError = checkEmailError()
             usernameError = checkUsernameError()
@@ -169,21 +177,21 @@ fun AccountView(
             modifier = Modifier
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 AsyncImage(
                     modifier = Modifier
                         .size(96.dp)
                         .clip(RoundedCornerShape(48.dp)),
                     model = "https://picsum.photos/200/200",
-                    contentDescription = "Profile Image"
+                    contentDescription = "Profile Image",
                 )
                 RoundedRectButton(
                     onClick = {
@@ -196,7 +204,8 @@ fun AccountView(
                             }
                             updatePhotoLoading = false
                         }
-                    }, loading = updatePhotoLoading
+                    },
+                    loading = updatePhotoLoading,
                 ) {
                     Text(text = "Update Photo")
                 }
@@ -220,15 +229,18 @@ fun AccountView(
                 leadingIcon = {
                     Icon(
                         painter = painterResource(id = R.drawable.email),
-                        contentDescription = "email"
+                        contentDescription = "email",
                     )
                 },
                 isError = showError && emailError,
                 supportingText = if (showError && emailError) {
                     { Text(text = "Please enter a valid email address") }
-                } else null,
+                } else {
+                    null
+                },
                 keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Next, keyboardType = KeyboardType.Email
+                    imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Email,
                 ),
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -248,22 +260,27 @@ fun AccountView(
                 },
                 leadingIcon = {
                     Icon(
-                        painter = painterResource(id = R.drawable.user), contentDescription = "user"
+                        painter = painterResource(id = R.drawable.user),
+                        contentDescription = "user",
                     )
                 },
                 isError = showError && usernameError,
                 supportingText = if (showError && usernameError) {
                     { Text(text = "Please enter a valid username") }
-                } else null,
+                } else {
+                    null
+                },
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text
+                    keyboardType = KeyboardType.Text,
                 ),
                 keyboardActions = KeyboardActions(onDone = { submit() }),
             )
             Spacer(modifier = Modifier.height(16.dp))
-            RoundedRectButton(modifier = Modifier.padding(16.dp),
+            RoundedRectButton(
+                modifier = Modifier.padding(16.dp),
                 loading = updatePersonalInfoLoading,
-                onClick = { submit() }) {
+                onClick = { submit() },
+            ) {
                 Text(text = "Update Personal Info")
             }
             SettingTitle(modifier = Modifier.padding(top = 24.dp), text = "Actions")
@@ -274,14 +291,14 @@ fun AccountView(
                 leadingContent = {
                     Icon(
                         painter = painterResource(id = R.drawable.password),
-                        contentDescription = "Password"
+                        contentDescription = "Password",
                     )
                 },
                 headlineContent = { Text(text = "Change Password") },
                 trailingContent = {
                     Icon(
                         Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "Navigate"
+                        contentDescription = "Navigate",
                     )
                 },
             )
@@ -294,18 +311,19 @@ fun AccountView(
                     Icon(
                         painter = painterResource(id = R.drawable.trash),
                         contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.error
+                        tint = MaterialTheme.colorScheme.error,
                     )
                 },
                 headlineContent = {
                     Text(
-                        text = "Delete Account", color = MaterialTheme.colorScheme.error
+                        text = "Delete Account",
+                        color = MaterialTheme.colorScheme.error,
                     )
                 },
                 trailingContent = {
                     Icon(
                         Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "Navigate"
+                        contentDescription = "Navigate",
                     )
                 },
             )

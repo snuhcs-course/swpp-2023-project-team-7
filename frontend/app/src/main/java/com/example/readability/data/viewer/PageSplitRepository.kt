@@ -10,7 +10,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 data class PageSplitData(
-    var pageSplits: List<Int>, val width: Int, val height: Int, val viewerStyle: ViewerStyle
+    var pageSplits: List<Int>,
+    val width: Int,
+    val height: Int,
+    val viewerStyle: ViewerStyle,
 )
 
 @Singleton
@@ -33,7 +36,10 @@ class PageSplitRepository @Inject constructor(
     suspend fun getSplitData(bookId: Int, width: Int, height: Int): PageSplitData? {
         if (pageSplitMap[bookId] != null) {
             val pageSplitData = pageSplitMap[bookId]!!
-            if (pageSplitData.width == width && pageSplitData.height == height && pageSplitData.viewerStyle == settingRepository.viewerStyle.firstOrNull()) {
+            if (pageSplitData.width == width &&
+                pageSplitData.height == height &&
+                pageSplitData.viewerStyle == settingRepository.viewerStyle.firstOrNull()
+            ) {
                 return pageSplitData
             }
         }
@@ -75,7 +81,7 @@ class PageSplitRepository @Inject constructor(
         }
         val pageContent = content.substring(
             if (page == 0) 0 else pageSplitData.pageSplits[page - 1],
-            pageSplitData.pageSplits[page]
+            pageSplitData.pageSplits[page],
         )
         val viewerStyle = pageSplitData.viewerStyle
         val textPaint = fontDataSource.buildTextPaint(viewerStyle)
@@ -95,7 +101,13 @@ class PageSplitRepository @Inject constructor(
         )
     }
 
-    fun drawPageRaw(canvas: NativeCanvas, pageContent: String, viewerStyle: ViewerStyle, width: Int, isDarkMode: Boolean) {
+    fun drawPageRaw(
+        canvas: NativeCanvas,
+        pageContent: String,
+        viewerStyle: ViewerStyle,
+        width: Int,
+        isDarkMode: Boolean,
+    ) {
         val textPaint = fontDataSource.buildTextPaint(viewerStyle)
         val charWidths = fontDataSource.getCharWidthArray(viewerStyle)
         if (isDarkMode) {

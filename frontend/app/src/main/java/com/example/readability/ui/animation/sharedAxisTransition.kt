@@ -18,9 +18,10 @@ import androidx.navigation.compose.composable
 import kotlin.math.roundToInt
 
 enum class SharedAxis {
-    X, Y, Z
+    X,
+    Y,
+    Z,
 }
-
 
 fun NavGraphBuilder.composableSharedAxis(
     route: String,
@@ -28,9 +29,10 @@ fun NavGraphBuilder.composableSharedAxis(
     distance: Dp = 30.dp,
     arguments: List<NamedNavArgument> = emptyList(),
     deepLinks: List<NavDeepLink> = emptyList(),
-    content: @Composable() (AnimatedContentScope.(NavBackStackEntry) -> Unit)
+    content:
+    @Composable()
+    (AnimatedContentScope.(NavBackStackEntry) -> Unit),
 ) {
-
     val distancePx = (Resources.getSystem().displayMetrics.density * distance.value).roundToInt()
 
     if (axis == SharedAxis.X) {
@@ -41,54 +43,58 @@ fun NavGraphBuilder.composableSharedAxis(
             content = content,
             enterTransition = {
                 slideInHorizontally(
-                    initialOffsetX = { distancePx }, animationSpec = tween(
-                        DURATION_EMPHASIZED, 0, EASING_EMPHASIZED
-                    )
+                    initialOffsetX = { distancePx },
+                    animationSpec = tween(
+                        DURATION_EMPHASIZED, 0, EASING_EMPHASIZED,
+                    ),
                 ) + fadeIn(
                     animationSpec = tween(
                         (DURATION_EMPHASIZED * (1 - FADE_THROUGH_THRESHOLD)).toInt(),
                         (DURATION_EMPHASIZED * FADE_THROUGH_THRESHOLD).toInt(),
-                        EASING_EMPHASIZED
-                    )
+                        EASING_EMPHASIZED,
+                    ),
                 )
             },
             exitTransition = {
                 slideOutHorizontally(
-                    targetOffsetX = { -distancePx }, animationSpec = tween(
-                        DURATION_EMPHASIZED, 0, EASING_EMPHASIZED
-                    )
+                    targetOffsetX = { -distancePx },
+                    animationSpec = tween(
+                        DURATION_EMPHASIZED, 0, EASING_EMPHASIZED,
+                    ),
                 ) + fadeOut(
                     animationSpec = tween(
                         (DURATION_EMPHASIZED * (1 - FADE_THROUGH_THRESHOLD)).toInt(),
                         0,
-                        EASING_EMPHASIZED
-                    )
+                        EASING_EMPHASIZED,
+                    ),
                 )
             },
             popEnterTransition = {
                 slideInHorizontally(
-                    initialOffsetX = { -distancePx }, animationSpec = tween(
-                        DURATION_EMPHASIZED, 0, EASING_EMPHASIZED
-                    )
+                    initialOffsetX = { -distancePx },
+                    animationSpec = tween(
+                        DURATION_EMPHASIZED, 0, EASING_EMPHASIZED,
+                    ),
                 ) + fadeIn(
                     animationSpec = tween(
                         (DURATION_EMPHASIZED * (1 - FADE_THROUGH_THRESHOLD)).toInt(),
                         (DURATION_EMPHASIZED * FADE_THROUGH_THRESHOLD).toInt(),
-                        EASING_EMPHASIZED
-                    )
+                        EASING_EMPHASIZED,
+                    ),
                 )
             },
             popExitTransition = {
                 slideOutHorizontally(
-                    targetOffsetX = { distancePx }, animationSpec = tween(
-                        DURATION_EMPHASIZED, 0, EASING_EMPHASIZED
-                    )
+                    targetOffsetX = { distancePx },
+                    animationSpec = tween(
+                        DURATION_EMPHASIZED, 0, EASING_EMPHASIZED,
+                    ),
                 ) + fadeOut(
                     animationSpec = tween(
                         (DURATION_EMPHASIZED * (1 - FADE_THROUGH_THRESHOLD)).toInt(),
                         0,
-                        EASING_EMPHASIZED
-                    )
+                        EASING_EMPHASIZED,
+                    ),
                 )
             },
         )

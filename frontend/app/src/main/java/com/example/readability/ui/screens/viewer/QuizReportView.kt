@@ -43,14 +43,15 @@ private val REPORT_REASONS = listOf(
     "It is harmful / unsafe.",
     "It isn't true.",
     "It isn't helpful to understand content.",
-    "Other reasons..."
+    "Other reasons...",
 )
 
 @Preview(showBackground = true, device = "id:pixel_5")
 @Composable
 fun ReportViewPreview() {
     QuizReportView(
-        question = "Question", answer = "Answer"
+        question = "Question",
+        answer = "Answer",
     )
 }
 
@@ -60,7 +61,7 @@ fun QuizReportView(
     question: String,
     answer: String,
     onBack: () -> Unit = {},
-    onReport: suspend (String) -> Result<Unit> = { Result.success(Unit) }
+    onReport: suspend (String) -> Result<Unit> = { Result.success(Unit) },
 ) {
     val scope = rememberCoroutineScope()
     var loading by remember { mutableStateOf(false) }
@@ -74,18 +75,18 @@ fun QuizReportView(
                 IconButton(onClick = { onBack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Arrow Back"
+                        contentDescription = "Arrow Back",
                     )
                 }
             })
         }) { innerPadding ->
             Column(
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.padding(innerPadding),
             ) {
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(rememberScrollState()),
                 ) {
                     ReportTitle()
                     ReportQuestion(question, answer)
@@ -95,12 +96,15 @@ fun QuizReportView(
                     loading = true
                     scope.launch {
                         onReport(REPORT_REASONS[reasonIdx]).onSuccess {
-                            snackbarHost.showSnackbar("Thank you for the feedback! We’ll continue to improve our service based on your opinion.")
+                            snackbarHost.showSnackbar(
+                                "Thank you for the feedback! " +
+                                    "We’ll continue to improve our service based on your opinion.",
+                            )
                             onBack()
                         }.onFailure {
                             snackbarHost.showSnackbar(
                                 it.message
-                                    ?: "Unknown error occurred while sending feedback. Please try again."
+                                    ?: "Unknown error occurred while sending feedback. Please try again.",
                             )
                             loading = false
                         }
@@ -119,14 +123,13 @@ fun ReportTitle() {
             .fillMaxWidth(),
         text = "Why are you reporting this quiz?",
         style = MaterialTheme.typography.titleLarge,
-        textAlign = TextAlign.Center
+        textAlign = TextAlign.Center,
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportQuestion(question: String, answer: String) {
-
     Column(
         modifier = Modifier
             .padding(16.dp)
@@ -134,12 +137,13 @@ fun ReportQuestion(question: String, answer: String) {
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
             )
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         Text(
-            text = "Question:", style = MaterialTheme.typography.labelLarge
+            text = "Question:",
+            style = MaterialTheme.typography.labelLarge,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -150,7 +154,8 @@ fun ReportQuestion(question: String, answer: String) {
         )
         Spacer(modifier = Modifier.height(32.dp))
         Text(
-            text = "Generated Answer:", style = MaterialTheme.typography.labelLarge
+            text = "Generated Answer:",
+            style = MaterialTheme.typography.labelLarge,
         )
         Text(
             text = answer,
@@ -158,7 +163,6 @@ fun ReportQuestion(question: String, answer: String) {
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
         )
-
     }
 }
 
@@ -171,15 +175,14 @@ fun ReportSelection(modifier: Modifier = Modifier, value: Int, onChange: (Int) -
                     .fillMaxWidth()
                     .selectable(selected = (index == value), onClick = {
                         onChange(index)
-                    })
+                    }),
             ) {
-
                 Text(
                     text = text,
                     modifier = Modifier
                         .padding(start = 16.dp)
                         .align(Alignment.CenterVertically)
-                        .weight(1f)
+                        .weight(1f),
                 )
                 RadioButton(selected = (index == value), onClick = { onChange(index) })
             }
@@ -192,7 +195,9 @@ fun SubmitButton(onClick: () -> Unit = {}, loading: Boolean) {
     RoundedRectButton(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp), onClick = onClick, enabled = !loading
+            .padding(16.dp),
+        onClick = onClick,
+        enabled = !loading,
     ) {
         if (loading) CircularProgressIndicatorInButton() else Text(text = "Submit Feedback")
     }

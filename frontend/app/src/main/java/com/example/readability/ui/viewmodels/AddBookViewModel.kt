@@ -8,7 +8,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddBookViewModel @Inject constructor(
-    private val bookRepository: BookRepository
+    private val bookRepository: BookRepository,
 ) : ViewModel() {
     suspend fun addBook(data: AddBookRequest) = bookRepository.addBook(data)
 }

@@ -6,13 +6,15 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.*
-import retrofit2.Response
-import org.junit.Assert.assertTrue
-import org.junit.Assert.assertEquals
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import retrofit2.Call
+import retrofit2.Response
 
 @ExperimentalCoroutinesApi
 class UserModelTest {
@@ -36,7 +38,9 @@ class UserModelTest {
 
         val callMock = mock(Call::class.java) as Call<UserResponse>
         `when`(callMock.execute()).thenReturn(fakeResponse)
-        `when`(loginAPI.signIn(anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(callMock)
+        `when`(
+            loginAPI.signIn(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()),
+        ).thenReturn(callMock)
 
         // Act
         val result = userModel.signIn(email, password)
@@ -56,7 +60,9 @@ class UserModelTest {
 
         val callMock = mock(Call::class.java) as Call<UserResponse>
         `when`(callMock.execute()).thenReturn(fakeResponse)
-        `when`(loginAPI.signIn(anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(callMock)
+        `when`(
+            loginAPI.signIn(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()),
+        ).thenReturn(callMock)
 
         // Act
         val result = userModel.signIn(email, password)
@@ -70,4 +76,3 @@ class UserModelTest {
         Dispatchers.resetMain() // reset main dispatcher to the original Main dispatcher
     }
 }
-

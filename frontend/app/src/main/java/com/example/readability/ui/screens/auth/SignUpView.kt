@@ -42,7 +42,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.R
-import com.example.readability.ui.animation.animateIMEDp
+import com.example.readability.ui.animation.animateImeDp
 import com.example.readability.ui.components.PasswordTextField
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
@@ -68,7 +68,7 @@ fun SignUpPreview() {
 fun SignUpView(
     onBack: () -> Unit = {},
     onSubmitted: suspend (String, String, String) -> Result<Unit> = { _, _, _ -> Result.success(Unit) },
-    onNavigateVerify: (String) -> Unit = {}
+    onNavigateVerify: (String) -> Unit = {},
 ) {
     var email by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -112,13 +112,12 @@ fun SignUpView(
                     Toast.makeText(
                         context,
                         it.message ?: "Unknown error occurred. Please try again.",
-                        Toast.LENGTH_SHORT
+                        Toast.LENGTH_SHORT,
                     ).show()
                 }
             }
         }
     }
-
 
     Scaffold(
         modifier = Modifier
@@ -130,11 +129,12 @@ fun SignUpView(
                 IconButton(onClick = { onBack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Arrow Back"
+                        contentDescription = "Arrow Back",
                     )
                 }
             })
-        }) { innerPaddings ->
+        },
+    ) { innerPaddings ->
         LaunchedEffect(Unit) {
             emailFocusRequester.requestFocus()
             emailError = checkEmailError()
@@ -146,7 +146,7 @@ fun SignUpView(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPaddings)
+                .padding(innerPaddings),
         ) {
             Column(
                 modifier = Modifier
@@ -173,15 +173,18 @@ fun SignUpView(
                     leadingIcon = {
                         Icon(
                             painter = painterResource(id = R.drawable.email),
-                            contentDescription = "email"
+                            contentDescription = "email",
                         )
                     },
                     isError = showError && emailError,
                     supportingText = if (showError && emailError) {
                         { Text(text = "Please enter a valid email address") }
-                    } else null,
+                    } else {
+                        null
+                    },
                     keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Next, keyboardType = KeyboardType.Email
+                        imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Email,
                     ),
                 )
                 OutlinedTextField(
@@ -201,15 +204,18 @@ fun SignUpView(
                     leadingIcon = {
                         Icon(
                             painter = painterResource(id = R.drawable.user),
-                            contentDescription = "user"
+                            contentDescription = "user",
                         )
                     },
                     isError = showError && usernameError,
                     supportingText = if (showError && usernameError) {
                         { Text(text = "Please enter a valid username") }
-                    } else null,
+                    } else {
+                        null
+                    },
                     keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Next, keyboardType = KeyboardType.Text
+                        imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Text,
                     ),
                 )
                 PasswordTextField(
@@ -252,7 +258,7 @@ fun SignUpView(
                     .fillMaxWidth()
                     .testTag("SignUpButton"),
                 onClick = { submit() },
-                imeAnimation = animateIMEDp(label = "AuthView_SignUpView_imeDp"),
+                imeAnimation = animateImeDp(label = "AuthView_SignUpView_imeDp"),
                 loading = loading,
             ) {
                 Text("Sign up")
@@ -260,5 +266,3 @@ fun SignUpView(
         }
     }
 }
-
-

@@ -35,12 +35,11 @@ import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheet(bookCardData: BookCardData, onDismiss: () -> Unit, onProgressChanged: (Int, Double) -> Unit) {
     val modalBottomSheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
+        skipPartiallyExpanded = true,
     )
     val closeScope = rememberCoroutineScope()
 
@@ -49,14 +48,17 @@ fun BottomSheet(bookCardData: BookCardData, onDismiss: () -> Unit, onProgressCha
         sheetState = modalBottomSheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
 
-        ) {
+    ) {
         BottomSheetContent(
-            modifier = Modifier.fillMaxWidth(), bookCardData = bookCardData, onDismiss = {
+            modifier = Modifier.fillMaxWidth(),
+            bookCardData = bookCardData,
+            onDismiss = {
                 closeScope.launch {
                     modalBottomSheetState.hide()
                     onDismiss()
                 }
-            }, onProgressChanged = onProgressChanged
+            },
+            onProgressChanged = onProgressChanged,
         )
     }
 }
@@ -69,18 +71,18 @@ fun BottomSheetPreview() {
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.surfaceContainerLow)
                 .clip(RoundedCornerShape(28.dp, 28.dp, 0.dp, 0.dp))
-                .padding(0.dp, 48.dp, 0.dp, 0.dp)
+                .padding(0.dp, 48.dp, 0.dp, 0.dp),
         ) {
             BottomSheetContent(
-                modifier = Modifier.fillMaxSize(), bookCardData = BookCardData(
+                modifier = Modifier.fillMaxSize(),
+                bookCardData = BookCardData(
                     id = 1,
                     title = "The Open Boat",
                     author = "Stephen Crane",
-                    coverImage = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/TheOpenBoat.jpg/220px-TheOpenBoat.jpg",
                     progress = 0.5,
                     coverImageData = null,
-                    content = "asd"
-                )
+                    content = "asd",
+                ),
             )
         }
     }
@@ -91,11 +93,11 @@ fun BottomSheetContent(
     modifier: Modifier = Modifier,
     bookCardData: BookCardData,
     onDismiss: () -> Unit = {},
-    onProgressChanged: (Int, Double) -> Unit = { _, _ -> }
+    onProgressChanged: (Int, Double) -> Unit = { _, _ -> },
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.SpaceBetween
+        verticalArrangement = Arrangement.SpaceBetween,
     ) {
         BookInfo(
             modifier = Modifier
@@ -103,13 +105,14 @@ fun BottomSheetContent(
                 .padding(16.dp),
             coverImage = bookCardData.coverImageData,
             title = bookCardData.title,
-            author = bookCardData.author
+            author = bookCardData.author,
         )
         SyncStatus(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
         Progress(
-            modifier = Modifier.fillMaxWidth(), progress = bookCardData.progress
+            modifier = Modifier.fillMaxWidth(),
+            progress = bookCardData.progress,
         )
         Actions(modifier = Modifier.fillMaxWidth(), onActionClicked = {
             when (it) {
@@ -133,20 +136,20 @@ fun BottomSheetContent(
 }
 
 @Composable
-fun BookInfo(
-    modifier: Modifier = Modifier, coverImage: ImageBitmap?, title: String, author: String
-) {
+fun BookInfo(modifier: Modifier = Modifier, coverImage: ImageBitmap?, title: String, author: String) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier,
     ) {
         if (coverImage == null) {
             Box(
-                modifier = Modifier.height(120.dp)
+                modifier = Modifier.height(120.dp),
             )
         } else {
             Image(
                 bitmap = coverImage,
-                contentDescription = "Book Image", modifier = Modifier.width(90.dp)
+                contentDescription = "Book Image",
+                modifier = Modifier.width(90.dp),
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -154,14 +157,14 @@ fun BookInfo(
             modifier = Modifier.fillMaxWidth(),
             text = title,
             textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.titleLarge
+            style = MaterialTheme.typography.titleLarge,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             modifier = Modifier.fillMaxWidth(),
             text = author,
             textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge,
         )
     }
 }
@@ -170,41 +173,42 @@ fun BookInfo(
 fun SyncStatus(modifier: Modifier) {
     Row(
         modifier = modifier.padding(16.dp, 16.dp, 24.dp, 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             modifier = Modifier.weight(1f),
             text = "Sync Status",
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
         Text(
             text = "Synced",
-            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
         )
     }
-
 }
 
 @Composable
 fun Progress(modifier: Modifier = Modifier, progress: Double) {
     Row(
         modifier = modifier.padding(16.dp, 16.dp, 24.dp, 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             modifier = Modifier.weight(1f),
             text = "Progress",
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
         Text(
             text = "${(progress * 100).roundToInt()}%",
-            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
         )
     }
 }
 
 enum class BookAction {
-    ClearProgress, MarkAsCompleted, DeleteFromMyLibrary
+    ClearProgress,
+    MarkAsCompleted,
+    DeleteFromMyLibrary,
 }
 
 @Composable
@@ -213,63 +217,67 @@ fun Actions(modifier: Modifier = Modifier, onActionClicked: (BookAction) -> Unit
         Text(
             "Actions",
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(16.dp, 24.dp, 16.dp, 8.dp)
+            modifier = Modifier.padding(16.dp, 24.dp, 16.dp, 8.dp),
         )
-        Row(verticalAlignment = Alignment.CenterVertically,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
                     onActionClicked(BookAction.ClearProgress)
                 }
-                .padding(16.dp)) {
+                .padding(16.dp),
+        ) {
             Icon(
                 painterResource(id = R.drawable.arrow_bend_down_left),
                 contentDescription = "clear progress",
-                tint = MaterialTheme.colorScheme.onSurface
+                tint = MaterialTheme.colorScheme.onSurface,
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 "Clear Progress",
-                style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
+                style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
                     onActionClicked(BookAction.MarkAsCompleted)
                 }
-                .padding(16.dp)) {
+                .padding(16.dp),
+        ) {
             Icon(
                 painterResource(id = R.drawable.check),
                 contentDescription = "mark",
-                tint = MaterialTheme.colorScheme.onSurface
+                tint = MaterialTheme.colorScheme.onSurface,
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 "Mark As Completed",
-                style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
+                style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
                     onActionClicked(BookAction.DeleteFromMyLibrary)
                 }
-                .padding(16.dp)) {
+                .padding(16.dp),
+        ) {
             Icon(
                 painter = painterResource(id = R.drawable.trash),
                 contentDescription = "delete",
-                tint = MaterialTheme.colorScheme.error
+                tint = MaterialTheme.colorScheme.error,
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 "Delete From My library",
-                style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.error)
+                style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.error),
             )
         }
-
-
     }
 }

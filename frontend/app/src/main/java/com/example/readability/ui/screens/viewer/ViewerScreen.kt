@@ -37,7 +37,8 @@ fun ViewerScreen(id: Int, onNavigateSettings: () -> Unit, onBack: () -> Unit) {
             val bookData by viewerViewModel.getBookData(id).collectAsState(initial = null)
             val pageSplitData by viewerViewModel.pageSplitData.collectAsState(initial = null)
             val isDarkTheme = isSystemInDarkTheme()
-            ViewerView(bookData = bookData,
+            ViewerView(
+                bookData = bookData,
                 pageSplitData = pageSplitData,
                 onBack = onBack,
                 onNavigateQuiz = {
@@ -61,7 +62,8 @@ fun ViewerScreen(id: Int, onNavigateSettings: () -> Unit, onBack: () -> Unit) {
                 },
                 onPageDraw = { canvas, pageIndex ->
                     viewerViewModel.drawPage(id, canvas, pageIndex, isDarkTheme)
-                })
+                },
+            )
         }
         composableSharedAxis(ViewerScreens.Quiz.route, axis = SharedAxis.X) {
             val quizViewModel: QuizViewModel = hiltViewModel()
@@ -77,14 +79,15 @@ fun ViewerScreen(id: Int, onNavigateSettings: () -> Unit, onBack: () -> Unit) {
                     navController.navigate(
                         ViewerScreens.QuizReport.createRoute(
                             question = quizList[it].question,
-                            answer = quizList[it].answer
-                        )
+                            answer = quizList[it].answer,
+                        ),
                     )
                 },
             )
         }
         composableSharedAxis(ViewerScreens.QuizReport.route, axis = SharedAxis.X) {
-            QuizReportView(question = it.arguments?.getString("question") ?: "",
+            QuizReportView(
+                question = it.arguments?.getString("question") ?: "",
                 answer = it.arguments?.getString("answer") ?: "",
                 onBack = { navController.popBackStack() },
                 onReport = {
@@ -93,7 +96,8 @@ fun ViewerScreen(id: Int, onNavigateSettings: () -> Unit, onBack: () -> Unit) {
                         delay(1500L)
                     }
                     Result.success(Unit)
-                })
+                },
+            )
         }
         composableSharedAxis(ViewerScreens.Summary.route, axis = SharedAxis.X) {
             val summaryViewModel: SummaryViewModel = hiltViewModel()

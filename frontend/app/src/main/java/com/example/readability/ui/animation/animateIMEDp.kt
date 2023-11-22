@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun animateIMEDp(label: String) : State<Dp> {
+fun animateImeDp(label: String): State<Dp> {
     var lastImeBottom by remember { mutableIntStateOf(0) }
     var isImeVisible by remember { mutableStateOf(false) }
     if (WindowInsets.isImeVisible) {

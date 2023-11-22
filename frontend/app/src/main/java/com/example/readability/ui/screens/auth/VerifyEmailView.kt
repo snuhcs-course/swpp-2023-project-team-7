@@ -41,7 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.LocalSnackbarHost
 import com.example.readability.R
-import com.example.readability.ui.animation.animateIMEDp
+import com.example.readability.ui.animation.animateImeDp
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.Dispatchers
@@ -90,24 +90,27 @@ fun VerifyEmailView(
         }
     }
 
-    Scaffold(modifier = Modifier
-        .imePadding()
-        .systemBarsPadding()
-        .navigationBarsPadding(),
+    Scaffold(
+        modifier = Modifier
+            .imePadding()
+            .systemBarsPadding()
+            .navigationBarsPadding(),
         topBar = {
             TopAppBar(title = {
                 Text(
-                    "Verify Email", style = MaterialTheme.typography.headlineSmall
+                    "Verify Email",
+                    style = MaterialTheme.typography.headlineSmall,
                 )
             }, navigationIcon = {
                 IconButton(onClick = { onBack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Arrow Back"
+                        contentDescription = "Arrow Back",
                     )
                 }
             })
-        }) { innerPadding ->
+        },
+    ) { innerPadding ->
         LaunchedEffect(Unit) {
             verificationCodeFocusRequester.requestFocus()
         }
@@ -118,7 +121,6 @@ fun VerifyEmailView(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top,
         ) {
-
             Column(
                 modifier = Modifier
                     .padding(32.dp)
@@ -129,7 +131,7 @@ fun VerifyEmailView(
                 Text(
                     text = "Enter the code we sent to\n$email.",
                     style = MaterialTheme.typography.titleLarge,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
                 TextButton(onClick = { onVerificationCodeResent() }) {
                     Text(text = "Resend Code")
@@ -151,7 +153,7 @@ fun VerifyEmailView(
                     .focusRequester(verificationCodeFocusRequester)
                     .testTag("VerificationCodeTextField"),
                 keyboardActions = KeyboardActions(onDone = { submit() }),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
             Spacer(modifier = Modifier.weight(1f))
             RoundedRectButton(
@@ -163,11 +165,10 @@ fun VerifyEmailView(
                 },
                 enabled = verificationCode.isNotBlank(),
                 loading = loading,
-                imeAnimation = animateIMEDp(label = "AuthView_VerifyEmailView_imeDp")
+                imeAnimation = animateImeDp(label = "AuthView_VerifyEmailView_imeDp"),
             ) {
                 Text("Next")
             }
         }
     }
-
 }

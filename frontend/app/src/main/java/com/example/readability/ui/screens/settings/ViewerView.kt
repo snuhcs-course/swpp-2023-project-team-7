@@ -81,7 +81,7 @@ fun ViewerPreview() {
 fun ViewerOptionsPreview() {
     ReadabilityTheme {
         Surface(
-            modifier = Modifier.background(MaterialTheme.colorScheme.background)
+            modifier = Modifier.background(MaterialTheme.colorScheme.background),
         ) {
             ViewerOptions(viewerStyle = ViewerStyle(), onViewerStyleChanged = {})
         }
@@ -128,17 +128,19 @@ fun ViewerView(
                     .weight(1f)
                     .fillMaxWidth()
                     .border(
-                        1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp)
-                    )
+                        1.dp,
+                        MaterialTheme.colorScheme.outline,
+                        RoundedCornerShape(12.dp),
+                    ),
             ) {
                 Canvas(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(
                             horizontal = viewerStyle.horizontalPadding.dp,
-                            vertical = viewerStyle.verticalPadding.dp
+                            vertical = viewerStyle.verticalPadding.dp,
                         )
-                        .clipToBounds()
+                        .clipToBounds(),
                 ) {
                     drawIntoCanvas {
                         onDrawPage(it.nativeCanvas, (width - padding * 2 - pageHorizontalPadding * 2).roundToInt())
@@ -146,26 +148,40 @@ fun ViewerView(
                 }
             }
             PrimaryTabRow(
-                modifier = Modifier.fillMaxWidth(), selectedTabIndex = pagerState.currentPage
+                modifier = Modifier.fillMaxWidth(),
+                selectedTabIndex = pagerState.currentPage,
             ) {
                 listOf("Text", "Viewer").forEachIndexed { index, title ->
-                    Tab(selected = pagerState.currentPage == index,
+                    Tab(
+                        selected = pagerState.currentPage == index,
                         onClick = { pagerScope.launch { pagerState.animateScrollToPage(index) } },
                         text = {
                             Text(
-                                text = title, style = MaterialTheme.typography.titleSmall.copy(
+                                text = title,
+                                style = MaterialTheme.typography.titleSmall.copy(
                                     fontFamily = Gabarito,
                                     fontWeight = FontWeight.Medium,
-                                    color = if (pagerState.currentPage == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                    color = if (pagerState.currentPage == index) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                                ),
                             )
-                        })
+                        },
+                    )
                 }
             }
             HorizontalPager(
-                modifier = if (maxHeight == 0.dp) Modifier.fillMaxWidth() else Modifier
-                    .fillMaxWidth()
-                    .height(maxHeight), state = pagerState, verticalAlignment = Alignment.Top
+                modifier = if (maxHeight == 0.dp) {
+                    Modifier.fillMaxWidth()
+                } else {
+                    Modifier
+                        .fillMaxWidth()
+                        .height(maxHeight)
+                },
+                state = pagerState,
+                verticalAlignment = Alignment.Top,
             ) {
                 when (it) {
                     0 -> TextOptions(
@@ -177,7 +193,7 @@ fun ViewerView(
                             },
                         viewerStyle = viewerStyle,
                         fontMap = fontMap,
-                        onViewerStyleChanged = onViewerStyleChanged
+                        onViewerStyleChanged = onViewerStyleChanged,
                     )
 
                     1 -> ViewerOptions(
@@ -188,11 +204,10 @@ fun ViewerView(
                                 maxHeight = maxHeight.coerceAtLeast(height)
                             },
                         viewerStyle = viewerStyle,
-                        onViewerStyleChanged = onViewerStyleChanged
+                        onViewerStyleChanged = onViewerStyleChanged,
                     )
                 }
             }
-
         }
     }
 }
@@ -203,21 +218,22 @@ fun TextOptions(
     modifier: Modifier = Modifier,
     viewerStyle: ViewerStyle,
     fontMap: Map<String, Int>,
-    onViewerStyleChanged: (viewerStyle: ViewerStyle) -> Unit
+    onViewerStyleChanged: (viewerStyle: ViewerStyle) -> Unit,
 ) {
     var fontFamilyExpanded by remember { mutableStateOf(false) }
     Column(
-        modifier = modifier
+        modifier = modifier,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(text = "Font Family", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.weight(1f))
             ExposedDropdownMenuBox(
                 expanded = fontFamilyExpanded,
-                onExpandedChange = { fontFamilyExpanded = it }) {
+                onExpandedChange = { fontFamilyExpanded = it },
+            ) {
                 Row(
                     modifier = Modifier
                         .height(40.dp)
@@ -227,15 +243,15 @@ fun TextOptions(
                         .defaultMinSize(minWidth = 128.dp)
                         .width(IntrinsicSize.Min),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
                         modifier = Modifier.weight(1f),
                         text = viewerStyle.fontFamily,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
                     )
                     ExposedDropdownMenuDefaults.TrailingIcon(
-                        expanded = fontFamilyExpanded
+                        expanded = fontFamilyExpanded,
                     )
                 }
                 ExposedDropdownMenu(expanded = fontFamilyExpanded, onDismissRequest = {
@@ -248,7 +264,7 @@ fun TextOptions(
                         }, text = {
                             Text(
                                 text = selectionOption.key,
-                                style = MaterialTheme.typography.bodyLarge
+                                style = MaterialTheme.typography.bodyLarge,
                             )
                         })
                     }
@@ -265,9 +281,10 @@ fun TextOptions(
                 onViewerStyleChanged(
                     viewerStyle.copy(
                         textSize = maxOf(
-                            1f, viewerStyle.textSize - 1
-                        )
-                    )
+                            1f,
+                            viewerStyle.textSize - 1,
+                        ),
+                    ),
                 )
             },
         )
@@ -308,10 +325,10 @@ fun TextOptions(
 fun ViewerOptions(
     modifier: Modifier = Modifier,
     viewerStyle: ViewerStyle,
-    onViewerStyleChanged: (viewerStyle: ViewerStyle) -> Unit
+    onViewerStyleChanged: (viewerStyle: ViewerStyle) -> Unit,
 ) {
     Column(
-        modifier = modifier
+        modifier = modifier,
     ) {
         OptionWithPlusMinus(
             title = "Horizontal Padding",
@@ -323,9 +340,10 @@ fun ViewerOptions(
                 onViewerStyleChanged(
                     viewerStyle.copy(
                         horizontalPadding = maxOf(
-                            0f, viewerStyle.horizontalPadding - 1
-                        )
-                    )
+                            0f,
+                            viewerStyle.horizontalPadding - 1,
+                        ),
+                    ),
                 )
             },
         )
@@ -339,15 +357,16 @@ fun ViewerOptions(
                 onViewerStyleChanged(
                     viewerStyle.copy(
                         verticalPadding = maxOf(
-                            0f, viewerStyle.verticalPadding - 1
-                        )
-                    )
+                            0f,
+                            viewerStyle.verticalPadding - 1,
+                        ),
+                    ),
                 )
             },
         )
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(text = "Background Color", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.weight(1f))
@@ -360,20 +379,20 @@ fun ViewerOptions(
                     modifier = Modifier
                         .size(40.dp)
                         .border(1.dp, md_theme_light_outline, RoundedCornerShape(4.dp))
-                        .background(Color(viewerStyle.brightBackgroundColor), RoundedCornerShape(4.dp))
+                        .background(Color(viewerStyle.brightBackgroundColor), RoundedCornerShape(4.dp)),
                 )
                 Icon(painter = painterResource(id = R.drawable.moon), contentDescription = "Moon")
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .border(1.dp, md_theme_dark_outline, RoundedCornerShape(4.dp))
-                        .background(Color(viewerStyle.darkBackgroundColor), RoundedCornerShape(4.dp))
+                        .background(Color(viewerStyle.darkBackgroundColor), RoundedCornerShape(4.dp)),
                 )
             }
         }
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(text = "Text Color", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.weight(1f))
@@ -386,14 +405,14 @@ fun ViewerOptions(
                     modifier = Modifier
                         .size(40.dp)
                         .border(1.dp, md_theme_light_outline, RoundedCornerShape(4.dp))
-                        .background(Color(viewerStyle.brightTextColor), RoundedCornerShape(4.dp))
+                        .background(Color(viewerStyle.brightTextColor), RoundedCornerShape(4.dp)),
                 )
                 Icon(painter = painterResource(id = R.drawable.moon), contentDescription = "Moon")
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .border(1.dp, md_theme_dark_outline, RoundedCornerShape(4.dp))
-                        .background(Color(viewerStyle.darkTextColor), RoundedCornerShape(4.dp))
+                        .background(Color(viewerStyle.darkTextColor), RoundedCornerShape(4.dp)),
                 )
             }
         }
@@ -401,32 +420,29 @@ fun ViewerOptions(
 }
 
 @Composable
-fun OptionWithPlusMinus(
-    title: String,
-    value: String,
-    onPlus: () -> Unit,
-    onMinus: () -> Unit,
-) {
+fun OptionWithPlusMinus(title: String, value: String, onPlus: () -> Unit, onMinus: () -> Unit) {
     Row(
         modifier = Modifier.padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text = title, style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.weight(1f))
         IconButton(onClick = { onPlus() }) {
             Icon(
-                painter = painterResource(id = R.drawable.plus), contentDescription = "Plus"
+                painter = painterResource(id = R.drawable.plus),
+                contentDescription = "Plus",
             )
         }
         Text(
             modifier = Modifier.defaultMinSize(minWidth = 80.dp),
             text = value,
             style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         IconButton(onClick = { onMinus() }) {
             Icon(
-                painter = painterResource(id = R.drawable.minus), contentDescription = "Minus"
+                painter = painterResource(id = R.drawable.minus),
+                contentDescription = "Minus",
             )
         }
     }

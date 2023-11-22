@@ -35,19 +35,18 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.example.readability.LocalSnackbarHost
-import com.example.readability.ui.animation.animateIMEDp
+import com.example.readability.ui.animation.animateImeDp
 import com.example.readability.ui.components.PasswordTextField
 import com.example.readability.ui.components.RoundedRectButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-
 private val passwordRegex = Regex("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}\$")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChangePasswordView (
+fun ChangePasswordView(
     onBack: () -> Unit = {},
     onPasswordSubmitted: suspend (password: String) -> Result<Unit> = { Result.success(Unit) },
 ) {
@@ -98,11 +97,12 @@ fun ChangePasswordView (
                 IconButton(onClick = { onBack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Arrow Back"
+                        contentDescription = "Arrow Back",
                     )
                 }
             })
-        }) { innerPadding ->
+        },
+    ) { innerPadding ->
         LaunchedEffect(Unit) {
             passwordFocusRequester.requestFocus()
             passwordError = isPasswordError()
@@ -152,8 +152,8 @@ fun ChangePasswordView (
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("ChangePasswordButton"),
-                imeAnimation = animateIMEDp(label = "SettingsScreen_ChangePasswordView_imeDp"),
-                loading = loading
+                imeAnimation = animateImeDp(label = "SettingsScreen_ChangePasswordView_imeDp"),
+                loading = loading,
             ) {
                 Text("Confirm")
             }

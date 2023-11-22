@@ -24,35 +24,31 @@ import com.example.readability.ui.theme.Lora
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SummaryView(
-    onBack: () -> Unit = {},
-    summary: String,
-) {
-    Scaffold (
+fun SummaryView(onBack: () -> Unit = {}, summary: String) {
+    Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "Previous Story") }, navigationIcon = {
                 IconButton(onClick = { onBack() }) {
                     Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Arrow Back")
                 }
             })
-        }
+        },
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp)
                 .verticalScroll(
-                    rememberScrollState()
+                    rememberScrollState(),
                 ),
             horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.Top,
         ) {
             Text(
                 text = summary,
                 textAlign = TextAlign.Start,
-                style = MaterialTheme.typography.titleLarge.copy(fontFamily = Lora, fontWeight = FontWeight.Normal)
+                style = MaterialTheme.typography.titleLarge.copy(fontFamily = Lora, fontWeight = FontWeight.Normal),
             )
         }
     }
-
 }

@@ -60,7 +60,7 @@ data class Book(
     @ColumnInfo(name = "progress") val progress: Double,
     @ColumnInfo(name = "cover_image") val coverImage: String?,
     @ColumnInfo(
-        name = "cover_image_data"
+        name = "cover_image_data",
     ) val coverImageData: ImageBitmap? = null,
     @ColumnInfo(name = "content") val content: String,
     @ColumnInfo(name = "content_data") val contentData: String? = null,
@@ -118,7 +118,9 @@ class BookDatabaseModule {
     @Singleton
     fun provideBookDatabase(@ApplicationContext appContext: Context): BookDatabase {
         return Room.databaseBuilder(
-            appContext, BookDatabase::class.java, "Book"
+            appContext,
+            BookDatabase::class.java,
+            "Book",
         ).build()
     }
 }

@@ -15,15 +15,15 @@ import javax.inject.Singleton
 class BookRepository @Inject constructor(
     private val bookDao: BookDao,
     private val bookRemoteDataSource: BookRemoteDataSource,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) {
-    val _bookMap = MutableStateFlow(mutableMapOf<Int, Book>())
+    private val bookMap = MutableStateFlow(mutableMapOf<Int, Book>())
 
-    val bookList = _bookMap.map {
+    val bookList = bookMap.map {
         it.values.toList()
     }
 
-    fun getBook(bookId: Int) = _bookMap.map {
+    fun getBook(bookId: Int) = bookMap.map {
         it[bookId]
     }
 
@@ -36,7 +36,7 @@ class BookRepository @Inject constructor(
                 bookList.forEach { book ->
                     map[book.bookId] = book
                 }
-                _bookMap.value = map
+                bookMap.value = map
             }
         }
     }
@@ -45,7 +45,7 @@ class BookRepository @Inject constructor(
         val accessToken =
             userRepository.getAccessToken() ?: return Result.failure(UserNotSignedInException())
         return bookRemoteDataSource.getBookList(accessToken).fold(onSuccess = {
-            val newMap = _bookMap.value.toMutableMap()
+            val newMap = bookMap.value.toMutableMap()
             it.forEach { book ->
                 println("BookRepository: book: $book")
                 if (bookDao.getBook(book.id) != null) {
@@ -58,7 +58,7 @@ class BookRepository @Inject constructor(
                         author = book.author,
                         progress = book.progress,
                         coverImage = book.coverImage,
-                        content = book.content
+                        content = book.content,
                     )
                     bookDao.insert(bookObject)
                     newMap[book.id] = bookObject
@@ -71,7 +71,7 @@ class BookRepository @Inject constructor(
                     newMap.remove(book.bookId)
                 }
             }
-            _bookMap.value = newMap
+            bookMap.value = newMap
             Result.success(Unit)
         }, onFailure = {
             Result.failure(it)
@@ -82,7 +82,7 @@ class BookRepository @Inject constructor(
         val accessToken =
             userRepository.getAccessToken() ?: return Result.failure(UserNotSignedInException())
         val book = bookDao.getBook(bookId) ?: return Result.failure(
-            Exception("Book not found")
+            Exception("Book not found"),
         )
         if (book.coverImageData != null) {
             return Result.success(Unit)
@@ -93,7 +93,7 @@ class BookRepository @Inject constructor(
         return bookRemoteDataSource.getCoverImageData(accessToken, book.coverImage)
             .fold(onSuccess = { image ->
                 bookDao.updateCoverImageData(bookId, image)
-                _bookMap.update {
+                bookMap.update {
                     it.toMutableMap().apply {
                         this[bookId] = book.copy(coverImageData = image)
                     }
@@ -108,7 +108,7 @@ class BookRepository @Inject constructor(
         val accessToken =
             userRepository.getAccessToken() ?: return Result.failure(UserNotSignedInException())
         val book = bookDao.getBook(bookId) ?: return Result.failure(
-            Exception("Book not found")
+            Exception("Book not found"),
         )
         if (book.contentData != null) {
             return Result.success(Unit)
@@ -116,7 +116,7 @@ class BookRepository @Inject constructor(
         return bookRemoteDataSource.getContentData(accessToken, book.content)
             .fold(onSuccess = { contentData ->
                 bookDao.updateContentData(bookId, contentData)
-                _bookMap.update {
+                bookMap.update {
                     it.toMutableMap().apply {
                         this[bookId] = book.copy(contentData = contentData)
                     }
@@ -139,7 +139,7 @@ class BookRepository @Inject constructor(
 
     suspend fun updateProgress(bookId: Int, progress: Double) {
         bookDao.updateProgress(bookId, progress)
-        _bookMap.update {
+        bookMap.update {
             it.toMutableMap().apply {
                 this[bookId] = this[bookId]!!.copy(progress = progress)
             }
@@ -148,6 +148,6 @@ class BookRepository @Inject constructor(
 
     suspend fun clearBooks() {
         bookDao.deleteAll()
-        _bookMap.value = mutableMapOf()
+        bookMap.value = mutableMapOf()
     }
 }

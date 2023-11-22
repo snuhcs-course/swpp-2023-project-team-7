@@ -39,7 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.R
-import com.example.readability.ui.animation.animateIMEDp
+import com.example.readability.ui.animation.animateImeDp
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +61,7 @@ private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@(.+)\$")
 fun ForgotPasswordView(
     onBack: () -> Unit = {},
     onNavigateVerify: (String) -> Unit = {},
-    onEmailSubmitted: suspend (String) -> Result<Unit> = { Result.success(Unit) }
+    onEmailSubmitted: suspend (String) -> Result<Unit> = { Result.success(Unit) },
 ) {
     var email by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf(false) }
@@ -90,23 +90,26 @@ fun ForgotPasswordView(
         }
     }
 
-    Scaffold(modifier = Modifier
-        .fillMaxWidth()
-        .imePadding()
-        .navigationBarsPadding()
-        .systemBarsPadding(),
+    Scaffold(
+        modifier = Modifier
+            .fillMaxWidth()
+            .imePadding()
+            .navigationBarsPadding()
+            .systemBarsPadding(),
         topBar = {
             TopAppBar(
                 title = { Text("Find Password") },
                 navigationIcon = {
                     IconButton(onClick = { onBack() }) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Arrow Back"
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Arrow Back",
                         )
                     }
                 },
             )
-        }) { innerPadding ->
+        },
+    ) { innerPadding ->
         LaunchedEffect(Unit) {
             emailFocusRequester.requestFocus()
             emailError = checkEmailError()
@@ -118,7 +121,6 @@ fun ForgotPasswordView(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top,
         ) {
-
             Column(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 32.dp)
@@ -152,7 +154,9 @@ fun ForgotPasswordView(
                 isError = emailError && showError,
                 supportingText = if (emailError && showError) {
                     { Text("Please enter a valid email address") }
-                } else null,
+                } else {
+                    null
+                },
                 keyboardActions = KeyboardActions(onDone = { submit() }),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             )
@@ -162,13 +166,11 @@ fun ForgotPasswordView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("NextButton"),
-                imeAnimation = animateIMEDp(label = "ForgotPasswordView_NextButton_imeDP"),
+                imeAnimation = animateImeDp(label = "ForgotPasswordView_NextButton_imeDP"),
                 loading = loading,
             ) {
                 Text("Next")
             }
         }
     }
-
 }
-

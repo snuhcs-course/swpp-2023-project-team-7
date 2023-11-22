@@ -18,14 +18,17 @@ import javax.inject.Inject
 class ViewerViewModel @Inject constructor(
     private val bookRepository: BookRepository,
     private val pageSplitRepository: PageSplitRepository,
-    settingRepository: SettingRepository
+    settingRepository: SettingRepository,
 ) : ViewModel() {
 
     val pageSplitData = MutableStateFlow<PageSplitData?>(null)
     val viewerStyle = settingRepository.viewerStyle
 
     fun setPageSize(bookId: Int, width: Int, height: Int) {
-        if (pageSplitData.value?.width == width && pageSplitData.value?.height == height && pageSplitData.value?.viewerStyle == viewerStyle.value) {
+        if (pageSplitData.value?.width == width &&
+            pageSplitData.value?.height == height &&
+            pageSplitData.value?.viewerStyle == viewerStyle.value
+        ) {
             return
         }
         viewModelScope.launch {
@@ -45,7 +48,10 @@ class ViewerViewModel @Inject constructor(
 
     fun drawPage(bookId: Int, canvas: NativeCanvas, page: Int, isDarkMode: Boolean) {
         pageSplitRepository.drawPage(
-            canvas = canvas, bookId = bookId, page = page, isDarkMode = isDarkMode
+            canvas = canvas,
+            bookId = bookId,
+            page = page,
+            isDarkMode = isDarkMode,
         )
     }
 }

@@ -19,9 +19,7 @@ sealed class BookScreens(val route: String) {
 }
 
 @Composable
-fun BookScreen(
-    onNavigateSettings: () -> Unit = {}, onNavigateViewer: (id: Int) -> Unit = {}
-) {
+fun BookScreen(onNavigateSettings: () -> Unit = {}, onNavigateViewer: (id: Int) -> Unit = {}) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = BookScreens.BookList.route) {
         composableSharedAxis(BookScreens.BookList.route, axis = SharedAxis.X) {
@@ -44,7 +42,7 @@ fun BookScreen(
                 },
                 onProgressChanged = { id, progress ->
                     bookListViewModel.updateProgress(id, progress)
-                }
+                },
             )
         }
         composableSharedAxis(BookScreens.AddBook.route, axis = SharedAxis.X) {

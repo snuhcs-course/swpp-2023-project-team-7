@@ -41,7 +41,7 @@ fun CircularProgressIndicatorInButton(
         strokeWidth = strokeWidth,
         color = color,
         trackColor = trackColor,
-        strokeCap = strokeCap
+        strokeCap = strokeCap,
     )
 }
 
@@ -64,12 +64,14 @@ fun RoundedRectButton(
                 .compositeOver(MaterialTheme.colorScheme.primary)
         } else {
             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-        }, label = "RoundedRectButton.DisabledContainerColor"
+        },
+        label = "RoundedRectButton.DisabledContainerColor",
     )
 
     val imeDp = imeAnimation?.value ?: 1.dp
     val imePaddingDp = imeAnimation?.value ?: 0.dp
-    Button(onClick = onClick,
+    Button(
+        onClick = onClick,
         modifier = modifier
             .padding(16 * imePaddingDp)
             .height(48.dp),
@@ -83,10 +85,15 @@ fun RoundedRectButton(
         contentPadding = contentPadding,
         interactionSource = interactionSource,
         content = if (loading) {
-            { CircularProgressIndicatorInButton(
-                color = MaterialTheme.colorScheme.onPrimary,
-            ) }
-        } else content)
+            {
+                CircularProgressIndicatorInButton(
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+        } else {
+            content
+        },
+    )
 }
 
 @Composable
@@ -108,12 +115,14 @@ fun RoundedRectFilledTonalButton(
                 .compositeOver(MaterialTheme.colorScheme.onSecondaryContainer)
         } else {
             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-        }, label = "RoundedRectFilledTonalButton.DisabledContainerColor"
+        },
+        label = "RoundedRectFilledTonalButton.DisabledContainerColor",
     )
 
     val imeDp = imeAnimation?.value ?: 1.dp
     val imePaddingDp = imeAnimation?.value ?: 0.dp
-    FilledTonalButton(onClick = onClick,
+    FilledTonalButton(
+        onClick = onClick,
         modifier = modifier
             .padding(16 * imePaddingDp)
             .height(48.dp),
@@ -127,8 +136,13 @@ fun RoundedRectFilledTonalButton(
         contentPadding = contentPadding,
         interactionSource = interactionSource,
         content = if (loading) {
-            { CircularProgressIndicatorInButton(
-                color = MaterialTheme.colorScheme.onPrimary,
-            ) }
-        } else content)
+            {
+                CircularProgressIndicatorInButton(
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+        } else {
+            content
+        },
+    )
 }
