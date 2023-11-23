@@ -1,5 +1,9 @@
 package com.example.readability.ui.screens.viewer
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -46,6 +50,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -72,6 +77,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -110,6 +116,8 @@ fun ViewerView(
     val bookReady by rememberUpdatedState(
         newValue = bookData != null && pageSplitData != null && pageSplitData.pageSplits.isNotEmpty() && closeLoading,
     )
+
+    LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
 
     // if book is ready within 150ms, don't show loading screen
     // otherwise, show loading screen for at least 700ms
@@ -209,6 +217,26 @@ fun ViewerView(
             }
         }
     }
+}
+
+@Composable
+fun LockScreenOrientation(orientation: Int) {
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val activity = context.findActivity() ?: return@DisposableEffect onDispose {}
+        val originalOrientation = activity.requestedOrientation
+        activity.requestedOrientation = orientation
+        onDispose {
+            // restore original orientation when view disappears
+            activity.requestedOrientation = originalOrientation
+        }
+    }
+}
+
+fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
 
 @Composable
@@ -635,17 +663,37 @@ fun ViewerOverlay(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        RoundedRectFilledTonalButton(
-                            modifier = Modifier.weight(1f),
-                            onClick = { onNavigateSummary() },
-                        ) {
-                            Text("Generate Summary")
-                        }
-                        RoundedRectFilledTonalButton(
-                            modifier = Modifier.weight(1f),
-                            onClick = { onNavigateQuiz() },
-                        ) {
-                            Text("Generate Quiz")
+                        // TODO: add ai status
+                        if (false) {
+                            RoundedRectFilledTonalButton(
+                                modifier = Modifier.weight(1f),
+                                onClick = { onNavigateSummary() },
+                                enabled = false,
+                            ) {
+                                Text("Waiting for Summary and Quiz...")
+                            }
+                        } else if (pageIndex < 4) {
+                            RoundedRectFilledTonalButton(
+                                modifier = Modifier.weight(1f),
+                                onClick = { onNavigateSummary() },
+                                enabled = false,
+                            ) {
+                                Text("4 pages required for Summary and Quiz")
+                            }
+                        } else {
+                            RoundedRectFilledTonalButton(
+                                modifier = Modifier.weight(1f),
+                                onClick = { onNavigateSummary() },
+                            ) {
+                                Text("Generate Summary")
+                            }
+                            RoundedRectFilledTonalButton(
+                                modifier = Modifier.weight(1f),
+                                onClick = { onNavigateQuiz() },
+                                enabled = pageIndex > 3,
+                            ) {
+                                Text("Generate Quiz")
+                            }
                         }
                     }
                     Slider(
