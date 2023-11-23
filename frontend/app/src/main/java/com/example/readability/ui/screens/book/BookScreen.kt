@@ -43,6 +43,9 @@ fun BookScreen(onNavigateSettings: () -> Unit = {}, onNavigateViewer: (id: Int) 
                 onProgressChanged = { id, progress ->
                     bookListViewModel.updateProgress(id, progress)
                 },
+                onRefresh = {
+                    bookListViewModel.updateBookList()
+                },
             )
         }
         composableSharedAxis(BookScreens.AddBook.route, axis = SharedAxis.X) {

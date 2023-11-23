@@ -105,6 +105,8 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("androidx.compose.runtime:runtime-tracing:1.0.0-alpha05")
+    implementation("androidx.compose.material:material:1.3.1")
+    implementation("com.github.skydoves:cloudy:0.1.2")
 
     testImplementation("androidx.room:room-testing:$roomVersion")
     testImplementation("junit:junit:4.13.2")
