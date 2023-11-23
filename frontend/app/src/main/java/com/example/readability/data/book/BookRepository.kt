@@ -45,8 +45,9 @@ class BookRepository @Inject constructor(
         val accessToken =
             userRepository.getAccessToken() ?: return Result.failure(UserNotSignedInException())
         return bookRemoteDataSource.getBookList(accessToken).fold(onSuccess = {
+                newBookList ->
             val newMap = bookMap.value.toMutableMap()
-            it.forEach { book ->
+            newBookList.forEach { book ->
                 println("BookRepository: book: $book")
                 if (bookDao.getBook(book.id) != null) {
                     bookDao.updateProgress(book.id, book.progress)
@@ -66,7 +67,7 @@ class BookRepository @Inject constructor(
             }
             // delete books that are not in the list
             bookDao.getAll().forEach { book ->
-                if (it.find { book.bookId == it.id } == null) {
+                if (newBookList.find { book.bookId == it.id } == null) {
                     bookDao.delete(book)
                     newMap.remove(book.bookId)
                 }

@@ -2,14 +2,17 @@ package com.example.readability.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.readability.data.book.Book
 import com.example.readability.data.book.BookCardData
 import com.example.readability.data.book.BookRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -17,24 +20,30 @@ import javax.inject.Inject
 class BookListViewModel @Inject constructor(
     private val bookRepository: BookRepository,
 ) : ViewModel() {
+    private fun bookToBookCardData(book: Book) = BookCardData(
+        id = book.bookId,
+        title = book.title,
+        author = book.author,
+        progress = book.progress,
+        coverImage = book.coverImage,
+        coverImageData = book.coverImageData,
+        content = book.content,
+    )
+
     val bookCardDataList = bookRepository.bookList.map {
-        it.map { book ->
-            BookCardData(
-                id = book.bookId,
-                title = book.title,
-                author = book.author,
-                progress = book.progress,
-                coverImage = book.coverImage,
-                coverImageData = book.coverImageData,
-                content = book.content,
-            )
-        }
-    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        it.map { bookToBookCardData(it) }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.Lazily,
+        runBlocking {
+            bookRepository.bookList.first().map { bookToBookCardData(it) }
+        },
+    )
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
             bookRepository.refreshBookList().onFailure {
-                println("BookListViewModel: refreshBookList failed: $it")
+                println("BookListViewModel: refreshBookList failed: ${it.message}")
             }
         }
     }
@@ -50,6 +59,13 @@ class BookListViewModel @Inject constructor(
     fun updateProgress(bookId: Int, progress: Double) {
         viewModelScope.launch(Dispatchers.IO) {
             bookRepository.updateProgress(bookId, progress)
+        }
+    }
+    suspend fun updateBookList() {
+        viewModelScope.launch(Dispatchers.IO) {
+            bookRepository.refreshBookList().onFailure {
+                println("BookListViewModel: refreshBookList failed: ${it.message}")
+            }
         }
     }
 }

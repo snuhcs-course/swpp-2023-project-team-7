@@ -26,7 +26,7 @@ class SummaryRepository @Inject constructor(
                     if (!isActive) return@collect
                     summary.value += response
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 return@withContext Result.failure(e)
             }
             Result.success(Unit)

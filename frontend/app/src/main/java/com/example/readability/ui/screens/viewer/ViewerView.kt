@@ -690,7 +690,6 @@ fun ViewerOverlay(
                             RoundedRectFilledTonalButton(
                                 modifier = Modifier.weight(1f),
                                 onClick = { onNavigateQuiz() },
-                                enabled = pageIndex > 3,
                             ) {
                                 Text("Generate Quiz")
                             }
