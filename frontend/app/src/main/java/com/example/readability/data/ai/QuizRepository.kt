@@ -41,33 +41,38 @@ class QuizRepository @Inject constructor(
             _quizList.update { listOf() }
             _quizCount.update { 0 }
             try {
+                var receivingQuiz = true
                 quizRemoteDataSource.getQuiz(bookId, progress, accessToken).collect { response ->
                     if (!isActive) return@collect
                     if (response.type == QuizResponseType.COUNT) {
                         _quizCount.value = response.intData
-                    } else if (response.type == QuizResponseType.QUESTION) {
-                        if (_quizList.value.size < response.intData) {
+                        _quizList.update { listOf(Quiz("", "")) }
+                    } else if (response.type == QuizResponseType.QUESTION_END) {
+                        receivingQuiz = false
+                    } else if (response.type == QuizResponseType.ANSWER_END) {
+                        receivingQuiz = true
+                        if (_quizList.value.size < _quizCount.value) {
                             _quizList.update {
                                 it.toMutableList().apply {
-                                    add(Quiz(response.data, ""))
-                                }
-                            }
-                        } else {
-                            _quizList.update {
-                                it.toMutableList().apply {
-                                    set(response.intData - 1, Quiz(response.data, ""))
+                                    add(Quiz("", ""))
                                 }
                             }
                         }
-                    } else if (response.type == QuizResponseType.ANSWER) {
+                    } else {
+                        val lastIndex = _quizList.value.lastIndex
                         _quizList.update {
                             it.toMutableList().apply {
-                                set(response.intData - 1, Quiz(this[response.intData - 1].question, response.data))
+                                if (receivingQuiz) {
+                                    set(lastIndex, Quiz(it[lastIndex].question + response.data, it[lastIndex].answer))
+                                } else {
+                                    set(lastIndex, Quiz(it[lastIndex].question, it[lastIndex].answer + response.data))
+                                }
                             }
                         }
                     }
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                e.printStackTrace()
                 return@withContext Result.failure(e)
             }
             if (isActive) {
