@@ -74,6 +74,18 @@ android {
         unitTests {
             isIncludeAndroidResources = true
         }
+        unitTests.all { it.jvmArgs("-noverify") }
+    }
+    sourceSets {
+        getByName("main") {
+            java.srcDirs("src/main/kotlin")
+        }
+        getByName("test") {
+            java.srcDirs("src/test/kotlin")
+        }
+        getByName("androidTest") {
+            java.srcDirs("src/androidTest/kotlin")
+        }
     }
 }
 
