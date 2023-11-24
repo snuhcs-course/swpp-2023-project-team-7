@@ -25,13 +25,14 @@ jobs:
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
             ${{ runner.os }}-gradle-
-    - name: go to frontend directory
-      run: cd frontend
     - name: Set execute permissions for gradlew
+      working-directory: frontend
       run: chmod +x ./gradlew
     - name: Run Android Linter
+      working-directory: frontend
       run: ./gradlew lintDebug
     - name: Run ktlintCheck
+      working-directory: frontend
       run: ./gradlew ktlintCheck
   run_unit_test:
     name: Run unit tests
@@ -53,9 +54,9 @@ jobs:
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
             ${{ runner.os }}-gradle-
-    - name: go to frontend directory
-      run: cd frontend
     - name: Set execute permissions for gradlew
+      working-directory: frontend
       run: chmod +x ./gradlew
     - name: Run unit tests
+      working-directory: frontend
       run: ./gradlew testDebugUnitTest
