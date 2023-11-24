@@ -1,4 +1,4 @@
-package com.example.readability.ui.models
+package com.example.readability.ui
 import com.example.readability.data.user.UserRepository
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest

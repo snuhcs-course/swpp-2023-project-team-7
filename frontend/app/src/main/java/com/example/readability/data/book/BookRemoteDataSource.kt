@@ -33,7 +33,7 @@ data class BookCardData(
 )
 
 data class BookResponse(
-    val bookId: Int,
+    val book_id: Int,
     val title: String,
     val author: String,
     val content: String,
@@ -99,7 +99,7 @@ class BookRemoteDataSource @Inject constructor(
                 return Result.success(
                     responseBody.books.map {
                         BookCardData(
-                            id = it.bookId,
+                            id = it.book_id,
                             title = it.title,
                             author = it.author,
                             progress = it.progress,

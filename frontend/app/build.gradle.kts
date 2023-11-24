@@ -16,7 +16,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "com.example.readability.screens.HiltTestRunner"
+        testInstrumentationRunner = "com.example.readability.HiltTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -52,7 +52,12 @@ android {
     }
     packaging {
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1,licenses/ASM,**attach_hotspot_windows.dll}"
+            excludes += "/META-INF/LICENSE.md"
+            excludes += "/META-INF/LICENSE-notice.md"
+            excludes += "/META-INF/AL2.0"
+            excludes += "/META-INF/LGPL2.1"
+            excludes += "/META-INF/licenses/ASM"
+            excludes += "/META-INF/**/attach_hotspot_windows.dll"
         }
     }
     aaptOptions {
@@ -114,6 +119,7 @@ dependencies {
     testImplementation("org.mockito:mockito-inline:4.4.0") // For final classes
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
     testImplementation("com.google.dagger:hilt-android-testing:$hiltVersion")
+    testImplementation("org.awaitility:awaitility:4.2.0")
 
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
@@ -121,6 +127,11 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.navigation:navigation-testing:2.7.5")
     androidTestImplementation("com.google.dagger:hilt-android-testing:$hiltVersion")
+
+    val mocckVersion = "1.13.8"
+    testImplementation("io.mockk:mockk:$mocckVersion")
+    androidTestImplementation("io.mockk:mockk-android:$mocckVersion")
+    androidTestImplementation("io.mockk:mockk-agent:$mocckVersion")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
