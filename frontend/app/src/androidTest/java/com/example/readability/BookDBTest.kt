@@ -1,14 +1,15 @@
-package com.example.readability.ui
+package com.example.readability
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.readability.data.book.AddBookRequest
 import com.example.readability.data.book.BookRepository
 import com.example.readability.data.user.UserRepository
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import dagger.hilt.android.testing.HiltTestApplication
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -19,18 +20,14 @@ import org.awaitility.Awaitility.await
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.jupiter.api.Assertions
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
-import java.io.File
+import java.io.InputStream
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.time.Duration
 
 @HiltAndroidTest
-@RunWith(RobolectricTestRunner::class)
-@Config(application = HiltTestApplication::class)
+@RunWith(AndroidJUnit4::class)
 class BookDBTest {
     @get:Rule
     var hiltRule = HiltAndroidRule(this)
@@ -46,11 +43,8 @@ class BookDBTest {
         hiltRule.inject()
     }
 
-    fun getFileFromResources(fileName: String): File {
-        return File(
-            javaClass.classLoader?.getResource(fileName)?.toURI()
-                ?: throw Exception("File not found"),
-        )
+    fun getFileFromResources(fileName: String): InputStream {
+        return javaClass.classLoader?.getResource(fileName)?.openStream() ?: throw Exception("File not found")
     }
 
     fun compareBitmaps(bitmap1: Bitmap, bitmap2: Bitmap): Boolean {
@@ -73,11 +67,15 @@ class BookDBTest {
         val email = "dbtesting@test.com"
         val username = "testuser"
         val password = "testpassword"
-        val content = getFileFromResources("the_open_boat.txt").readText(Charsets.UTF_8)
-        val coverImageFile = getFileFromResources("the_open_boat.jpg")
-        val coverImage = coverImageFile.readBytes().toHexString(HexFormat.Default)
+        val content = getFileFromResources("the_open_boat.txt").use {
+            it.readBytes().decodeToString()
+        }
+        val coverImageBytes = getFileFromResources("the_open_boat.jpg").use {
+            it.readBytes()
+        }
+        val coverImage = coverImageBytes.toHexString(HexFormat.Default)
         val coverImageBitmap =
-            BitmapFactory.decodeByteArray(coverImageFile.readBytes(), 0, coverImageFile.readBytes().size)
+            BitmapFactory.decodeByteArray(coverImageBytes, 0, coverImageBytes.size)
         val bookTitle = "testbook_${System.currentTimeMillis()}"
         val bookListScope = CoroutineScope(Dispatchers.Default)
         val bookList = bookRepository.bookList.stateIn(bookListScope)
@@ -95,11 +93,11 @@ class BookDBTest {
                 ),
             )
         }
-        Assertions.assertTrue(signInResult.isSuccess, "SignIn should succeed")
-        Assertions.assertTrue(bookAddResult.isSuccess, "Book add should succeed")
+        assertTrue("SignIn should succeed", signInResult.isSuccess)
+        assertTrue("Book add should succeed", bookAddResult.isSuccess)
 
         val bookRefreshResult = withContext(Dispatchers.IO) { bookRepository.refreshBookList() }
-        Assertions.assertTrue(bookRefreshResult.isSuccess, "Book refresh should succeed")
+        assertTrue("Book refresh should succeed", bookRefreshResult.isSuccess)
         await().timeout(java.time.Duration.ofMillis(5000L)).until {
             bookList.value.isNotEmpty() && bookList.value.any { it.title == bookTitle }
         }
@@ -109,16 +107,16 @@ class BookDBTest {
         val contentResult = withContext(Dispatchers.IO) { bookRepository.getContentData(book.bookId) }
         val imageResult = withContext(Dispatchers.IO) { bookRepository.getCoverImageData(book.bookId) }
 
-        Assertions.assertTrue(contentResult.isSuccess, "Get content should succeed")
-        Assertions.assertTrue(imageResult.isSuccess, "Get image should succeed")
+        assertTrue("Get content should succeed", contentResult.isSuccess)
+        assertTrue("Get image should succeed", imageResult.isSuccess)
         await().timeout(java.time.Duration.ofMillis(5000L)).until {
             book = bookList.value.first { it.title == bookTitle }
             book.contentData != null && book.coverImageData != null
         }
-        Assertions.assertTrue(book.contentData == content, "Book content should be the same as the added content")
-        Assertions.assertTrue(
-            compareBitmaps(book.coverImageData!!.asAndroidBitmap(), coverImageBitmap),
+        assertTrue("Book content should be the same as the added content", book.contentData == content)
+        assertTrue(
             "Book cover image should be the same as the added image",
+            compareBitmaps(book.coverImageData!!.asAndroidBitmap(), coverImageBitmap),
         )
 
         // clean up stateflow

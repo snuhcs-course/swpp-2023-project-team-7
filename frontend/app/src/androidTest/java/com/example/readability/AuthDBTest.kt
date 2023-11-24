@@ -1,8 +1,10 @@
-package com.example.readability.ui
+package com.example.readability
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.readability.data.user.UserRepository
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import dagger.hilt.android.testing.HiltTestApplication
+import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
@@ -10,17 +12,12 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 import javax.inject.Inject
 import kotlin.time.Duration
 
 @HiltAndroidTest
-@RunWith(RobolectricTestRunner::class)
-@Config(application = HiltTestApplication::class)
+@RunWith(AndroidJUnit4::class)
 class AuthDBTest {
 
     @get:Rule
@@ -52,25 +49,25 @@ class AuthDBTest {
         // Assert
 
         // SignIn Success case
-        assertTrue(signInSuccess.isSuccess, "SignIn should succeed")
+        assertTrue("SignIn should succeed", signInSuccess.isSuccess)
 
         // SignIn in wrong password
-        assertTrue(signInFail.isFailure, "SignIn should fail since password is wrong")
+        assertTrue("SignIn should fail since password is wrong", signInFail.isFailure)
 
         // SignUp in duplicated email
         Assert.assertTrue(emailSignUpFail.isFailure)
         assertEquals(
+            "SignUp failed since email already exists",
             "Email already exists",
             emailSignUpFail.exceptionOrNull()?.message,
-            "SignUp failed since email already exists",
         )
 
         // SignUp in duplicated username
         Assert.assertTrue(userSignUpFail.isFailure)
         assertEquals(
+            "SignUp failed since username already exists",
             "Username already exists",
             userSignUpFail.exceptionOrNull()?.message,
-            "SignUp failed since username already exists",
         )
     }
 }
