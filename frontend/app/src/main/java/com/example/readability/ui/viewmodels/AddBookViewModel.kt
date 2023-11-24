@@ -1,11 +1,14 @@
 package com.example.readability.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
-import com.example.readability.ui.models.AddBookModel
-import com.example.readability.ui.models.AddBookRequest
+import com.example.readability.data.book.AddBookRequest
+import com.example.readability.data.book.BookRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class AddBookViewModel : ViewModel() {
-    suspend fun addBook(data: AddBookRequest): Result<Unit> {
-        return AddBookModel.getInstance().addBook(data)
-    }
+@HiltViewModel
+class AddBookViewModel @Inject constructor(
+    private val bookRepository: BookRepository,
+) : ViewModel() {
+    suspend fun addBook(data: AddBookRequest) = bookRepository.addBook(data)
 }

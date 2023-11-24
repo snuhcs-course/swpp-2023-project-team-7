@@ -27,11 +27,12 @@ fun PasswordTextField(
     supportingText: String? = null,
     isError: Boolean = false,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+    keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
 ) {
     var passwordVisibility: Boolean by remember { mutableStateOf(false) }
 
-    OutlinedTextField(modifier = modifier,
+    OutlinedTextField(
+        modifier = modifier,
         visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
         value = password,
         onValueChange = { onPasswordChanged(it) },
@@ -41,19 +42,25 @@ fun PasswordTextField(
         },
         leadingIcon = {
             Icon(
-                painter = painterResource(id = R.drawable.password), contentDescription = "Password"
+                painter = painterResource(id = R.drawable.password),
+                contentDescription = "Password",
             )
         },
         trailingIcon = {
             IconButton(onClick = {
                 passwordVisibility = !passwordVisibility
             }) {
-                if (passwordVisibility) Icon(
-                    painter = painterResource(id = R.drawable.eye), contentDescription = "visible"
-                ) else Icon(
-                    painter = painterResource(id = R.drawable.closed_eye),
-                    contentDescription = "not visible"
-                )
+                if (passwordVisibility) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.eye),
+                        contentDescription = "visible",
+                    )
+                } else {
+                    Icon(
+                        painter = painterResource(id = R.drawable.closed_eye),
+                        contentDescription = "not visible",
+                    )
+                }
             }
         },
         supportingText = supportingText?.let {
@@ -61,6 +68,6 @@ fun PasswordTextField(
         },
         keyboardActions = keyboardActions,
         keyboardOptions = keyboardOptions.copy(keyboardType = KeyboardType.Password),
-        isError = isError
+        isError = isError,
     )
 }

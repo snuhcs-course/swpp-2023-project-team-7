@@ -1,10 +1,12 @@
 package com.example.readability.ui.screens.book
 
+import android.content.ContentResolver
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -23,7 +25,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -34,7 +35,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,7 +50,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.LocalSnackbarHost
 import com.example.readability.R
-import com.example.readability.ui.models.AddBookRequest
+import com.example.readability.data.book.AddBookRequest
+import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
@@ -74,12 +75,21 @@ fun bytesToHex(bytes: ByteArray): String {
     return String(hexChars)
 }
 
+private fun queryName(resolver: ContentResolver, uri: Uri): String {
+    val returnCursor = resolver.query(uri, null, null, null, null)!!
+    val nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+    returnCursor.moveToFirst()
+    val name = returnCursor.getString(nameIndex)
+    returnCursor.close()
+    return name
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddBookView(
     onBack: () -> Unit = {},
     onBookUploaded: () -> Unit = {},
-    onAddBookClicked: suspend (AddBookRequest) -> Result<Unit> = { Result.success(Unit) }
+    onAddBookClicked: suspend (req: AddBookRequest) -> Result<Unit> = { Result.success(Unit) },
 ) {
     val context = LocalContext.current
     var title by remember { mutableStateOf("") }
@@ -88,13 +98,15 @@ fun AddBookView(
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     var imageString by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
+    var fileName by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
 
     val snackbarHost = LocalSnackbarHost.current
 
     val imageSelectLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
         imageUri = uri
         if (uri != null) {
@@ -107,34 +119,36 @@ fun AddBookView(
 
             if (bitmap != null) {
                 // convert bitmap to hex string
-                val stream = ByteArrayOutputStream()
-                bitmap!!.compress(Bitmap.CompressFormat.JPEG, 95, stream)
-                val bytes = stream.toByteArray()
-                imageString = bytesToHex(bytes)
-                stream.close()
+                ByteArrayOutputStream().use {
+                    bitmap!!.compress(Bitmap.CompressFormat.JPEG, 95, it)
+                    val bytes = it.toByteArray()
+                    imageString = bytesToHex(bytes)
+                }
             }
         }
     }
 
     val textFileSelectLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
         // get content
         if (uri != null) {
             val contentResolver = context.contentResolver
+            fileName = queryName(contentResolver, uri)
+            title = fileName.substring(0, fileName.length - 4).replace("_", " ").split(" ")
+                .joinToString(" ") {
+                    it.replaceFirstChar { it.uppercase() }
+                }
             val inputStream = contentResolver.openInputStream(uri)
             if (inputStream != null) {
-                content = inputStream.bufferedReader().use { it.readText() }
-                inputStream.close()
+                inputStream.use {
+                    content = it.bufferedReader().use { it.readText() }
+                }
             } else {
                 // Go back to main activity
                 onBack()
             }
         }
-    }
-
-    LaunchedEffect(Unit) {
-        textFileSelectLauncher.launch("text/*")
     }
 
     Scaffold(topBar = {
@@ -144,7 +158,7 @@ fun AddBookView(
             IconButton(onClick = { onBack() }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Arrow Back"
+                    contentDescription = "Arrow Back",
                 )
             }
         })
@@ -155,33 +169,12 @@ fun AddBookView(
                 .padding(16.dp)
                 .fillMaxSize()
                 .verticalScroll(
-                    rememberScrollState()
-                )
+                    rememberScrollState(),
+                ),
         ) {
-            OutlinedTextField(modifier = Modifier.fillMaxWidth(),
-                value = title,
-                onValueChange = { title = it },
-                label = { Text(text = "Book Title") },
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.book),
-                        contentDescription = "Book Icon"
-                    )
-                })
             Spacer(modifier = Modifier.height(16.dp))
-            OutlinedTextField(modifier = Modifier.fillMaxWidth(),
-                value = author,
-                onValueChange = { author = it },
-                label = { Text(text = "Author (Optional)") },
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.user),
-                        contentDescription = "Book Icon"
-                    )
-                })
-            Spacer(modifier = Modifier.height(32.dp))
             Box(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Column(
                     modifier = Modifier
@@ -189,75 +182,169 @@ fun AddBookView(
                         .border(
                             width = 1.dp,
                             color = MaterialTheme.colorScheme.outline,
-                            shape = RoundedCornerShape(4.dp)
+                            shape = RoundedCornerShape(4.dp),
                         )
-                        .padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    FilledTonalButton(
+                        modifier = Modifier
+                            .height(48.dp)
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        onClick = {
+                            textFileSelectLauncher.launch("text/*")
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.file_upload),
+                            contentDescription = "File Upload Icon",
+                        )
+                        Text(text = if (fileName.isEmpty()) "Select txt File" else "Change txt File")
+                    }
+                    if (fileName.isNotEmpty()) {
+                        Text(
+                            text = "Selected File: $fileName",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+                Text(
+                    modifier = Modifier
+                        .layout { measurable, constraints ->
+                            // at the text center
+                            val placeable = measurable.measure(constraints)
+                            layout(placeable.width, placeable.height) {
+                                placeable.placeRelative(
+                                    x = 8.dp
+                                        .toPx()
+                                        .toInt(),
+                                    y = (-placeable.height) / 2,
+                                )
+                            }
+                        }
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(horizontal = 4.dp),
+                    text = "Book File",
+                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = title,
+                onValueChange = { title = it },
+                label = { Text(text = "Book Title") },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.book),
+                        contentDescription = "Book Icon",
+                    )
+                },
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = author,
+                onValueChange = { author = it },
+                label = { Text(text = "Author (Optional)") },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.user),
+                        contentDescription = "Book Icon",
+                    )
+                },
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline,
+                            shape = RoundedCornerShape(4.dp),
+                        )
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     bitmap?.let {
                         Image(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(
-                                    RoundedCornerShape(12.dp)
+                                    RoundedCornerShape(12.dp),
                                 ),
                             bitmap = it.asImageBitmap(),
                             contentDescription = null,
                         )
                     }
-                    FilledTonalButton(modifier = Modifier
-                        .height(48.dp)
-                        .fillMaxWidth(),
+                    FilledTonalButton(
+                        modifier = Modifier
+                            .height(48.dp)
+                            .fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         onClick = {
                             imageSelectLauncher.launch("image/*")
-                        }) {
+                        },
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.file_upload),
-                            contentDescription = "File Upload Icon"
+                            contentDescription = "File Upload Icon",
                         )
                         Text(text = if (imageUri == null) "Select Image" else "Change Image")
                     }
                 }
-                Text(modifier = Modifier
-                    .layout { measurable, constraints ->
-                        // at the text center
-                        val placeable = measurable.measure(constraints)
-                        layout(placeable.width, placeable.height) {
-                            placeable.placeRelative(
-                                x = 8.dp
-                                    .toPx()
-                                    .toInt(), y = (-placeable.height) / 2
-                            )
+                Text(
+                    modifier = Modifier
+                        .layout { measurable, constraints ->
+                            // at the text center
+                            val placeable = measurable.measure(constraints)
+                            layout(placeable.width, placeable.height) {
+                                placeable.placeRelative(
+                                    x = 8.dp
+                                        .toPx()
+                                        .toInt(),
+                                    y = (-placeable.height) / 2,
+                                )
+                            }
                         }
-                    }
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(horizontal = 4.dp),
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(horizontal = 4.dp),
                     text = "Book Cover (Optional)",
-                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                )
             }
             Spacer(modifier = Modifier.height(32.dp))
-            Button(modifier = Modifier
-                .height(48.dp)
-                .fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+            RoundedRectButton(
+                modifier = Modifier.fillMaxWidth(),
+                loading = loading,
                 onClick = {
+                    loading = true
                     scope.launch {
                         onAddBookClicked(
                             AddBookRequest(
                                 title = title,
                                 content = content,
                                 author = author,
-                                coverImage = imageString
-                            )
+                                coverImage = imageString,
+                            ),
                         ).onSuccess {
                             onBookUploaded()
-                        }.onFailure {
                             snackbarHost.showSnackbar(
-                                it.message ?: "Unknown error happened while uploading book"
+                                "Book is successfully uploaded",
+                            )
+                        }.onFailure {
+                            loading = false
+                            snackbarHost.showSnackbar(
+                                it.message ?: "Unknown error happened while uploading book",
                             )
                         }
                     }
-                }) {
+                },
+            ) {
                 Text(text = "Add Book")
             }
         }

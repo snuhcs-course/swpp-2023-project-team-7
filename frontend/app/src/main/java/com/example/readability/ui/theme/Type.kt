@@ -10,15 +10,15 @@ import com.example.readability.R
 @OptIn(ExperimentalTextApi::class)
 val Gabarito = FontFamily(
     Font(
-        R.font.gabarito
-    )
+        R.font.gabarito,
+    ),
 )
 
 @OptIn(ExperimentalTextApi::class)
 val Lora = FontFamily(
     Font(
-        R.font.lora
-    )
+        R.font.lora,
+    ),
 )
 
 // Set of Material typography styles to start with

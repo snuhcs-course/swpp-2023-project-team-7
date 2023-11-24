@@ -1,13 +1,7 @@
 package com.example.readability
 
 import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
 
-class ReadabilityApplication: Application() {
-    init {
-        instance = this
-    }
-
-    companion object {
-        var instance: ReadabilityApplication? = null
-    }
-}
+@HiltAndroidApp
+class ReadabilityApplication : Application()

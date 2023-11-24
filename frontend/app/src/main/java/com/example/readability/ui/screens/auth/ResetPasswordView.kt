@@ -34,7 +34,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.readability.ui.animation.animateIMEDp
+import com.example.readability.ui.animation.animateImeDp
 import com.example.readability.ui.components.PasswordTextField
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
@@ -59,7 +59,6 @@ fun ResetPasswordView(
     onPasswordSubmitted: suspend (String) -> Result<Unit> = { Result.success(Unit) },
     onNavigateEmail: () -> Unit = {},
 ) {
-
     var newPassword by remember { mutableStateOf("") }
     var repeatPassword by remember { mutableStateOf("") }
 
@@ -81,6 +80,7 @@ fun ResetPasswordView(
         if (isError()) {
             showError = true
         } else {
+            loading = true
             scope.launch {
                 onPasswordSubmitted(newPassword).onSuccess {
                     withContext(Dispatchers.Main) { onNavigateEmail() }
@@ -102,11 +102,12 @@ fun ResetPasswordView(
                 IconButton(onClick = { onBack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Arrow Back"
+                        contentDescription = "Arrow Back",
                     )
                 }
             })
-        }) { innerPadding ->
+        },
+    ) { innerPadding ->
         LaunchedEffect(Unit) {
             passwordFocusRequester.requestFocus()
             passwordError = isPasswordError()
@@ -156,7 +157,8 @@ fun ResetPasswordView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("ResetPasswordButton"),
-                imeAnimation = animateIMEDp(label = "AuthView_ResetPasswordView_imeDp")
+                imeAnimation = animateImeDp(label = "AuthView_ResetPasswordView_imeDp"),
+                loading = loading,
             ) {
                 Text("Reset Password")
             }

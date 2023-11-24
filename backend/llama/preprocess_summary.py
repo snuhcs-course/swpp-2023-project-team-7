@@ -1,50 +1,92 @@
 import sys
 import pickle
-from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer
-import torch
 from custom_type import Summary
+import tiktoken
+import openai
+import mysql.connector
+import os
+import math
 
-model_name_or_path = "TheBloke/Llama-2-7b-Chat-GPTQ"
-model = AutoModelForCausalLM.from_pretrained(model_name_or_path,
-                                             device_map="auto",
-                                             trust_remote_code=False,
-                                             revision="main")
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_random_exponential,
+)  # for exponential backoff
+ 
+@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
+def completion_with_backoff(**kwargs):
+    return openai.ChatCompletion.create(**kwargs)
 
-tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
-streamer = TextStreamer(tokenizer)
+books_db = mysql.connector.connect(
+    host=os.environ["MYSQL_ENDPOINT"],
+    user=os.environ["MYSQL_USER"],
+    password=os.environ["MYSQL_PWD"],
+    database="readability",
+)
 
-MAX_SIZE = 2900
-# PROMPT_TEMPLATE=f'''[INST] <<SYS>>
-# You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Your main purpose as an assitant however, is to provide a clear summary of a given text. When you are given a large amount of text, try to extract the most important points that are relevant for understanding the plot of the story. Focus more on the facts rather than the interpretations. Also note that for the summary, you will not be getting a response from the user.
-# <</SYS>>[/INST]'''
+tokenizer = tiktoken.get_encoding("cl100k_base")
+MAX_SIZE = 3900
 
-PROMPT_TEMPLATE_INTERMEDIATE = f'''[INST]<<SYS>>
-You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. You will be given a short passage from a larger, more complex novel. Your job is to extract the essential facts from the given passage to later be used for providing a comprehensive summary to let users understand the entire plot of the larger, complex novel. Therefore, when given a passage, reply only with the bullet points that you think are the most important points.
-<</SYS>>[/INST]'''
+INTERMEDIATE_SYSTEM_PROMPT = '''
+"Hello, ChatGPT. I have a passage from a novel that I need help with. 
+It's quite long and detailed, and I'm looking to create a summary of the larger text it's a part of. 
+Can you assist me by identifying and extracting the most crucial bullet points from this passage? 
+These points should capture key events, character developments, themes, or any significant literary elements that are essential to the overall narrative and its context in the larger story. 
+Only provide bulletpoints, and do not say anything else.
+If there isn't enough information to extract bullet points, just say "No bullet points".
+Thank you!"
+'''
 
-PROMPT_TEMPLATE_FINAL = f'''[INST]<<SYS>>
-You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. You will be given a list of bullet points that reflect the key facts of an entire, complex novel. With these bullet points, provide an insightful summary such that the user can get a good idea about the plot of the entire story.
-<</SYS>>[/INST]'''
+# FINAL_SYSTEM_SUMMARY_PROMPT='''
+# Hello again, ChatGPT. 
+# Earlier, you helped me by extracting crucial bullet points from a passage of a novel. 
+# Now, I need your assistance in using these bullet points to create an overarching summary of the entire novel. 
+# The summary should integrate these key points in a cohesive and fluid manner, highlighting the main plot, character arcs, themes, and any significant literary elements that define the novel. 
+# The aim is to capture the essence and narrative flow of the book, providing a comprehensive yet concise overview. 
+# Could you please help me formulate this into a well-structured summary? Thank you!
+# '''
 
-PROMPT_TEMPLATE_TOKENS_INTERMEDIATE = tokenizer(
-    PROMPT_TEMPLATE_INTERMEDIATE, return_tensors='pt').input_ids
-PROMPT_TEMPLATE_TOKENS_FINAL = tokenizer(
-    PROMPT_TEMPLATE_FINAL, return_tensors='pt').input_ids
+FINAL_SYSTEM_SUMMARY_PROMPT = '''
+You will be provided with several bullet points that outline key aspects of a story. Your task is to synthesize these points into a coherent and concise summary that captures the most crucial elements necessary for understanding the story’s overall plot. Your summary should make it easy for a reader to grasp the main ideas, themes, and developments within the story.
+Read the bullet points carefully: Carefully analyze each bullet point to understand the fundamental components of the story, such as the main events, character motivations, conflicts, and resolutions.
 
+Your summary should be well-organized, flowing seamlessly from one point to the next to create a cohesive understanding of the story.
+Focus on conveying the key elements that are central to the story’s plot and overall message.
+Avoid including overly detailed or minor points that do not significantly contribute to understanding the core plot.
+
+Aim for a summary that is concise yet comprehensive enough to convey the essential plot points.
+Ensure that the summary is not overly lengthy or cluttered with less pertinent details.
+
+Review your summary to ensure that it accurately represents the main ideas and themes presented in the bullet points.
+Ensure that the language used is clear and easily understandable.
+'''
 
 def split_large_text(story):
-    res = tokenizer(story, add_special_tokens=False, return_tensors='pt')
-    tokens = res.input_ids
-    sliced_tensors = []
-    for start_idx in range(0, tokens.shape[1], MAX_SIZE):
-        end_idx = min(start_idx+MAX_SIZE, tokens.shape[1])
-        start = res.encodings[0].offsets[start_idx][0]
-        end = res.encodings[0].offsets[end_idx-1][1]
+    tokens = tokenizer.encode(story)
+    # calculate the number of splits
+    number_of_splits = math.ceil(len(tokens) / MAX_SIZE)
+    # divide the tokens evenly across the number of splits
+    start_end_indices = [len(tokens)//number_of_splits] * number_of_splits
+    # add the remainder evenly across the splits
+    remainder = len(tokens) % number_of_splits
+    while remainder:
+        for i in reversed(range(number_of_splits)):
+            if remainder:
+                start_end_indices[i] += 1
+                remainder -= 1
+            else:
+                break
 
+    sliced_lists = []
+    for i, current in enumerate(start_end_indices):
+        start_idx = sum(start_end_indices[:i])
+        end_idx = sum(start_end_indices[:i+1])
         sliced_story = {
-            "tokens": tokens[:, start_idx:start_idx+MAX_SIZE], "start_idx": start, "end_idx": end}
-        sliced_tensors.append(sliced_story)
-    return sliced_tensors
+            "sliced_text": tokenizer.decode(tokens[start_idx:end_idx]), "start_idx": start_idx, "end_idx": end_idx-1
+        }
+        sliced_lists.append(sliced_story)
+        print("start_idx: ", start_idx, "end_idx: ", end_idx-1)
+    return sliced_lists
 
 
 def split_list(input_list):
@@ -84,23 +126,56 @@ def reduce_multiple_summaries_to_one(summary_list, is_intermediate):
     summary_content_list = [summary.summary_content for summary in summary_list]
     reduced_start_idx = min([summary.start_idx for summary in summary_list])
     reduced_end_idx = max([summary.end_idx for summary in summary_list])
+    content = '\n'.join(summary_content_list)
 
-    concat_summaries = '\n'.join(summary_content_list)
-    prompt = tokenizer(concat_summaries, return_tensors='pt').input_ids
+    print("THIS IS CONTENT: ", content)
 
     if is_intermediate:
-        inserted_input_ids = torch.cat([PROMPT_TEMPLATE_TOKENS_INTERMEDIATE[:, :-4],
-                                       prompt, PROMPT_TEMPLATE_TOKENS_INTERMEDIATE[:, -4:]], dim=1).cuda()
+        response = ""
+        for attempt in range(10):
+            try:
+                for resp in completion_with_backoff(
+                    model="gpt-4", messages=[
+                        {"role": "system", "content": INTERMEDIATE_SYSTEM_PROMPT},
+                        {"role": "user", "content": content}
+                    ], stream=True
+                ):
+                    finished = resp.choices[0].finish_reason is not None
+                    delta_content = "\n" if (finished) else resp.choices[0].delta.content
+                    response += delta_content
+
+                    sys.stdout.write(delta_content)
+                    sys.stdout.flush()
+                    if finished:
+                        break
+            except Exception as e:
+                print(e)
+                continue
+            break
     else:
-        inserted_input_ids = torch.cat(
-            [PROMPT_TEMPLATE_TOKENS_FINAL[:, :-4], prompt, PROMPT_TEMPLATE_TOKENS_FINAL[:, -4:]], dim=1).cuda()
+        response = ""
+        for attempt in range(10):
+            try:
+                for resp in completion_with_backoff(
+                    model="gpt-4", messages=[
+                        {"role": "system", "content": FINAL_SYSTEM_SUMMARY_PROMPT},
+                        {"role": "user", "content": content}
+                    ], stream=True
+                ):
+                    finished = resp.choices[0].finish_reason is not None
+                    delta_content = "\n" if (finished) else resp.choices[0].delta.content
+                    response += delta_content
 
-    output = model.generate(inputs=inserted_input_ids, streamer=streamer,
-                            temperature=0.7, do_sample=True, top_p=0.95, top_k=40, max_new_tokens=512)
-    decoded_output = tokenizer.decode(output[0]).split(
-        "[/INST]")[1].replace("<s>", "").replace("</s>", "")
+                    sys.stdout.write(delta_content)
+                    sys.stdout.flush()
+                    if finished:
+                        break
+            except Exception as e:
+                print(e)
+                continue
+            break
 
-    reduced_summary = Summary(summary_content=decoded_output,
+    reduced_summary = Summary(summary_content=response,
                               start_idx=reduced_start_idx, end_idx=reduced_end_idx, children=summary_list)
     for summary in summary_list:
         summary.parent = reduced_summary
@@ -116,29 +191,92 @@ def reduce_summaries_list(summaries_list):
     return summaries_list[0]
 
 
+async def generate_summary_tree(book_id, story):
+    summaries_list = []
+    sliced_text_dict_list = split_large_text(story)
+    for prompt in sliced_text_dict_list:
+        response = ""
+        for attempt in range(10):
+            try:
+                for resp in completion_with_backoff(
+                    model="gpt-4", messages=[
+                        {"role": "system", "content": INTERMEDIATE_SYSTEM_PROMPT},
+                        {"role": "user", "content": prompt["sliced_text"]}
+                    ], stream=True
+                ):
+                    finished = resp.choices[0].finish_reason is not None
+                    delta_content = "\n" if (finished) else resp.choices[0].delta.content
+                    response += delta_content
+
+                    sys.stdout.write(delta_content)
+                    sys.stdout.flush()
+                    if finished:
+                        break 
+
+                first_level_summary = Summary(summary_content=response,
+                                        start_idx=prompt["start_idx"],
+                                        end_idx=prompt["end_idx"])
+                summaries_list.append(first_level_summary)
+            except Exception as e:
+                print(e)
+                continue
+            break
+    single_summary = reduce_summaries_list(summaries_list)
+
+    if not books_db.is_connected():
+        books_db.reconnect()
+    cursor = books_db.cursor()
+    cursor.execute(f"SELECT content FROM Books where id = {book_id}")
+    results = cursor.fetchall()
+    #TODO: results might be none?
+    book_content_url = results[0][0]
+    summary_path_url = book_content_url.split('.')[0] + "_summary.pkl"
+
+    cursor.execute(f"UPDATE Books SET summary_tree = '{summary_path_url}' WHERE id = {book_id}")
+    books_db.commit()
+
+    user_dirname = f"/home/swpp/readability_users/"
+    summary_path_url = os.path.join(user_dirname, summary_path_url)
+    with open(summary_path_url, 'wb') as pickle_file:
+        pickle.dump(single_summary, pickle_file)
+
+
 def main():
     story_path = sys.argv[1]
     story = open(story_path, "r").read()
     summaries_list = []
 
     print("\n\n*** Generate:")
-    sliced_tokens_dict_list = split_large_text(story)
-    for prompt in sliced_tokens_dict_list:
-        inserted_input_ids = torch.cat([PROMPT_TEMPLATE_TOKENS_INTERMEDIATE[:, :-4],
-                                       prompt["tokens"], PROMPT_TEMPLATE_TOKENS_INTERMEDIATE[:, -4:]], dim=1).cuda()
-        output = model.generate(inputs=inserted_input_ids, streamer=streamer,
-                                temperature=0.7, do_sample=True, top_p=0.95, top_k=40, max_new_tokens=512)
-        decoded_output = tokenizer.decode(output[0]).split(
-            "[/INST]")[1].replace("<s>", "").replace("</s>", "")
+    sliced_text_dict_list = split_large_text(story)
 
-        first_level_summary = Summary(summary_content=decoded_output,
+    for prompt in sliced_text_dict_list:
+        response = ""
+        for resp in completion_with_backoff(
+            model="gpt-4", messages=[
+                {"role": "system", "content": INTERMEDIATE_SYSTEM_PROMPT},
+                {"role": "user", "content": prompt["sliced_text"]}
+            ], stream=True
+        ):
+            finished = resp.choices[0].finish_reason is not None
+            delta_content = "\n" if (finished) else resp.choices[0].delta.content
+            response += delta_content
+
+            sys.stdout.write(delta_content)
+            sys.stdout.flush()
+            if finished:
+                break 
+
+        first_level_summary = Summary(summary_content=response,
                                 start_idx=prompt["start_idx"],
                                 end_idx=prompt["end_idx"])
         summaries_list.append(first_level_summary)
 
     single_summary = reduce_summaries_list(summaries_list)
-    print(single_summary.summary_content)
-    with open(f"{story_path.split('.')[0]}_summary.pkl", 'wb') as pickle_file:
+    print("\n\n*** FINAL Summary:")
+    print(single_summary)
+
+    summary_tree_path = f"{story_path.split('.')[0]}_summary.pkl"
+    with open(summary_tree_path, 'wb') as pickle_file:
         pickle.dump(single_summary, pickle_file)
 
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, Depends, HTTPException, status
+from fastapi import APIRouter, File, UploadFile, Depends, HTTPException, status, BackgroundTasks
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import mysql.connector
@@ -6,8 +6,10 @@ import io
 import PIL.Image as Image
 import os
 import uuid
+import asyncio
 
 from routers.user import get_user_with_access_token
+from llama.preprocess_summary import generate_summary_tree
 
 class BookAddRequest(BaseModel):
     # TODO: Replace email when using OAuth
@@ -25,11 +27,11 @@ books_db = mysql.connector.connect(
 book = APIRouter()
 
 @book.get("/test_db")
-def test_book_get():
+def test_book_get(query: str):
     if not books_db.is_connected():
         books_db.reconnect()
     cursor = books_db.cursor()
-    cursor.execute(f"SELECT * FROM Books")
+    cursor.execute(query)
     result = cursor.fetchall()
     return {"test":result}
 
@@ -57,6 +59,7 @@ def book_list(email: str = Depends(get_user_with_access_token)):
             "progress": row[4],
             "cover_image": row[5],
             "content": result[0][6],
+            "summary_tree": result[0][7]
         })
     return {"books": books}
 
@@ -101,7 +104,7 @@ def book_progress(book_id: str, progress: float, email: str = Depends(get_user_w
     return {}
 
 @book.post("/book/add")
-def book_add(req: BookAddRequest, email: str = Depends(get_user_with_access_token)):
+async def book_add(req: BookAddRequest, email: str = Depends(get_user_with_access_token)):
     if email is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -134,9 +137,8 @@ def book_add(req: BookAddRequest, email: str = Depends(get_user_with_access_toke
     with open(content_url, 'w') as book_file:
         book_file.write(req.content)
     # asssumes that the client is sending the image as a byte array.
-    # TODO: decide encoding of the image
-    image = Image.open(io.BytesIO(bytearray.fromhex(req.cover_image)))
-    image.save(image_url)
+    # image = Image.open(io.BytesIO(bytearray.fromhex(req.cover_image)))
+    # image.save(image_url)
 
     add_book = (
         "INSERT INTO Books (email, title, author, progress, cover_image, content)"
@@ -149,6 +151,11 @@ def book_add(req: BookAddRequest, email: str = Depends(get_user_with_access_toke
     cursor = books_db.cursor()
     cursor.execute(add_book, book_data)
     books_db.commit()
+    book_id = cursor.lastrowid
+
+    # TODO: handle possible errors from async task
+    asyncio.create_task(generate_summary_tree(book_id, req.content))
+
     return {}
 
 @book.get("/book/image")

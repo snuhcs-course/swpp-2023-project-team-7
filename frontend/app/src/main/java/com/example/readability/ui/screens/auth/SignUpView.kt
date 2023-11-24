@@ -1,5 +1,6 @@
 package com.example.readability.ui.screens.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -39,8 +42,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.R
-import com.example.readability.ui.animation.animateIMEDp
-import com.example.readability.ui.components.CircularProgressIndicatorInButton
+import com.example.readability.ui.animation.animateImeDp
 import com.example.readability.ui.components.PasswordTextField
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
@@ -65,8 +67,8 @@ fun SignUpPreview() {
 @Composable
 fun SignUpView(
     onBack: () -> Unit = {},
-    onSubmitted: suspend (String) -> Result<Unit> = { Result.success(Unit) },
-    onNavigateVerify: (String) -> Unit = {}
+    onSubmitted: suspend (String, String, String) -> Result<Unit> = { _, _, _ -> Result.success(Unit) },
+    onNavigateVerify: (String) -> Unit = {},
 ) {
     var email by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -75,8 +77,10 @@ fun SignUpView(
     var loading by remember { mutableStateOf(false) }
 
     val emailFocusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
 
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     var showError by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf(false) }
@@ -94,21 +98,28 @@ fun SignUpView(
     }
 
     val submit = {
+        focusManager.clearFocus()
         if (checkError()) {
             showError = true
         } else {
             loading = true
             scope.launch {
-                onSubmitted(email).onSuccess {
+                onSubmitted(email, username, password).onSuccess {
                     withContext(Dispatchers.Main) { onNavigateVerify(email) }
                 }.onFailure {
                     loading = false
-                    showError = true
+                    println(it.message)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            it.message ?: "Unknown error occurred. Please try again.",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }
                 }
             }
         }
     }
-
 
     Scaffold(
         modifier = Modifier
@@ -120,11 +131,12 @@ fun SignUpView(
                 IconButton(onClick = { onBack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Arrow Back"
+                        contentDescription = "Arrow Back",
                     )
                 }
             })
-        }) { innerPaddings ->
+        },
+    ) { innerPaddings ->
         LaunchedEffect(Unit) {
             emailFocusRequester.requestFocus()
             emailError = checkEmailError()
@@ -136,7 +148,7 @@ fun SignUpView(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPaddings)
+                .padding(innerPaddings),
         ) {
             Column(
                 modifier = Modifier
@@ -163,15 +175,18 @@ fun SignUpView(
                     leadingIcon = {
                         Icon(
                             painter = painterResource(id = R.drawable.email),
-                            contentDescription = "email"
+                            contentDescription = "email",
                         )
                     },
                     isError = showError && emailError,
                     supportingText = if (showError && emailError) {
                         { Text(text = "Please enter a valid email address") }
-                    } else null,
+                    } else {
+                        null
+                    },
                     keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Next, keyboardType = KeyboardType.Email
+                        imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Email,
                     ),
                 )
                 OutlinedTextField(
@@ -191,15 +206,18 @@ fun SignUpView(
                     leadingIcon = {
                         Icon(
                             painter = painterResource(id = R.drawable.user),
-                            contentDescription = "user"
+                            contentDescription = "user",
                         )
                     },
                     isError = showError && usernameError,
                     supportingText = if (showError && usernameError) {
                         { Text(text = "Please enter a valid username") }
-                    } else null,
+                    } else {
+                        null
+                    },
                     keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Next, keyboardType = KeyboardType.Text
+                        imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Text,
                     ),
                 )
                 PasswordTextField(
@@ -242,13 +260,11 @@ fun SignUpView(
                     .fillMaxWidth()
                     .testTag("SignUpButton"),
                 onClick = { submit() },
-                imeAnimation = animateIMEDp(label = "AuthView_SignUpView_imeDp"),
-                enabled = !loading
+                imeAnimation = animateImeDp(label = "AuthView_SignUpView_imeDp"),
+                loading = loading,
             ) {
-                if (loading) CircularProgressIndicatorInButton() else Text("Sign up")
+                Text("Sign up")
             }
         }
     }
 }
-
-
