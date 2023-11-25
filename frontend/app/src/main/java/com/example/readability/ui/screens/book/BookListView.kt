@@ -186,8 +186,17 @@ fun BookListView(
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
                                 )
+                                if (index == bookCardDataList.size - 1){
+                                    Column (
+                                        modifier = Modifier.height(80.dp)
+                                    ){
+
+                                    }
+                                }
+
                             }
                         }
+
                     }
                 }
             }
