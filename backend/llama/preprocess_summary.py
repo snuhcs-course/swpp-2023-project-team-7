@@ -17,13 +17,6 @@ from tenacity import (
 def completion_with_backoff(**kwargs):
     return openai.ChatCompletion.create(**kwargs)
 
-books_db = mysql.connector.connect(
-    host=os.environ["MYSQL_ENDPOINT"],
-    user=os.environ["MYSQL_USER"],
-    password=os.environ["MYSQL_PWD"],
-    database="readability",
-)
-
 tokenizer = tiktoken.get_encoding("cl100k_base")
 MAX_SIZE = 3900
 
@@ -60,6 +53,35 @@ Ensure that the summary is not overly lengthy or cluttered with less pertinent d
 Review your summary to ensure that it accurately represents the main ideas and themes presented in the bullet points.
 Ensure that the language used is clear and easily understandable.
 '''
+def get_book_content_url(books_db, book_id):
+    cursor = books_db.cursor()
+    cursor.execute(f"SELECT content FROM Books where id = {book_id}")
+    results = cursor.fetchall()
+    book_content_url = results[0][0]
+    return book_content_url
+
+def update_summary_path_url(books_db, book_id, summary_path_url):
+    cursor = books_db.cursor()
+    cursor.execute(f"UPDATE Books SET summary_tree = '{summary_path_url}' WHERE id = {book_id}")
+    books_db.commit()
+
+def update_num_current_inference(books_db, book_id):
+    cursor = books_db.cursor()
+    cursor.execute(f"UPDATE Books SET num_current_inference = num_current_inference + 1 WHERE id = {book_id}")
+    books_db.commit()
+
+def update_num_total_inference(books_db, book_id, num_total_inference):
+    cursor = books_db.cursor()
+    cursor.execute(f"UPDATE Books SET num_total_inference = {num_total_inference} WHERE id = {book_id}")
+    books_db.commit()
+    cursor.execute(f"UPDATE Books SET num_current_inference = {0} WHERE id = {book_id}")
+    books_db.commit()
+
+def get_number_of_inferences(num_splits):
+    assert num_splits >= 0
+    if num_splits == 0:
+        return 0
+    return num_splits + get_number_of_inferences(num_splits//2)
 
 def split_large_text(story):
     tokens = tokenizer.encode(story)
@@ -122,12 +144,11 @@ def split_list(input_list):
     return output_list
 
 
-def reduce_multiple_summaries_to_one(summary_list, is_intermediate):
+def reduce_multiple_summaries_to_one(books_db, book_id, summary_list, is_intermediate):
     summary_content_list = [summary.summary_content for summary in summary_list]
     reduced_start_idx = min([summary.start_idx for summary in summary_list])
     reduced_end_idx = max([summary.end_idx for summary in summary_list])
     content = '\n'.join(summary_content_list)
-
     print("THIS IS CONTENT: ", content)
 
     if is_intermediate:
@@ -147,6 +168,7 @@ def reduce_multiple_summaries_to_one(summary_list, is_intermediate):
                     sys.stdout.write(delta_content)
                     sys.stdout.flush()
                     if finished:
+                        update_num_current_inference(books_db, book_id)
                         break
             except Exception as e:
                 print(e)
@@ -169,6 +191,7 @@ def reduce_multiple_summaries_to_one(summary_list, is_intermediate):
                     sys.stdout.write(delta_content)
                     sys.stdout.flush()
                     if finished:
+                        update_num_current_inference(books_db, book_id)
                         break
             except Exception as e:
                 print(e)
@@ -183,17 +206,27 @@ def reduce_multiple_summaries_to_one(summary_list, is_intermediate):
     return reduced_summary
 
 
-def reduce_summaries_list(summaries_list):
+def reduce_summaries_list(books_db, book_id, summaries_list):
     while len(summaries_list) > 1:
         double_paired_list = split_list(summaries_list)
-        summaries_list = [reduce_multiple_summaries_to_one(double_pair, is_intermediate=(
+        summaries_list = [reduce_multiple_summaries_to_one(books_db, book_id, double_pair, is_intermediate=(
             len(summaries_list) > 3)) for double_pair in double_paired_list]
     return summaries_list[0]
 
 
-async def generate_summary_tree(book_id, story):
+def generate_summary_tree(book_id, story):
+    books_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
+
     summaries_list = []
     sliced_text_dict_list = split_large_text(story)
+    num_total_inferences = get_number_of_inferences(len(sliced_text_dict_list))
+    update_num_total_inference(books_db, book_id, num_total_inferences)
+
     for prompt in sliced_text_dict_list:
         response = ""
         for attempt in range(10):
@@ -211,8 +244,10 @@ async def generate_summary_tree(book_id, story):
                     sys.stdout.write(delta_content)
                     sys.stdout.flush()
                     if finished:
+                        update_num_current_inference(books_db, book_id)
                         break 
 
+                
                 first_level_summary = Summary(summary_content=response,
                                         start_idx=prompt["start_idx"],
                                         end_idx=prompt["end_idx"])
@@ -221,19 +256,11 @@ async def generate_summary_tree(book_id, story):
                 print(e)
                 continue
             break
-    single_summary = reduce_summaries_list(summaries_list)
 
-    if not books_db.is_connected():
-        books_db.reconnect()
-    cursor = books_db.cursor()
-    cursor.execute(f"SELECT content FROM Books where id = {book_id}")
-    results = cursor.fetchall()
-    #TODO: results might be none?
-    book_content_url = results[0][0]
+    single_summary = reduce_summaries_list(books_db, book_id, summaries_list)
+    book_content_url = get_book_content_url(books_db, book_id)
     summary_path_url = book_content_url.split('.')[0] + "_summary.pkl"
-
-    cursor.execute(f"UPDATE Books SET summary_tree = '{summary_path_url}' WHERE id = {book_id}")
-    books_db.commit()
+    update_summary_path_url(books_db, book_id, summary_path_url)
 
     user_dirname = f"/home/swpp/readability_users/"
     summary_path_url = os.path.join(user_dirname, summary_path_url)
@@ -281,4 +308,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main() 
