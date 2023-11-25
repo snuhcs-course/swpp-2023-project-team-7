@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -103,7 +104,6 @@ fun AddBookView(
 
     val scope = rememberCoroutineScope()
 
-    val snackbarHost = LocalSnackbarHost.current
 
     val imageSelectLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -322,27 +322,46 @@ fun AddBookView(
                 modifier = Modifier.fillMaxWidth(),
                 loading = loading,
                 onClick = {
-                    loading = true
-                    scope.launch {
-                        onAddBookClicked(
-                            AddBookRequest(
-                                title = title,
-                                content = content,
-                                author = author,
-                                coverImage = imageString,
-                            ),
-                        ).onSuccess {
-                            onBookUploaded()
-                            snackbarHost.showSnackbar(
-                                "Book is successfully uploaded",
-                            )
-                        }.onFailure {
-                            loading = false
-                            snackbarHost.showSnackbar(
-                                it.message ?: "Unknown error happened while uploading book",
-                            )
+                    if(content.isEmpty()){
+                        Toast.makeText(
+                            context,
+                            "  Please upload txt file  ",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }else if(fileName.substring(fileName.length - 4, fileName.length - 1) != ".txt"){
+                        Toast.makeText(
+                            context,
+                            "Invalid file format.\nOnly txt file supported",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }else{
+                        loading = true
+                        scope.launch {
+                            onAddBookClicked(
+                                AddBookRequest(
+                                    title = title,
+                                    content = content,
+                                    author = author,
+                                    coverImage = imageString,
+                                ),
+                            ).onSuccess {
+                                onBookUploaded()
+                                Toast.makeText(
+                                    context,
+                                    "Book is successfully uploaded",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            }.onFailure {
+                                loading = false
+                                Toast.makeText(
+                                    context,
+                                    "Unknown error happened while uploading book",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            }
                         }
                     }
+
                 },
             ) {
                 Text(text = "Add Book")

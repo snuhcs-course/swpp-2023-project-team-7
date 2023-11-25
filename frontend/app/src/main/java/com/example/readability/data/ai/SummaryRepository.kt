@@ -17,6 +17,7 @@ class SummaryRepository @Inject constructor(
     val summary = MutableStateFlow("")
 
     suspend fun getSummary(bookId: Int, progress: Double): Result<Unit> {
+        summary.value = ""
         return withContext(Dispatchers.IO) {
             val accessToken = userRepository.getAccessToken() ?: return@withContext Result.failure(
                 UserNotSignedInException(),
