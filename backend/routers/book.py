@@ -1,4 +1,5 @@
 from fastapi import APIRouter, File, UploadFile, Depends, HTTPException, status, BackgroundTasks
+from fastapi import BackgroundTasks
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import mysql.connector
@@ -18,18 +19,17 @@ class BookAddRequest(BaseModel):
     author: str = None
     cover_image: str = None
 
-books_db = mysql.connector.connect(
-    host=os.environ["MYSQL_ENDPOINT"],
-    user=os.environ["MYSQL_USER"],
-    password=os.environ["MYSQL_PWD"],
-    database="readability",
-)
+
 book = APIRouter()
 
 @book.get("/test_db")
 def test_book_get(query: str):
-    if not books_db.is_connected():
-        books_db.reconnect()
+    books_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
     cursor = books_db.cursor()
     cursor.execute(query)
     result = cursor.fetchall()
@@ -44,8 +44,12 @@ def book_list(email: str = Depends(get_user_with_access_token)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    if not books_db.is_connected():
-        books_db.reconnect()
+    books_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
     cursor = books_db.cursor()
     cursor.execute(f"SELECT * FROM Books WHERE email = '{email}'")
     result = cursor.fetchall()
@@ -73,8 +77,12 @@ def book_detail(book_id: str, email: str = Depends(get_user_with_access_token)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    if not books_db.is_connected():
-        books_db.reconnect()
+    books_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
     cursor = books_db.cursor()
     cursor.execute(f"SELECT * FROM Books WHERE id = '{book_id}'")
     result = cursor.fetchall()
@@ -96,24 +104,32 @@ def book_progress(book_id: str, progress: float, email: str = Depends(get_user_w
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    if not books_db.is_connected():
-        books_db.reconnect()
+    books_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
     cursor = books_db.cursor()
     cursor.execute(f"UPDATE Books SET progress = {progress} WHERE id = '{book_id}'")
     books_db.commit()
     return {}
 
 @book.post("/book/add")
-async def book_add(req: BookAddRequest, email: str = Depends(get_user_with_access_token)):
+async def book_add(background_tasks:BackgroundTasks, req: BookAddRequest, email: str = Depends(get_user_with_access_token)):
     if email is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    books_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
 
-    if not books_db.is_connected():
-        books_db.reconnect()
     # from the Users table, get the user's username by querying with the email
     cursor = books_db.cursor()
     cursor.execute(f"SELECT username FROM Users WHERE email = '{email}'")
@@ -136,16 +152,20 @@ async def book_add(req: BookAddRequest, email: str = Depends(get_user_with_acces
 
     with open(content_url, 'w') as book_file:
         book_file.write(req.content)
+
+    content_url = "/".join(content_url.split("/")[-2:])
     # asssumes that the client is sending the image as a byte array.
-    # image = Image.open(io.BytesIO(bytearray.fromhex(req.cover_image)))
-    # image.save(image_url)
+    if req.cover_image != "":
+        image = Image.open(io.BytesIO(bytearray.fromhex(req.cover_image)))
+        image.save(image_url)
+        image_url = "/".join(image_url.split("/")[-2:])
+    else:
+        image_url = None
 
     add_book = (
         "INSERT INTO Books (email, title, author, progress, cover_image, content)"
         "VALUES (%s, %s, %s, %s, %s, %s)"
     )
-    image_url = "/".join(image_url.split("/")[-2:])
-    content_url = "/".join(content_url.split("/")[-2:])
     book_data = (email, req.title, req.author, 0.0, image_url, content_url)
 
     cursor = books_db.cursor()
@@ -153,9 +173,7 @@ async def book_add(req: BookAddRequest, email: str = Depends(get_user_with_acces
     books_db.commit()
     book_id = cursor.lastrowid
 
-    # TODO: handle possible errors from async task
-    asyncio.create_task(generate_summary_tree(book_id, req.content))
-
+    background_tasks.add_task(generate_summary_tree, book_id, req.content)
     return {}
 
 @book.get("/book/image")
@@ -179,3 +197,21 @@ def book_content(content_url: str, email: str = Depends(get_user_with_access_tok
         )
     content_url = os.path.join('/home/swpp/readability_users', content_url)
     return FileResponse(content_url)
+
+@book.delete("/book/delete")
+def book_delete(book_id: str, email: str = Depends(get_user_with_access_token)):
+    if email is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    books_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
+    books_db.cursor().execute(f"DELETE FROM Books WHERE id = '{book_id}'")
+    books_db.commit()
+    return {}

@@ -13,12 +13,6 @@ class UserSignupRequest(BaseModel):
     password: str
 
 user = APIRouter()
-books_db = mysql.connector.connect(
-    host=os.environ["MYSQL_ENDPOINT"],
-    user=os.environ["MYSQL_USER"],
-    password=os.environ["MYSQL_PWD"],
-    database="readability",
-)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -36,22 +30,29 @@ def check_token_expired(token):
         return current_time > exp_timestamp
 
 def get_user_with_access_token(access_token):
-    if not books_db.is_connected():
-        books_db.reconnect()
+    users_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
 
-    cursor = books_db.cursor()
+    cursor = users_db.cursor()
     cursor.execute(f"SELECT * FROM Users WHERE access_token = '{access_token}'")
     result = cursor.fetchall()
 
     if len(result) == 0:
+        print("no user by len")
         return None
     # assert integrity of the token
     decoded_token = jwt.decode(access_token.replace('"',''), SECRET_KEY, algorithms=[ALGORITHM])
     decoded_email = decoded_token.get("sub")
 
     if (decoded_email != result[0][0]):
+        print("no user by email")
         return None
     if check_token_expired(access_token):
+        print("no user by expired")
         return None
 
     # should be impossible as we already check whether the user exists
@@ -65,9 +66,13 @@ def get_password_hash(password):
 
 @user.post("/user/signup")
 def user_signup(user_signup_request: UserSignupRequest):
-    if not books_db.is_connected():
-        books_db.reconnect()
-    cursor = books_db.cursor()
+    users_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
+    cursor = users_db.cursor()
 
     cursor.execute(f"SELECT * FROM Users WHERE email = '{user_signup_request.email}'")
     result = cursor.fetchall()
@@ -89,14 +94,18 @@ def user_signup(user_signup_request: UserSignupRequest):
 
     hashed_password = get_password_hash(user_signup_request.password)
     cursor.execute(f"INSERT INTO Users (username, email, password) VALUES ('{user_signup_request.username}', '{user_signup_request.email}', '{hashed_password}')")
-    books_db.commit()
+    users_db.commit()
     os.mkdir(f"/home/swpp/readability_users/{user_signup_request.username}")
     return {"success": True}
 
 def check_user_exists_in_db(email:str, password:str):
-    if not books_db.is_connected():
-        books_db.reconnect()
-    cursor = books_db.cursor()
+    users_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
+    cursor = users_db.cursor()
     cursor.execute(f"SELECT * FROM Users WHERE email = '{email}'")
     result = cursor.fetchall()
     print(result)
@@ -119,24 +128,36 @@ def create_jwt_token(data: dict, expires_delta: timedelta = None):
     return encoded_jwt
 
 def insert_access_token_to_user(email, access_token):
-    if not books_db.is_connected():
-        books_db.reconnect()
-    cursor = books_db.cursor()
+    users_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
+    cursor = users_db.cursor()
     cursor.execute(f"UPDATE Users SET access_token = '{access_token}' WHERE email = '{email}'")
-    books_db.commit()
+    users_db.commit()
 
 def insert_refresh_token_to_user(email, refresh_token):
-    if not books_db.is_connected():
-        books_db.reconnect()
-    cursor = books_db.cursor()
+    users_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
+    cursor = users_db.cursor()
     cursor.execute(f"UPDATE Users SET refresh_token = '{refresh_token}' WHERE email = '{email}'")
-    books_db.commit()
+    users_db.commit()
 
 def get_user_refresh_token(email):
-    if not books_db.is_connected():
-        books_db.reconnect()
+    users_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
 
-    cursor = books_db.cursor()
+    cursor = users_db.cursor()
     cursor.execute(f"SELECT * FROM Users WHERE email = '{email}'")
     result = cursor.fetchall()
     # should be impossible as we already check whether the user exists
@@ -188,10 +209,14 @@ def get_user_info(
 
     if not get_user_with_access_token(access_token):
         raise credentials_exception
+    users_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
 
-    if not books_db.is_connected():
-        books_db.reconnect()
-    cursor = books_db.cursor()
+    cursor = users_db.cursor()
     cursor.execute(f"SELECT * FROM Users WHERE access_token = '{access_token}'")
     result = cursor.fetchall()
 
