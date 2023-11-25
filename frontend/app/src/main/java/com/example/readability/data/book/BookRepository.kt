@@ -147,6 +147,26 @@ class BookRepository @Inject constructor(
         }
     }
 
+    suspend fun deleteBook(bookId: Int) : Result<Unit> {
+        val accessToken =
+            userRepository.getAccessToken() ?: return Result.failure(UserNotSignedInException())
+        return bookRemoteDataSource.deleteBook(bookId, accessToken).fold(onSuccess = {
+            val book = bookMap.value[bookId] ?: return Result.failure(UserNotSignedInException())
+
+            bookDao.delete(book)
+            bookMap.update {
+                val newMap = it.toMutableMap()
+                newMap.remove(bookId)
+                newMap
+            }
+
+            refreshBookList()
+
+        }, onFailure = {
+            Result.failure(it)
+        })
+    }
+
     suspend fun clearBooks() {
         bookDao.deleteAll()
         bookMap.value = mutableMapOf()

@@ -61,6 +61,11 @@ class BookListViewModel @Inject constructor(
             bookRepository.updateProgress(bookId, progress)
         }
     }
+    fun deleteBook(bookId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            bookRepository.deleteBook(bookId)
+        }
+    }
     suspend fun updateBookList() {
         viewModelScope.launch(Dispatchers.IO) {
             bookRepository.refreshBookList().onFailure {

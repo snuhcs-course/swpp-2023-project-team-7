@@ -37,7 +37,7 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomSheet(bookCardData: BookCardData, onDismiss: () -> Unit, onProgressChanged: (Int, Double) -> Unit) {
+fun BottomSheet(bookCardData: BookCardData, onDismiss: () -> Unit, onProgressChanged: (Int, Double) -> Unit, onBookDeleted: (Int) -> Unit = {}) {
     val modalBottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
     )
@@ -59,6 +59,7 @@ fun BottomSheet(bookCardData: BookCardData, onDismiss: () -> Unit, onProgressCha
                 }
             },
             onProgressChanged = onProgressChanged,
+            onBookDeleted = onBookDeleted,
         )
     }
 }
@@ -94,6 +95,7 @@ fun BottomSheetContent(
     bookCardData: BookCardData,
     onDismiss: () -> Unit = {},
     onProgressChanged: (Int, Double) -> Unit = { _, _ -> },
+    onBookDeleted: (Int) -> Unit = {},
 ) {
     Column(
         modifier = modifier,
@@ -128,6 +130,7 @@ fun BottomSheetContent(
 
                 BookAction.DeleteFromMyLibrary -> {
                     // TODO
+                    onBookDeleted(bookCardData.id)
                     onDismiss()
                 }
             }
@@ -209,6 +212,8 @@ enum class BookAction {
     ClearProgress,
     MarkAsCompleted,
     DeleteFromMyLibrary,
+
+
 }
 
 @Composable

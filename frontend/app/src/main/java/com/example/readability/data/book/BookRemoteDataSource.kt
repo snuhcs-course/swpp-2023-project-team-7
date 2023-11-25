@@ -14,6 +14,7 @@ import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
@@ -73,6 +74,12 @@ interface BookAPI {
 
     @POST("/book/add")
     fun addBook(@Query("access_token") accessToken: String, @Body book: AddBookRequest): Call<Unit>
+
+    @DELETE("/book/delete")
+    fun deleteBook(
+        @Query("book_id") bookId: Int,
+        @Query("access_token") accessToken: String,
+    ): Call<ResponseBody>
 }
 
 @InstallIn(SingletonComponent::class)
@@ -154,6 +161,20 @@ class BookRemoteDataSource @Inject constructor(
             val response = bookAPI.addBook(accessToken, req).execute()
             if (response.isSuccessful) {
                 return Result.success(Unit)
+            } else {
+                return Result.failure(Throwable(parseErrorBody(response.errorBody())))
+            }
+        } catch (e: Exception) {
+            return Result.failure(e)
+        }
+    }
+
+    fun deleteBook(bookId: Int, accessToken: String): Result<String> {
+        try {
+            val response = bookAPI.deleteBook(bookId, accessToken).execute()
+            if (response.isSuccessful) {
+                val responseBody = response.body() ?: return Result.failure(Throwable("No body"))
+                return Result.success(responseBody.string())
             } else {
                 return Result.failure(Throwable(parseErrorBody(response.errorBody())))
             }

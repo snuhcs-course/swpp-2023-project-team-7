@@ -70,6 +70,7 @@ fun BookListView(
     onLoadImage: suspend (id: Int) -> Result<Unit> = { Result.success(Unit) },
     onLoadContent: suspend (id: Int) -> Result<Unit> = { Result.success(Unit) },
     onProgressChanged: (Int, Double) -> Unit = { _, _ -> },
+    onBookDeleted: (Int) -> Unit = {},
     onNavigateSettings: () -> Unit = {},
     onNavigateAddBook: () -> Unit = {},
     onNavigateViewer: (id: Int) -> Unit = {},
@@ -182,12 +183,15 @@ fun BookListView(
                                     onProgressChanged = { id, progress ->
                                         onProgressChanged(id, progress)
                                     },
+                                    onBookDeleted ={ id ->
+                                        onBookDeleted(id)
+                                    },
                                 )
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
                                 )
                                 if (index == bookCardDataList.size - 1){
-                                    Column (
+                                    LazyColumn (
                                         modifier = Modifier.height(80.dp)
                                     ){
 
@@ -236,6 +240,7 @@ fun BookCard(
     onClick: () -> Unit = {},
     onLoadImage: suspend () -> Unit = {},
     onProgressChanged: (Int, Double) -> Unit = { _, _ -> },
+    onBookDeleted: (Int) -> Unit = {}
 ) {
     var showSheet by remember { mutableStateOf(false) }
     var loadingImage by remember { mutableStateOf(false) }
@@ -244,7 +249,8 @@ fun BookCard(
     if (showSheet) {
         BottomSheet(bookCardData = bookCardData, onDismiss = {
             showSheet = false
-        }, onProgressChanged = onProgressChanged)
+        }, onProgressChanged = onProgressChanged,
+            onBookDeleted = onBookDeleted)
     }
 
     LaunchedEffect(bookCardData.coverImage) {
