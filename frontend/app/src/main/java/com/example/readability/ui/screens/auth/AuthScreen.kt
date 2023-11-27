@@ -47,7 +47,6 @@ fun AuthScreen(navController: NavHostController = rememberNavController(), onNav
                 onBack = { navController.popBackStack() },
                 onNavigateSignIn = { navController.navigate(AuthScreens.SignIn.createRoute(it)) },
                 onNavigateSignUp = { navController.navigate(AuthScreens.SignUp.route) },
-                onNavigateForgotPassword = { navController.navigate(AuthScreens.ForgotPassword.route) },
             )
         }
         composableSharedAxis(AuthScreens.SignIn.route, axis = SharedAxis.X) {
@@ -62,7 +61,6 @@ fun AuthScreen(navController: NavHostController = rememberNavController(), onNav
                     }
                 },
                 onNavigateBookList = { onNavigateBookList() },
-                onNavigateForgotPassword = { navController.navigate(AuthScreens.ForgotPassword.route) },
             )
         }
         composableSharedAxis(AuthScreens.SignUp.route, axis = SharedAxis.X) {
@@ -75,12 +73,6 @@ fun AuthScreen(navController: NavHostController = rememberNavController(), onNav
                     }
                 },
                 onNavigateVerify = {
-                    // TODO: implement verification on backend
-//                    navController.navigate(
-//                        AuthScreens.VerifyEmail.createRoute(
-//                            it, true
-//                        )
-//                    )
                     onNavigateBookList()
                 },
             )

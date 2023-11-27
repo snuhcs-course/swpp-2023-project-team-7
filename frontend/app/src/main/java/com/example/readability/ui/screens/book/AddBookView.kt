@@ -352,15 +352,15 @@ fun AddBookView(
                                 ).show()
                             }.onFailure {
                                 loading = false
+                                val message = if (it.message?.isEmpty() == false) it.message!! else "Unknown error happened while uploading book"
                                 Toast.makeText(
                                     context,
-                                    "Unknown error happened while uploading book",
+                                    message,
                                     Toast.LENGTH_SHORT,
                                 ).show()
                             }
                         }
                     }
-
                 },
             ) {
                 Text(text = "Add Book")

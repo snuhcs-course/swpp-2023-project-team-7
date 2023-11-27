@@ -16,4 +16,5 @@ class UserViewModel @Inject constructor(
     suspend fun signUp(email: String, username: String, password: String) =
         userRepository.signUp(email, username, password)
     suspend fun signOut() = userRepository.signOut()
+    suspend fun getUserInfo() = userRepository.getUserInfo()
 }

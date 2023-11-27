@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -593,6 +595,9 @@ fun ViewerOverlay(
         (pageSize * (bookData?.progress ?: 0.0)).toInt(),
         pageSize - 1,
     )
+    val context = LocalContext.current
+    val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val activeNetwork: NetworkInfo? = cm.activeNetworkInfo
 //    var aiStatus = 0
 //    Handler(Looper.getMainLooper()).postDelayed({
 //        println("aiStatus = ${bookData?.numCurrentInference} / ${bookData?.numTotalInference}")
@@ -668,9 +673,18 @@ fun ViewerOverlay(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
+                        if (activeNetwork?.isConnectedOrConnecting == null || !activeNetwork.isConnectedOrConnecting) {
+                            RoundedRectFilledTonalButton(
+                                modifier = Modifier.weight(1f),
+                                onClick = { onNavigateSummary() },
+                                enabled = false,
+                            ) {
+                                Text("No Internet Connection")
+                            }
+                        }
                         // TODO: add ai status
 //                        if (bookData?.numTotalInference == 0) {
-                        if (false) {
+                        else if (false) {
                             RoundedRectFilledTonalButton(
                                 modifier = Modifier.weight(1f),
                                 onClick = { onNavigateSummary() },

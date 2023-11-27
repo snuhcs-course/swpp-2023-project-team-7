@@ -193,22 +193,6 @@ fun AccountView(
                     model = "https://picsum.photos/200/200",
                     contentDescription = "Profile Image",
                 )
-                RoundedRectButton(
-                    onClick = {
-                        updatePhotoLoading = true
-                        scope.launch {
-                            onUpdatePhoto().onSuccess {
-                                snackbarHost.showSnackbar("Photo updated")
-                            }.onFailure {
-                                snackbarHost.showSnackbar("Failed to update photo: " + it.message)
-                            }
-                            updatePhotoLoading = false
-                        }
-                    },
-                    loading = updatePhotoLoading,
-                ) {
-                    Text(text = "Update Photo")
-                }
             }
             SettingTitle(modifier = Modifier.padding(top = 24.dp), text = "Personal Info")
             Spacer(modifier = Modifier.height(16.dp))
@@ -276,13 +260,13 @@ fun AccountView(
                 keyboardActions = KeyboardActions(onDone = { submit() }),
             )
             Spacer(modifier = Modifier.height(16.dp))
-            RoundedRectButton(
-                modifier = Modifier.padding(16.dp),
-                loading = updatePersonalInfoLoading,
-                onClick = { submit() },
-            ) {
-                Text(text = "Update Personal Info")
-            }
+//            RoundedRectButton(
+//                modifier = Modifier.padding(16.dp),
+//                loading = updatePersonalInfoLoading,
+//                onClick = { submit() },
+//            ) {
+//                Text(text = "Update Personal Info")
+//            }
             SettingTitle(modifier = Modifier.padding(top = 24.dp), text = "Actions")
             ListItem(
                 modifier = Modifier.clickable {

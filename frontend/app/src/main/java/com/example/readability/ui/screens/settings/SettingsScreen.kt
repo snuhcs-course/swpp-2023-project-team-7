@@ -48,9 +48,8 @@ fun SettingsScreen(
                     Result.success(Unit)
                 },
                 onBack = { onBack() },
-                onNavigatePasswordCheck = { navController.navigate(SettingsScreens.PasswordCheck.route) },
+                onNavigatePasswordCheck = { navController.navigate(SettingsScreens.Account.route) },
                 onNavigateViewer = { navController.navigate(SettingsScreens.Viewer.route) },
-                onNavigateAbout = { navController.navigate(SettingsScreens.About.createRoute(it)) },
                 onNavigateIntro = { onNavigateAuth() },
             )
         }

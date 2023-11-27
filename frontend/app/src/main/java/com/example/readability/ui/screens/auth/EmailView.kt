@@ -56,7 +56,6 @@ fun EmailView(
     onBack: () -> Unit = {},
     onNavigateSignIn: (String) -> Unit = {},
     onNavigateSignUp: () -> Unit = {},
-    onNavigateForgotPassword: () -> Unit = {},
 ) {
     var showError by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf(false) }
@@ -145,13 +144,6 @@ fun EmailView(
                     keyboardActions = KeyboardActions(onDone = { submit() }),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 )
-            }
-
-            TextButton(
-                modifier = Modifier.testTag("ForgotPasswordButton"),
-                onClick = { onNavigateForgotPassword() },
-            ) {
-                Text("Forgot password?")
             }
 
             TextButton(

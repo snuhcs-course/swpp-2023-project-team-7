@@ -64,7 +64,6 @@ fun SignInView(
     onBack: () -> Unit = {},
     onPasswordSubmitted: suspend (String) -> Result<Unit> = { Result.success(Unit) },
     onNavigateBookList: () -> Unit = {},
-    onNavigateForgotPassword: (String) -> Unit = {},
 ) {
     var password by remember { mutableStateOf("") }
     var passwordError by remember { mutableStateOf<String?>(null) }
