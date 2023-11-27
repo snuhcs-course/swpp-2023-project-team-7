@@ -44,6 +44,14 @@ class ViewerViewModel @Inject constructor(
         }
     }
 
+    fun setAIStatus(bookId: Int, aiStatus: Double) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                bookRepository.updateAIStatus(bookId, aiStatus)
+            }
+        }
+    }
+
     fun getBookData(id: Int) = bookRepository.getBook(id)
 
     fun drawPage(bookId: Int, canvas: NativeCanvas, page: Int, isDarkMode: Boolean) {

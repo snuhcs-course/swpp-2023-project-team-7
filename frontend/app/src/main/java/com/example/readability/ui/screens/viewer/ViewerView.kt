@@ -593,6 +593,11 @@ fun ViewerOverlay(
         (pageSize * (bookData?.progress ?: 0.0)).toInt(),
         pageSize - 1,
     )
+//    var aiStatus = 0
+//    Handler(Looper.getMainLooper()).postDelayed({
+//        println("aiStatus = ${bookData?.numCurrentInference} / ${bookData?.numTotalInference}")
+//        aiStatus = if (bookData?.numTotalInference == 0) 0 else bookData?.numCurrentInference!! / bookData.numTotalInference
+//    }, 10000)
 
     Column(
         modifier = modifier,
@@ -664,13 +669,14 @@ fun ViewerOverlay(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         // TODO: add ai status
+//                        if (bookData?.numTotalInference == 0) {
                         if (false) {
                             RoundedRectFilledTonalButton(
                                 modifier = Modifier.weight(1f),
                                 onClick = { onNavigateSummary() },
                                 enabled = false,
                             ) {
-                                Text("Waiting for Summary and Quiz...")
+                                Text("Too short to generate Summary and Quiz")
                             }
                         } else if (pageIndex < 4) {
                             RoundedRectFilledTonalButton(
@@ -680,6 +686,14 @@ fun ViewerOverlay(
                             ) {
                                 Text("4 pages required for Summary and Quiz")
                             }
+//                        } else if (aiStatus < 1) {
+//                            RoundedRectFilledTonalButton(
+//                                modifier = Modifier.weight(1f),
+//                                onClick = { onNavigateSummary() },
+//                                enabled = false,
+//                            ) {
+//                                Text("Waiting for Summary and Quiz...(${aiStatus * 100 / 1}%)")
+//                            }
                         } else {
                             RoundedRectFilledTonalButton(
                                 modifier = Modifier.weight(1f),

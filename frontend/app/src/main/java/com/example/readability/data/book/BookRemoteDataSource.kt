@@ -18,6 +18,8 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.Streaming
 import javax.inject.Inject
@@ -31,6 +33,8 @@ data class BookCardData(
     val coverImage: String? = null,
     val coverImageData: ImageBitmap? = null,
     val content: String,
+    val numTotalInference: Int = 0,
+    val numCurrentInference: Int = 0,
 )
 
 data class BookResponse(
@@ -40,6 +44,8 @@ data class BookResponse(
     val content: String,
     val cover_image: String,
     val progress: Double,
+    val num_total_inference: Int,
+    val num_current_inference: Int,
 )
 
 data class AddBookRequest(
@@ -74,6 +80,13 @@ interface BookAPI {
 
     @POST("/book/add")
     fun addBook(@Query("access_token") accessToken: String, @Body book: AddBookRequest): Call<Unit>
+
+    @PUT("/book/{book_id}/progress")
+    fun updateProgress(
+        @Path("book_id") bookId: Int,
+        @Query("progress") progress: Double,
+        @Query("access_token") accessToken: String,
+    ): Call<ResponseBody>
 
     @DELETE("/book/delete")
     fun deleteBook(
@@ -172,6 +185,20 @@ class BookRemoteDataSource @Inject constructor(
     fun deleteBook(bookId: Int, accessToken: String): Result<String> {
         try {
             val response = bookAPI.deleteBook(bookId, accessToken).execute()
+            if (response.isSuccessful) {
+                val responseBody = response.body() ?: return Result.failure(Throwable("No body"))
+                return Result.success(responseBody.string())
+            } else {
+                return Result.failure(Throwable(parseErrorBody(response.errorBody())))
+            }
+        } catch (e: Exception) {
+            return Result.failure(e)
+        }
+    }
+
+    fun updateProgress(bookId: Int, progress: Double, accessToken: String): Result<String> {
+        try {
+            val response = bookAPI.updateProgress(bookId, progress, accessToken).execute()
             if (response.isSuccessful) {
                 val responseBody = response.body() ?: return Result.failure(Throwable("No body"))
                 return Result.success(responseBody.string())

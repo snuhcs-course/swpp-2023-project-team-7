@@ -37,13 +37,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -175,18 +172,7 @@ fun InformText(onPrivacyPolicyClicked: () -> Unit = {}, onTermsOfUseClicked: () 
     )
 
     val annotatedString = buildAnnotatedString {
-        append("By Continuing I agree with\nthe ")
-        pushStringAnnotation("privacy", "privacy")
-        withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
-            append("Privacy Policy")
-        }
-        pop()
-        append(", ")
-        pushStringAnnotation("terms", "terms")
-        withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
-            append("Term of Use")
-        }
-        pop()
+        append("By Continuing I agree with\nthe Privacy Policy, Term of Use")
     }
 
     ClickableText(text = annotatedString, onClick = {

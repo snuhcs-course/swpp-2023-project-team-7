@@ -1,5 +1,6 @@
 package com.example.readability.ui.screens.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,13 +33,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.readability.LocalSnackbarHost
 import com.example.readability.R
 import com.example.readability.ui.animation.animateImeDp
 import com.example.readability.ui.components.PasswordTextField
@@ -71,10 +71,10 @@ fun SignInView(
 
     var loading by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+
     val passwordFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
-
-    val snackbarHost = LocalSnackbarHost.current
 
     val scope = rememberCoroutineScope()
 
@@ -86,9 +86,12 @@ fun SignInView(
             loading = true
             scope.launch {
                 onPasswordSubmitted(password).onSuccess {
-                    // TODO: show welcome message
                     withContext(Dispatchers.Main) { onNavigateBookList() }
-                    snackbarHost.showSnackbar("Welcome back!")
+                    Toast.makeText(
+                        context,
+                        "Welcome back!",
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 }.onFailure {
                     loading = false
                     passwordError = it.message ?: ""
@@ -162,9 +165,6 @@ fun SignInView(
                 supportingText = passwordError,
             )
             Spacer(modifier = Modifier.weight(1f))
-            TextButton(onClick = { onNavigateForgotPassword(email) }) {
-                Text("Forgot password?")
-            }
             RoundedRectButton(
                 onClick = { submit() },
                 modifier = Modifier

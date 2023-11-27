@@ -65,6 +65,8 @@ data class Book(
     @ColumnInfo(name = "content") val content: String,
     @ColumnInfo(name = "content_data") val contentData: String? = null,
     @ColumnInfo(name = "last_read") val lastRead: Date = Date(0),
+    @ColumnInfo(name = "num_total_inference") val numTotalInference: Int,
+    @ColumnInfo(name = "num_current_inference") val numCurrentInference: Int,
 )
 
 @Dao
@@ -74,6 +76,12 @@ interface BookDao {
 
     @Query("SELECT * FROM Book WHERE book_id = :bookId")
     fun getBook(bookId: Int): Book?
+
+    @Query("SELECT num_total_inference FROM Book WHERE book_id = :bookId")
+    fun getNumTotalInference(bookId: Int): Int?
+
+    @Query("SELECT num_current_inference FROM Book WHERE book_id = :bookId")
+    fun getNumCurrentInference(bookId: Int): Int?
 
     @Insert
     fun insert(book: Book)

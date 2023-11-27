@@ -48,7 +48,6 @@ fun SettingsView(
     onBack: () -> Unit = {},
     onNavigatePasswordCheck: () -> Unit = {},
     onNavigateViewer: () -> Unit = {},
-    onNavigateAbout: (type: String) -> Unit = {},
     onNavigateIntro: () -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -102,49 +101,6 @@ fun SettingsView(
                 },
                 headlineContent = {
                     Text(text = "Viewer Settings", style = MaterialTheme.typography.bodyLarge)
-                },
-                trailingContent = {
-                    Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "Navigate",
-                    )
-                },
-            )
-            SettingTitle(modifier = Modifier.padding(top = 24.dp), text = "About")
-            ListItem(
-                modifier = Modifier.clickable {
-                    onNavigateAbout("privacy_policy")
-                },
-                headlineContent = {
-                    Text(text = "Privacy Policy", style = MaterialTheme.typography.bodyLarge)
-                },
-                trailingContent = {
-                    Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "Navigate",
-                    )
-                },
-            )
-            ListItem(
-                modifier = Modifier.clickable {
-                    onNavigateAbout("terms_of_use")
-                },
-                headlineContent = {
-                    Text(text = "Terms of Use", style = MaterialTheme.typography.bodyLarge)
-                },
-                trailingContent = {
-                    Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "Navigate",
-                    )
-                },
-            )
-            ListItem(
-                modifier = Modifier.clickable {
-                    onNavigateAbout("open_source_licenses")
-                },
-                headlineContent = {
-                    Text(text = "Open Source Licenses", style = MaterialTheme.typography.bodyLarge)
                 },
                 trailingContent = {
                     Icon(

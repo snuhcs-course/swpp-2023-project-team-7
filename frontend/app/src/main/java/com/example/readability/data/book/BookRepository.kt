@@ -60,6 +60,8 @@ class BookRepository @Inject constructor(
                         progress = book.progress,
                         coverImage = book.coverImage,
                         content = book.content,
+                        numCurrentInference = book.numCurrentInference,
+                        numTotalInference = book.numTotalInference,
                     )
                     bookDao.insert(bookObject)
                     newMap[book.id] = bookObject
@@ -138,13 +140,20 @@ class BookRepository @Inject constructor(
         })
     }
 
-    suspend fun updateProgress(bookId: Int, progress: Double) {
+    suspend fun updateProgress(bookId: Int, progress: Double): Result<Unit> {
+        val accessToken =
+            userRepository.getAccessToken() ?: return Result.failure(UserNotSignedInException())
         bookDao.updateProgress(bookId, progress)
         bookMap.update {
             it.toMutableMap().apply {
                 this[bookId] = this[bookId]!!.copy(progress = progress)
             }
         }
+        return bookRemoteDataSource.updateProgress(bookId, progress, accessToken).fold(onSuccess = {
+            refreshBookList()
+        }, onFailure = {
+            Result.failure(it)
+        })
     }
 
     suspend fun deleteBook(bookId: Int) : Result<Unit> {
@@ -170,5 +179,14 @@ class BookRepository @Inject constructor(
     suspend fun clearBooks() {
         bookDao.deleteAll()
         bookMap.value = mutableMapOf()
+    }
+
+    fun updateAIStatus(bookId: Int, aiStatus: Double) {
+        bookDao.getNumTotalInference(bookId) ?: return
+        bookMap.update {
+            it.toMutableMap().apply {
+//                this[bookId] = this[bookId]!!.copy(aiStatus = aiStatus)
+            }
+        }
     }
 }
