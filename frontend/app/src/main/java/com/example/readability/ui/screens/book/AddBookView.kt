@@ -49,7 +49,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.readability.LocalSnackbarHost
 import com.example.readability.R
 import com.example.readability.data.book.AddBookRequest
 import com.example.readability.ui.components.RoundedRectButton
@@ -328,7 +327,7 @@ fun AddBookView(
                             "  Please upload txt file  ",
                             Toast.LENGTH_SHORT,
                         ).show()
-                    }else if(fileName.substring(fileName.length - 4, fileName.length - 1) != ".txt"){
+                    }else if(fileName.substring(fileName.length - 4, fileName.length) != ".txt"){
                         Toast.makeText(
                             context,
                             "Invalid file format.\nOnly txt file supported",

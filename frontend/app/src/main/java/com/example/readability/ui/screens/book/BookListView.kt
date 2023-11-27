@@ -70,10 +70,11 @@ fun BookListView(
     onLoadImage: suspend (id: Int) -> Result<Unit> = { Result.success(Unit) },
     onLoadContent: suspend (id: Int) -> Result<Unit> = { Result.success(Unit) },
     onProgressChanged: (Int, Double) -> Unit = { _, _ -> },
-    onBookDeleted: (Int) -> Unit = {},
+    onBookDeleted: suspend (Int) -> Result<Unit> = { Result.success(Unit) },
     onNavigateSettings: () -> Unit = {},
     onNavigateAddBook: () -> Unit = {},
     onNavigateViewer: (id: Int) -> Unit = {},
+    onNavigateBookList: () -> Unit = {},
     onRefresh: suspend () -> Unit = {},
 ) {
     val contentLoadScope = rememberCoroutineScope()
@@ -183,8 +184,11 @@ fun BookListView(
                                     onProgressChanged = { id, progress ->
                                         onProgressChanged(id, progress)
                                     },
-                                    onBookDeleted ={ id ->
+                                    onBookDeleted = { id ->
                                         onBookDeleted(id)
+                                    },
+                                    onNavigateBookList = {
+                                        onNavigateBookList()
                                     },
                                 )
                                 HorizontalDivider(
@@ -240,7 +244,8 @@ fun BookCard(
     onClick: () -> Unit = {},
     onLoadImage: suspend () -> Unit = {},
     onProgressChanged: (Int, Double) -> Unit = { _, _ -> },
-    onBookDeleted: (Int) -> Unit = {}
+    onBookDeleted: suspend (Int) -> Result<Unit> = { Result.success(Unit) },
+    onNavigateBookList: () -> Unit = {},
 ) {
     var showSheet by remember { mutableStateOf(false) }
     var loadingImage by remember { mutableStateOf(false) }
@@ -250,7 +255,8 @@ fun BookCard(
         BottomSheet(bookCardData = bookCardData, onDismiss = {
             showSheet = false
         }, onProgressChanged = onProgressChanged,
-            onBookDeleted = onBookDeleted)
+            onBookDeleted = onBookDeleted,
+            onNavigateBookList = onNavigateBookList,)
     }
 
     LaunchedEffect(bookCardData.coverImage) {

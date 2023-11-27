@@ -40,12 +40,15 @@ fun BookScreen(onNavigateSettings: () -> Unit = {}, onNavigateViewer: (id: Int) 
                 onNavigateViewer = { id ->
                     onNavigateViewer(id)
                 },
+                onNavigateBookList = {
+                    navController.popBackStack()
+                },
                 onProgressChanged = { id, progress ->
                     bookListViewModel.updateProgress(id, progress)
                 },
                 onBookDeleted = {id ->
                     bookListViewModel.deleteBook(id)
-
+                    Result.success(Unit)
                 },
                 onRefresh = {
                     bookListViewModel.updateBookList()
