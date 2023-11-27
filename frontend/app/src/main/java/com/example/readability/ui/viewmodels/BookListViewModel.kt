@@ -73,4 +73,8 @@ class BookListViewModel @Inject constructor(
             }
         }
     }
+
+    suspend fun clearBookList() {
+        bookRepository.clearBooks()
+    }
 }

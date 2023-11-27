@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.readability.ui.animation.SharedAxis
 import com.example.readability.ui.animation.composableSharedAxis
+import com.example.readability.ui.viewmodels.BookListViewModel
 import com.example.readability.ui.viewmodels.SettingViewModel
 import com.example.readability.ui.viewmodels.UserViewModel
 import kotlinx.coroutines.Dispatchers
@@ -36,11 +37,13 @@ fun SettingsScreen(
     NavHost(navController = navController, startDestination = startDestination) {
         composableSharedAxis(SettingsScreens.Settings.route, axis = SharedAxis.X) {
             val userViewModel: UserViewModel = hiltViewModel()
+            val bookListViewModel: BookListViewModel = hiltViewModel()
             // TODO: put correct user info to SettingsView
             SettingsView(
                 onSignOut = {
                     withContext(Dispatchers.IO) {
                         userViewModel.signOut()
+                        bookListViewModel.clearBookList()
                     }
                     Result.success(Unit)
                 },

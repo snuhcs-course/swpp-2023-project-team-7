@@ -1,6 +1,5 @@
 package com.example.readability.data.user
 
-import com.example.readability.data.book.BookDao
 import kotlinx.coroutines.flow.first
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -10,7 +9,6 @@ import javax.inject.Singleton
 class UserRepository @Inject constructor(
     private val userRemoteDataSource: UserRemoteDataSource,
     private val userDao: UserDao,
-    private val bookDao: BookDao,
 ) {
     val user = userDao.get()
     suspend fun signIn(email: String, password: String): Result<Unit> {
@@ -87,8 +85,6 @@ class UserRepository @Inject constructor(
     }
 
     fun signOut() {
-        bookDao.deleteAll()
         userDao.deleteAll()
-        // TODO: clear bookMap too - currently not possible because injecting BookRepository into UserRepository causes a circular dependency
     }
 }
