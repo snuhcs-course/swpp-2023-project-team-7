@@ -1,5 +1,6 @@
 package com.example.readability.data.ai
 
+import com.example.readability.data.NetworkStatusRepository
 import com.example.readability.data.user.UserNotSignedInException
 import com.example.readability.data.user.UserRepository
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +29,7 @@ enum class QuizLoadState {
 class QuizRepository @Inject constructor(
     private val quizRemoteDataSource: QuizRemoteDataSource,
     private val userRepository: UserRepository,
+    private val networkStatusRepository: NetworkStatusRepository,
 ) {
     private val _quizList = MutableStateFlow(listOf<Quiz>())
     private val _quizCount = MutableStateFlow(0)
@@ -39,6 +41,9 @@ class QuizRepository @Inject constructor(
     val quizCount = _quizCount.asStateFlow()
     val quizLoadState = _quizLoadState.asStateFlow()
     suspend fun getQuiz(bookId: Int, progress: Double): Result<Unit> {
+        if (!networkStatusRepository.isConnected) {
+            return Result.failure(Exception("Network not connected"))
+        }
         return withContext(Dispatchers.IO) {
             _quizLoadState.update { QuizLoadState.LOADING }
             val accessToken = userRepository.getAccessToken()

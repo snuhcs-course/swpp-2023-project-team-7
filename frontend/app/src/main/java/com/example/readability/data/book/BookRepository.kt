@@ -1,5 +1,6 @@
 package com.example.readability.data.book
 
+import com.example.readability.data.NetworkStatusRepository
 import com.example.readability.data.user.UserNotSignedInException
 import com.example.readability.data.user.UserRepository
 import kotlinx.coroutines.CoroutineScope
@@ -21,6 +22,7 @@ class BookRepository @Inject constructor(
     private val bookDao: BookDao,
     private val bookRemoteDataSource: BookRemoteDataSource,
     private val userRepository: UserRepository,
+    private val networkStatusRepository: NetworkStatusRepository,
 ) {
     private val bookMap = MutableStateFlow(mutableMapOf<Int, Book>())
     private val progressUpdateScope = CoroutineScope(Dispatchers.IO)
@@ -51,6 +53,9 @@ class BookRepository @Inject constructor(
     suspend fun refreshBookList(): Result<Unit> {
         val accessToken =
             userRepository.getAccessToken() ?: return Result.failure(UserNotSignedInException())
+        if (!networkStatusRepository.isConnected) {
+            return Result.failure(Exception("Network not connected"))
+        }
         return bookRemoteDataSource.getBookList(accessToken).fold(onSuccess = {
                 newBookList ->
             val newMap = bookMap.value.toMutableMap()
@@ -97,6 +102,9 @@ class BookRepository @Inject constructor(
         if (book.coverImageData != null) {
             return Result.success(Unit)
         }
+        if (!networkStatusRepository.isConnected) {
+            return Result.failure(Exception("Network not connected"))
+        }
         if (book.coverImage == null) {
             return Result.failure(Exception("Book cover image not found"))
         }
@@ -123,6 +131,9 @@ class BookRepository @Inject constructor(
         if (book.contentData != null) {
             return Result.success(Unit)
         }
+        if (!networkStatusRepository.isConnected) {
+            return Result.failure(Exception("Network not connected"))
+        }
         return bookRemoteDataSource.getContentData(accessToken, book.content)
             .fold(onSuccess = { contentData ->
                 bookDao.updateContentData(bookId, contentData)
@@ -140,6 +151,9 @@ class BookRepository @Inject constructor(
     suspend fun addBook(data: AddBookRequest): Result<Unit> {
         val accessToken =
             userRepository.getAccessToken() ?: return Result.failure(UserNotSignedInException())
+        if (!networkStatusRepository.isConnected) {
+            return Result.failure(Exception("Network not connected"))
+        }
         return bookRemoteDataSource.addBook(accessToken, data).fold(onSuccess = {
             refreshBookList()
         }, onFailure = {
@@ -160,7 +174,7 @@ class BookRepository @Inject constructor(
         progressUpdateJob?.cancel()
         progressUpdateJob = progressUpdateScope.launch {
             delay(100L)
-            if (!isActive) {
+            if (!isActive || !networkStatusRepository.isConnected) {
                 return@launch
             }
             bookRemoteDataSource.updateProgress(bookId, progress, accessToken)
@@ -171,6 +185,9 @@ class BookRepository @Inject constructor(
     suspend fun deleteBook(bookId: Int): Result<Unit> {
         val accessToken =
             userRepository.getAccessToken() ?: return Result.failure(UserNotSignedInException())
+        if (!networkStatusRepository.isConnected) {
+            return Result.failure(Exception("Network not connected"))
+        }
         return bookRemoteDataSource.deleteBook(bookId, accessToken).fold(onSuccess = {
             val book = bookMap.value[bookId] ?: return Result.failure(UserNotSignedInException())
 

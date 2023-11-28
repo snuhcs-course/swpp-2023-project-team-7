@@ -5,8 +5,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
-import android.net.ConnectivityManager
-import android.net.NetworkInfo
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -103,6 +101,7 @@ import kotlinx.coroutines.sync.withLock
 fun ViewerView(
     bookData: Book?,
     pageSplitData: PageSplitData?,
+    isNetworkConnected: Boolean,
     onPageDraw: (canvas: NativeCanvas, pageIndex: Int) -> Unit = { _, _ -> },
     onBack: () -> Unit = {},
     onProgressChange: (Double) -> Unit = {},
@@ -183,6 +182,7 @@ fun ViewerView(
                     visible = overlayVisible,
                     bookData = bookData,
                     pageSize = pageSize,
+                    isNetworkConnected = isNetworkConnected,
                     onProgressChange = { onProgressChange(it.toDouble()) },
                     onBack = { onBack() },
                     onNavigateSettings = { onNavigateSettings() },
@@ -584,6 +584,7 @@ fun ViewerOverlay(
     visible: Boolean,
     bookData: Book?,
     pageSize: Int,
+    isNetworkConnected: Boolean,
     onProgressChange: (Float) -> Unit,
     onBack: () -> Unit,
     onNavigateSettings: () -> Unit,
@@ -595,9 +596,6 @@ fun ViewerOverlay(
         (pageSize * (bookData?.progress ?: 0.0)).toInt(),
         pageSize - 1,
     )
-    val context = LocalContext.current
-    val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    val activeNetwork: NetworkInfo? = cm.activeNetworkInfo
 //    var aiStatus = 0
 //    Handler(Looper.getMainLooper()).postDelayed({
 //        println("aiStatus = ${bookData?.numCurrentInference} / ${bookData?.numTotalInference}")
@@ -673,7 +671,7 @@ fun ViewerOverlay(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        if (activeNetwork?.isConnectedOrConnecting == null || !activeNetwork.isConnectedOrConnecting) {
+                        if (!isNetworkConnected) {
                             RoundedRectFilledTonalButton(
                                 modifier = Modifier.weight(1f),
                                 onClick = { onNavigateSummary() },

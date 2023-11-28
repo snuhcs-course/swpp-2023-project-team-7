@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.readability.ui.animation.SharedAxis
 import com.example.readability.ui.animation.composableSharedAxis
+import com.example.readability.ui.viewmodels.NetworkStatusViewModel
 import com.example.readability.ui.viewmodels.QuizViewModel
 import com.example.readability.ui.viewmodels.SummaryViewModel
 import com.example.readability.ui.viewmodels.ViewerViewModel
@@ -34,13 +35,16 @@ fun ViewerScreen(id: Int, onNavigateSettings: () -> Unit, onBack: () -> Unit) {
             val viewerViewModel: ViewerViewModel = hiltViewModel()
             val quizViewModel: QuizViewModel = hiltViewModel()
             val summaryViewModel: SummaryViewModel = hiltViewModel()
+            val networkStatusViewModel: NetworkStatusViewModel = hiltViewModel()
             val bookData by viewerViewModel.getBookData(id).collectAsState(initial = null)
             val pageSplitData by viewerViewModel.pageSplitData.collectAsState(initial = null)
             val isDarkTheme = isSystemInDarkTheme()
+            val isNetworkConnected by networkStatusViewModel.connectedState.collectAsState()
             ViewerView(
                 bookData = bookData,
                 pageSplitData = pageSplitData,
                 onBack = onBack,
+                isNetworkConnected = isNetworkConnected,
                 onNavigateQuiz = {
                     if (bookData != null) {
                         quizViewModel.loadQuiz(id, bookData!!.progress)

@@ -1,9 +1,6 @@
 package com.example.readability.ui.screens.book
 
 import BottomSheet
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkInfo
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
@@ -78,28 +75,21 @@ fun BookListView(
     onNavigateAddBook: () -> Unit = {},
     onNavigateViewer: (id: Int) -> Unit = {},
     onNavigateBookList: () -> Unit = {},
-    onRefresh: suspend () -> Unit = {},
+    onRefresh: suspend () -> Result<Unit> = { Result.success(Unit) },
 ) {
     val contentLoadScope = rememberCoroutineScope()
     val context = LocalContext.current
-    val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    val activeNetwork: NetworkInfo? = cm.activeNetworkInfo
 
     var refreshing by remember { mutableStateOf(false) }
     val refreshScope = rememberCoroutineScope()
 
     fun refresh() = refreshScope.launch {
         refreshing = true
-        if (activeNetwork?.isConnectedOrConnecting == null || !activeNetwork.isConnectedOrConnecting) {
-            delay(700)
-            refreshing = false
-            delay(200)
-            Toast.makeText(context, "No Internet Connection", Toast.LENGTH_SHORT).show()
-        } else {
-            onRefresh()
-            delay(1000) // TODO
-            refreshing = false
+        onRefresh().onFailure {
+            Toast.makeText(context, "Failed to refresh: ${it.message}", Toast.LENGTH_SHORT).show()
         }
+        delay(1000) // TODO
+        refreshing = false
     }
 
     val state = rememberPullRefreshState(refreshing, ::refresh)

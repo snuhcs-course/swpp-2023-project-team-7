@@ -61,16 +61,16 @@ class BookListViewModel @Inject constructor(
             bookRepository.updateProgress(bookId, progress)
         }
     }
+
     suspend fun deleteBook(bookId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             bookRepository.deleteBook(bookId)
         }
     }
-    suspend fun updateBookList() {
-        viewModelScope.launch(Dispatchers.IO) {
-            bookRepository.refreshBookList().onFailure {
-                println("BookListViewModel: refreshBookList failed: ${it.message}")
-            }
+
+    suspend fun updateBookList(): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            bookRepository.refreshBookList()
         }
     }
 

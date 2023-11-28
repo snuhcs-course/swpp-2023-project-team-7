@@ -2,7 +2,6 @@ package com.example.readability.ui.screens.book
 
 import android.content.Context
 import android.net.ConnectivityManager
-import android.net.NetworkInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -68,13 +67,8 @@ fun BookScreen(onNavigateSettings: () -> Unit = {}, onNavigateViewer: (id: Int) 
                 onBack = { navController.popBackStack() },
                 onBookUploaded = { navController.popBackStack() },
                 onAddBookClicked = {
-                    val activeNetwork: NetworkInfo? = cm.activeNetworkInfo
-                    if (activeNetwork != null && activeNetwork.isConnectedOrConnecting) {
-                        withContext(Dispatchers.IO) {
-                            addBookViewModel.addBook(it)
-                        }
-                    } else {
-                        Result.failure(Exception("No internet connection"))
+                    withContext(Dispatchers.IO) {
+                        addBookViewModel.addBook(it)
                     }
                 },
             )
