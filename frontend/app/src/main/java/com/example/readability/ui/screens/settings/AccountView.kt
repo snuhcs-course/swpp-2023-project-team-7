@@ -70,7 +70,6 @@ fun AccountPreview() {
 fun AccountView(
     onBack: () -> Unit = {},
     onNavigateChangePassword: () -> Unit = {},
-    onUpdatePhoto: suspend () -> Result<Unit> = { Result.success(Unit) },
     onUpdatePersonalInfo: suspend () -> Result<Unit> = { Result.success(Unit) },
     onDeleteAccount: suspend () -> Result<Unit> = { Result.success(Unit) },
     onNavigateIntro: () -> Unit = {},
@@ -81,7 +80,6 @@ fun AccountView(
     var usernameError by remember { mutableStateOf(false) }
     var showError by remember { mutableStateOf(false) }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
-    var updatePhotoLoading by remember { mutableStateOf(false) }
     var updatePersonalInfoLoading by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()

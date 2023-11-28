@@ -1,11 +1,8 @@
 package com.example.readability.ui.screens.book
 
-import android.content.Context
-import android.net.ConnectivityManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
@@ -24,8 +21,6 @@ sealed class BookScreens(val route: String) {
 @Composable
 fun BookScreen(onNavigateSettings: () -> Unit = {}, onNavigateViewer: (id: Int) -> Unit = {}) {
     val navController = rememberNavController()
-    val context = LocalContext.current
-    val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     NavHost(navController = navController, startDestination = BookScreens.BookList.route) {
         composableSharedAxis(BookScreens.BookList.route, axis = SharedAxis.X) {
@@ -45,9 +40,6 @@ fun BookScreen(onNavigateSettings: () -> Unit = {}, onNavigateViewer: (id: Int) 
                 },
                 onNavigateViewer = { id ->
                     onNavigateViewer(id)
-                },
-                onNavigateBookList = {
-                    navController.popBackStack()
                 },
                 onProgressChanged = { id, progress ->
                     bookListViewModel.updateProgress(id, progress)

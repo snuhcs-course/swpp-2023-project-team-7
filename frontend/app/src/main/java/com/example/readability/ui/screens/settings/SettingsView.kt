@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
 @Preview(showBackground = true, device = "id:pixel_5")
 fun SettingsViewPreview() {
     ReadabilityTheme {
-        SettingsView()
+//        SettingsView()
     }
 }
 
@@ -49,6 +49,7 @@ fun SettingsView(
     onNavigatePasswordCheck: () -> Unit = {},
     onNavigateViewer: () -> Unit = {},
     onNavigateIntro: () -> Unit = {},
+//    userData: UserData
 ) {
     val context = LocalContext.current
     val logoutScope = rememberCoroutineScope()

@@ -38,6 +38,9 @@ fun SettingsScreen(
         composableSharedAxis(SettingsScreens.Settings.route, axis = SharedAxis.X) {
             val userViewModel: UserViewModel = hiltViewModel()
             val bookListViewModel: BookListViewModel = hiltViewModel()
+//            val userData by userViewModel.userData.collectAsState()
+
+
             // TODO: put correct user info to SettingsView
             SettingsView(
                 onSignOut = {
@@ -51,6 +54,7 @@ fun SettingsScreen(
                 onNavigatePasswordCheck = { navController.navigate(SettingsScreens.Account.route) },
                 onNavigateViewer = { navController.navigate(SettingsScreens.Viewer.route) },
                 onNavigateIntro = { onNavigateAuth() },
+//                userData = userData
             )
         }
         composableSharedAxis(SettingsScreens.PasswordCheck.route, axis = SharedAxis.X) {
@@ -71,13 +75,6 @@ fun SettingsScreen(
             AccountView(
                 onBack = { navController.popBackStack() },
                 onNavigateChangePassword = { navController.navigate(SettingsScreens.ChangePassword.route) },
-                onUpdatePhoto = {
-                    withContext(Dispatchers.IO) {
-                        // TODO: update photo using userViewModel
-                        delay(1000L)
-                        Result.success(Unit)
-                    }
-                },
                 onUpdatePersonalInfo = {
                     withContext(Dispatchers.IO) {
                         // TODO: update personal info using userViewModel

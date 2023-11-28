@@ -13,6 +13,16 @@ class UserRepository @Inject constructor(
     private val networkStatusRepository: NetworkStatusRepository,
 ) {
     val user = userDao.get()
+
+//    init {
+//        // load book list from database
+//        runBlocking {
+//            withContext(Dispatchers.IO) {
+//                val user = userDao.get()
+//            }
+//        }
+//    }
+
     suspend fun signIn(email: String, password: String): Result<Unit> {
         if (!networkStatusRepository.isConnected) {
             return Result.failure(Exception("Network not connected"))
