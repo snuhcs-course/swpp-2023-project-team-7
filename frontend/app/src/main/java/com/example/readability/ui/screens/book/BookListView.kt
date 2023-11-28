@@ -206,24 +206,21 @@ fun BookListView(
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
                                 )
-                                if (index == bookCardDataList.size - 1){
-                                    LazyColumn (
-                                        modifier = Modifier.height(80.dp)
-                                    ){
-
+                                if (index == bookCardDataList.size - 1) {
+                                    LazyColumn(
+                                        modifier = Modifier.height(80.dp),
+                                    ) {
                                     }
                                 }
-
                             }
                         }
-
                     }
                 }
             }
             PullRefreshIndicator(
                 modifier = Modifier.align(Alignment.TopCenter),
                 refreshing = refreshing,
-                state = state
+                state = state,
             )
         }
     }
@@ -264,11 +261,15 @@ fun BookCard(
     val imageLoadScope = rememberCoroutineScope()
 
     if (showSheet) {
-        BottomSheet(bookCardData = bookCardData, onDismiss = {
-            showSheet = false
-        }, onProgressChanged = onProgressChanged,
+        BottomSheet(
+            bookCardData = bookCardData,
+            onDismiss = {
+                showSheet = false
+            },
+            onProgressChanged = onProgressChanged,
             onBookDeleted = onBookDeleted,
-            onNavigateBookList = onNavigateBookList,)
+            onNavigateBookList = onNavigateBookList,
+        )
     }
 
     LaunchedEffect(bookCardData.coverImage) {

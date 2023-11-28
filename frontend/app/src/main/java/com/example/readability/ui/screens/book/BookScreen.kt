@@ -53,7 +53,7 @@ fun BookScreen(onNavigateSettings: () -> Unit = {}, onNavigateViewer: (id: Int) 
                 onProgressChanged = { id, progress ->
                     bookListViewModel.updateProgress(id, progress)
                 },
-                onBookDeleted = {id ->
+                onBookDeleted = { id ->
                     bookListViewModel.deleteBook(id)
                     Result.success(Unit)
                 },

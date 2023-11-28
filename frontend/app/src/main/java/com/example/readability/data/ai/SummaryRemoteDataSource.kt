@@ -50,7 +50,7 @@ class SummaryRemoteDataSource @Inject constructor(
             responseBody.byteStream().bufferedReader().use {
                 try {
                     while (currentCoroutineContext().isActive) {
-                        val line = it.readLine() ?: continue
+                        val line = it.readLine() ?: break
                         if (line.startsWith("data:")) {
                             emit(line.substring(6))
                         }

@@ -89,10 +89,7 @@ interface BookAPI {
     ): Call<ResponseBody>
 
     @DELETE("/book/delete")
-    fun deleteBook(
-        @Query("book_id") bookId: Int,
-        @Query("access_token") accessToken: String,
-    ): Call<ResponseBody>
+    fun deleteBook(@Query("book_id") bookId: Int, @Query("access_token") accessToken: String): Call<ResponseBody>
 }
 
 @InstallIn(SingletonComponent::class)

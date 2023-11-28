@@ -103,7 +103,6 @@ fun AddBookView(
 
     val scope = rememberCoroutineScope()
 
-
     val imageSelectLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
@@ -321,19 +320,19 @@ fun AddBookView(
                 modifier = Modifier.fillMaxWidth(),
                 loading = loading,
                 onClick = {
-                    if(content.isEmpty()){
+                    if (content.isEmpty()) {
                         Toast.makeText(
                             context,
                             "  Please upload txt file  ",
                             Toast.LENGTH_SHORT,
                         ).show()
-                    }else if(fileName.substring(fileName.length - 4, fileName.length) != ".txt"){
+                    } else if (fileName.substring(fileName.length - 4, fileName.length) != ".txt") {
                         Toast.makeText(
                             context,
                             "Invalid file format.\nOnly txt file supported",
                             Toast.LENGTH_SHORT,
                         ).show()
-                    }else{
+                    } else {
                         loading = true
                         scope.launch {
                             onAddBookClicked(
@@ -352,7 +351,11 @@ fun AddBookView(
                                 ).show()
                             }.onFailure {
                                 loading = false
-                                val message = if (it.message?.isEmpty() == false) it.message!! else "Unknown error happened while uploading book"
+                                val message = if (it.message?.isEmpty() == false) {
+                                    it.message!!
+                                } else {
+                                    "Unknown error happened while uploading book"
+                                }
                                 Toast.makeText(
                                     context,
                                     message,

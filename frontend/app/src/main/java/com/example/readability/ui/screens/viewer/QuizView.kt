@@ -126,7 +126,7 @@ fun QuizView(
             ) {
                 if (it < quizList.size) {
                     QuizCard(
-                        modifier = Modifier.padding(32.dp),
+                        modifier = Modifier.padding(24.dp),
                         index = it,
                         quiz = quizList[it],
                         quizLoaded = quizLoadState == QuizLoadState.LOADED || it < quizList.size - 1,

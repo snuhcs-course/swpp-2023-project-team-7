@@ -65,7 +65,7 @@ fun BottomSheet(
         onDismissRequest = { onDismiss() },
         sheetState = modalBottomSheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
-        ) {
+    ) {
         BottomSheetContent(
             modifier = Modifier.fillMaxWidth(),
             bookCardData = bookCardData,
@@ -284,8 +284,6 @@ enum class BookAction {
     ClearProgress,
     MarkAsCompleted,
     DeleteFromMyLibrary,
-
-
 }
 
 @Composable

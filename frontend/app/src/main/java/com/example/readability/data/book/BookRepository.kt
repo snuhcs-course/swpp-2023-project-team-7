@@ -2,10 +2,15 @@ package com.example.readability.data.book
 
 import com.example.readability.data.user.UserNotSignedInException
 import com.example.readability.data.user.UserRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -18,6 +23,8 @@ class BookRepository @Inject constructor(
     private val userRepository: UserRepository,
 ) {
     private val bookMap = MutableStateFlow(mutableMapOf<Int, Book>())
+    private val progressUpdateScope = CoroutineScope(Dispatchers.IO)
+    private var progressUpdateJob: Job? = null
 
     val bookList = bookMap.map {
         it.values.toList()
@@ -149,14 +156,19 @@ class BookRepository @Inject constructor(
                 this[bookId] = this[bookId]!!.copy(progress = progress)
             }
         }
-        return bookRemoteDataSource.updateProgress(bookId, progress, accessToken).fold(onSuccess = {
-            refreshBookList()
-        }, onFailure = {
-            Result.failure(it)
-        })
+
+        progressUpdateJob?.cancel()
+        progressUpdateJob = progressUpdateScope.launch {
+            delay(100L)
+            if (!isActive) {
+                return@launch
+            }
+            bookRemoteDataSource.updateProgress(bookId, progress, accessToken)
+        }
+        return Result.success(Unit)
     }
 
-    suspend fun deleteBook(bookId: Int) : Result<Unit> {
+    suspend fun deleteBook(bookId: Int): Result<Unit> {
         val accessToken =
             userRepository.getAccessToken() ?: return Result.failure(UserNotSignedInException())
         return bookRemoteDataSource.deleteBook(bookId, accessToken).fold(onSuccess = {
@@ -170,7 +182,6 @@ class BookRepository @Inject constructor(
             }
 
             refreshBookList()
-
         }, onFailure = {
             Result.failure(it)
         })

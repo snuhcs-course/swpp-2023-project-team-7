@@ -53,7 +53,6 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.readability.LocalSnackbarHost
 import com.example.readability.R
-import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.components.SettingTitle
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.launch

@@ -77,16 +77,13 @@ class QuizRemoteDataSource @Inject constructor(
                         }
                     }
                     while (currentCoroutineContext().isActive) {
-                        val line = it.readLine() ?: continue
+                        val line = it.readLine() ?: break
 //                        println(line)
                         if (line.startsWith("data:")) {
                             var token = line.substring(6)
                             if (token.isEmpty()) token = "\n"
                             if (token.contains(":")) {
                                 updateContent(token.substring(0, token.indexOf(":")))
-                                println(
-                                    "content: $content, quizCount: $quizCount, receivingQuizCount: $receivingQuizCount, receivingQuiz: $receivingQuiz",
-                                )
                                 if (quizCount == 0) {
                                     receivingQuizCount = true
                                 } else {
