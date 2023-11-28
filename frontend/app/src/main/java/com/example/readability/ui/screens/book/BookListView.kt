@@ -52,6 +52,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -74,7 +75,6 @@ fun BookListView(
     onNavigateSettings: () -> Unit = {},
     onNavigateAddBook: () -> Unit = {},
     onNavigateViewer: (id: Int) -> Unit = {},
-    onNavigateBookList: () -> Unit = {},
     onRefresh: suspend () -> Result<Unit> = { Result.success(Unit) },
 ) {
     val contentLoadScope = rememberCoroutineScope()
@@ -189,9 +189,6 @@ fun BookListView(
                                     onBookDeleted = { id ->
                                         onBookDeleted(id)
                                     },
-                                    onNavigateBookList = {
-                                        onNavigateBookList()
-                                    },
                                 )
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -244,7 +241,6 @@ fun BookCard(
     onLoadImage: suspend () -> Unit = {},
     onProgressChanged: (Int, Double) -> Unit = { _, _ -> },
     onBookDeleted: suspend (Int) -> Result<Unit> = { Result.success(Unit) },
-    onNavigateBookList: () -> Unit = {},
 ) {
     var showSheet by remember { mutableStateOf(false) }
     var loadingImage by remember { mutableStateOf(false) }
@@ -258,7 +254,6 @@ fun BookCard(
             },
             onProgressChanged = onProgressChanged,
             onBookDeleted = onBookDeleted,
-            onNavigateBookList = onNavigateBookList,
         )
     }
 
@@ -292,12 +287,12 @@ fun BookCard(
             Image(
                 modifier = Modifier
                     .padding(16.dp, 16.dp, 0.dp, 16.dp)
-                    .fillMaxHeight()
+                    .height(100.dp)
                     .width(64.dp)
                     .testTag(bookCardData.coverImage ?: ""),
                 bitmap = bookCardData.coverImageData,
                 contentDescription = "Book Cover Image",
-                contentScale = ContentScale.FillWidth,
+                contentScale = ContentScale.Fit,
             )
         }
         Column(
@@ -316,16 +311,19 @@ fun BookCard(
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontFamily = Gabarito,
                         fontWeight = FontWeight.Medium,
+                        lineBreak = LineBreak.Paragraph
                     ),
                 )
             }
             Text(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
+                    .padding(0.dp, 0.dp, 16.dp, 0.dp),
                 text = bookCardData.author,
                 style = MaterialTheme.typography.titleSmall.copy(
                     color = MaterialTheme.colorScheme.secondary,
                     fontFamily = Gabarito,
                     fontWeight = FontWeight.Medium,
+                    lineBreak = LineBreak.Paragraph
                 ),
             )
             Spacer(modifier = Modifier.weight(1f))

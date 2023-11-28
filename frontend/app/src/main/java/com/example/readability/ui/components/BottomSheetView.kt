@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -54,7 +55,6 @@ fun BottomSheet(
     onDismiss: () -> Unit,
     onProgressChanged: (Int, Double) -> Unit,
     onBookDeleted: suspend (Int) -> Result<Unit> = { Result.success(Unit) },
-    onNavigateBookList: () -> Unit = {},
 ) {
     val modalBottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
@@ -77,7 +77,6 @@ fun BottomSheet(
             },
             onProgressChanged = onProgressChanged,
             onBookDeleted = onBookDeleted,
-            onNavigateBookList = onNavigateBookList,
         )
     }
 }
@@ -114,7 +113,6 @@ fun BottomSheetContent(
     onDismiss: () -> Unit = {},
     onProgressChanged: (Int, Double) -> Unit = { _, _ -> },
     onBookDeleted: suspend (Int) -> Result<Unit> = { Result.success(Unit) },
-    onNavigateBookList: () -> Unit = {},
 ) {
     var showDeleteBookDialog by remember { mutableStateOf(false) }
 
@@ -143,7 +141,8 @@ fun BottomSheetContent(
                                 "Book deleted",
                                 Toast.LENGTH_SHORT,
                             ).show()
-                            onNavigateBookList()
+                            onDismiss()
+//                            onNavigateBookList()
                         }.onFailure {
                             Toast.makeText(
                                 context,
@@ -224,7 +223,10 @@ fun BookInfo(modifier: Modifier = Modifier, coverImage: ImageBitmap?, title: Str
             Image(
                 bitmap = coverImage,
                 contentDescription = "Book Image",
-                modifier = Modifier.width(90.dp),
+                modifier = Modifier
+                    .width(90.dp)
+                    .height(140.dp),
+                contentScale = ContentScale.Fit,
             )
         }
         Spacer(modifier = Modifier.height(16.dp))

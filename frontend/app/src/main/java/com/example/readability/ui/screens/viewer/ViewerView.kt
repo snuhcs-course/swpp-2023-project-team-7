@@ -80,6 +80,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAll
@@ -618,7 +619,7 @@ fun ViewerOverlay(
             CenterAlignedTopAppBar(windowInsets = WindowInsets(0, 0, 0, 0), title = {
                 Text(
                     text = bookData?.title ?: "",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyLarge.copy(lineBreak = LineBreak.Paragraph),
                     textAlign = TextAlign.Center,
                 )
             }, navigationIcon = {

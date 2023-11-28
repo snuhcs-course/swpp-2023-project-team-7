@@ -96,12 +96,32 @@ fun AddBookView(
     var author by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var defaultbitmap by remember { mutableStateOf<Bitmap?>(null) }
     var imageString by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     var fileName by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
+    val maxChar = 80
+
+    var defaultImageString = ""
+    val defaultUri = Uri.parse("android.resource://"+context.packageName+"/drawable/" + R.drawable.defaul_book_cover_image)
+    defaultbitmap = if (Build.VERSION.SDK_INT < 28) {
+        MediaStore.Images.Media.getBitmap(context.contentResolver, defaultUri)
+    } else {
+        val source = ImageDecoder.createSource(context.contentResolver, defaultUri)
+        ImageDecoder.decodeBitmap(source)
+    }
+
+    if (defaultbitmap != null) {
+        // convert bitmap to hex string
+        ByteArrayOutputStream().use {
+            defaultbitmap!!.compress(Bitmap.CompressFormat.JPEG, 95, it)
+            val bytes = it.toByteArray()
+            defaultImageString = bytesToHex(bytes)
+        }
+    }
 
     val imageSelectLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -137,6 +157,9 @@ fun AddBookView(
                 .joinToString(" ") {
                     it.replaceFirstChar { it.uppercase() }
                 }
+            if (title.length > maxChar) {
+                title = title.substring(0, maxChar)
+            }
             val inputStream = contentResolver.openInputStream(uri)
             if (inputStream != null) {
                 inputStream.use {
@@ -231,7 +254,8 @@ fun AddBookView(
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = title,
-                onValueChange = { title = it },
+                onValueChange = {
+                    if (it.length <= maxChar) title = it },
                 label = { Text(text = "Book Title") },
                 leadingIcon = {
                     Icon(
@@ -239,12 +263,13 @@ fun AddBookView(
                         contentDescription = "Book Icon",
                     )
                 },
+                singleLine = true,
             )
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = author,
-                onValueChange = { author = it },
+                onValueChange = {if (it.length <= maxChar) author = it },
                 label = { Text(text = "Author (Optional)") },
                 leadingIcon = {
                     Icon(
@@ -252,6 +277,7 @@ fun AddBookView(
                         contentDescription = "Book Icon",
                     )
                 },
+                singleLine = true,
             )
             Spacer(modifier = Modifier.height(32.dp))
             Box(
@@ -323,7 +349,7 @@ fun AddBookView(
                     if (content.isEmpty()) {
                         Toast.makeText(
                             context,
-                            "  Please upload txt file  ",
+                            "File is empty.",
                             Toast.LENGTH_SHORT,
                         ).show()
                     } else if (fileName.substring(fileName.length - 4, fileName.length) != ".txt") {
@@ -340,7 +366,7 @@ fun AddBookView(
                                     title = title,
                                     content = content,
                                     author = author,
-                                    coverImage = imageString,
+                                    coverImage = if ( imageString == "" ){ defaultImageString }else{ imageString },
                                 ),
                             ).onSuccess {
                                 onBookUploaded()
