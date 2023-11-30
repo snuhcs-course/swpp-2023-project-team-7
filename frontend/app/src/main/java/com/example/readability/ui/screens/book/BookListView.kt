@@ -227,6 +227,7 @@ fun BookCardPreview() {
                 author = "F. Scott Fitzgerald",
                 progress = 0.5,
                 content = "aasdasd",
+                summaryProgress = 0.5,
             ),
         )
     }
@@ -311,7 +312,7 @@ fun BookCard(
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontFamily = Gabarito,
                         fontWeight = FontWeight.Medium,
-                        lineBreak = LineBreak.Paragraph
+                        lineBreak = LineBreak.Paragraph,
                     ),
                 )
             }
@@ -323,7 +324,7 @@ fun BookCard(
                     color = MaterialTheme.colorScheme.secondary,
                     fontFamily = Gabarito,
                     fontWeight = FontWeight.Medium,
-                    lineBreak = LineBreak.Paragraph
+                    lineBreak = LineBreak.Paragraph,
                 ),
             )
             Spacer(modifier = Modifier.weight(1f))

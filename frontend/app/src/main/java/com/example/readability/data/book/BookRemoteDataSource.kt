@@ -33,8 +33,7 @@ data class BookCardData(
     val coverImage: String? = null,
     val coverImageData: ImageBitmap? = null,
     val content: String,
-    val numTotalInference: Int = 0,
-    val numCurrentInference: Int = 0,
+    val summaryProgress: Double,
 )
 
 data class BookResponse(
@@ -44,8 +43,6 @@ data class BookResponse(
     val content: String,
     val cover_image: String,
     val progress: Double,
-    val num_total_inference: Int,
-    val num_current_inference: Int,
 )
 
 data class AddBookRequest(
@@ -108,15 +105,15 @@ class BookRemoteDataSource @Inject constructor(
     private val bookAPI: BookAPI,
 ) {
 
-    fun getBookList(accessToken: String): Result<List<BookCardData>> {
+    fun getBookList(accessToken: String): Result<List<Book>> {
         try {
             val response = bookAPI.getBooks(accessToken).execute()
             if (response.isSuccessful) {
                 val responseBody = response.body() ?: return Result.failure(Throwable("No body"))
                 return Result.success(
                     responseBody.books.map {
-                        BookCardData(
-                            id = it.book_id,
+                        Book(
+                            bookId = it.book_id,
                             title = it.title,
                             author = it.author,
                             progress = it.progress,

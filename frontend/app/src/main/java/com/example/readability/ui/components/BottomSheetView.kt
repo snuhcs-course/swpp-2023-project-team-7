@@ -100,6 +100,7 @@ fun BottomSheetPreview() {
                     progress = 0.5,
                     coverImageData = null,
                     content = "asd",
+                    summaryProgress = 0.5,
                 ),
             )
         }

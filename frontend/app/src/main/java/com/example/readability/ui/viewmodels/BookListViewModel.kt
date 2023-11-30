@@ -28,6 +28,7 @@ class BookListViewModel @Inject constructor(
         coverImage = book.coverImage,
         coverImageData = book.coverImageData,
         content = book.content,
+        summaryProgress = book.summaryProgress,
     )
 
     val bookCardDataList = bookRepository.bookList.map {

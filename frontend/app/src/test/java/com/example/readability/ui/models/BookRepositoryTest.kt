@@ -1,11 +1,14 @@
 package com.example.readability.ui.models
 
-import com.example.readability.data.book.Book
+import com.example.readability.data.NetworkStatusRepository
 import com.example.readability.data.book.BookDao
+import com.example.readability.data.book.BookEntity
+import com.example.readability.data.book.BookFileDataSource
 import com.example.readability.data.book.BookRemoteDataSource
 import com.example.readability.data.book.BookRepository
 import com.example.readability.data.user.UserRepository
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -33,27 +36,38 @@ class BookRepositoryTest {
     @Mock
     private lateinit var userRepository: UserRepository
 
+    @Mock
+    private lateinit var networkStatusRepository: NetworkStatusRepository
+
+    @Mock
+    private lateinit var bookFileDataSource: BookFileDataSource
+
     // class under test
     private lateinit var bookRepository: BookRepository
 
     @Before
-    fun init() {
+    fun init() = runBlocking {
         `when`(bookDao.getAll()).thenReturn(
             listOf(
-                Book(
+                BookEntity(
                     bookId = 1,
                     title = "test",
                     author = "test",
                     progress = 0.0,
                     coverImage = "test",
                     content = "test",
+                    summaryProgress = 0.5,
                 ),
             ),
         )
+        `when`(networkStatusRepository.isConnected).thenReturn(true)
+        `when`(userRepository.getAccessToken()).thenReturn("test")
         bookRepository = BookRepository(
             bookDao = bookDao,
             bookRemoteDataSource = bookRemoteDataSource,
             userRepository = userRepository,
+            networkStatusRepository = networkStatusRepository,
+            bookFileDataSource = bookFileDataSource,
         )
     }
 
