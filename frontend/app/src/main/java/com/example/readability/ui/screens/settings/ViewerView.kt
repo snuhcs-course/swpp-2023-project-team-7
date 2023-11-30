@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -105,13 +106,17 @@ fun ViewerView(
     var maxHeight by remember { mutableStateOf(0.dp) }
     val density = LocalDensity.current
 
-    Scaffold(topBar = {
-        TopAppBar(title = { Text(text = "Viewer Settings") }, navigationIcon = {
-            IconButton(onClick = { onBack() }) {
-                Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
-            }
-        })
-    }) { innerPadding ->
+    Scaffold(
+        modifier = Modifier
+            .safeDrawingPadding(),
+        topBar = {
+            TopAppBar(title = { Text(text = "Viewer Settings") }, navigationIcon = {
+                IconButton(onClick = { onBack() }) {
+                    Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
+                }
+            })
+        },
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)

@@ -53,8 +53,8 @@ class PageSplitRepository @Inject constructor(
         }.firstOrNull() ?: return null
         val content = book.contentData ?: return null
         val viewerStyle = settingRepository.viewerStyle.firstOrNull() ?: return null
-        val textPaint = fontDataSource.buildTextPaint(viewerStyle)
         val charWidths = fontDataSource.getCharWidthArray(viewerStyle)
+        val textPaint = fontDataSource.buildTextPaint(viewerStyle)
         val pageSplits = pageSplitDataSource.splitPage(
             width = width,
             height = height,
@@ -89,13 +89,13 @@ class PageSplitRepository @Inject constructor(
             pageSplitData.pageSplits[page],
         )
         val viewerStyle = pageSplitData.viewerStyle
+        val charWidths = fontDataSource.getCharWidthArray(viewerStyle)
         val textPaint = fontDataSource.buildTextPaint(viewerStyle)
         if (isDarkMode) {
             textPaint.color = viewerStyle.darkTextColor
         } else {
             textPaint.color = viewerStyle.brightTextColor
         }
-        val charWidths = fontDataSource.getCharWidthArray(viewerStyle)
         pageSplitDataSource.drawPage(
             canvas = canvas,
             width = pageSplitData.width,
@@ -113,8 +113,8 @@ class PageSplitRepository @Inject constructor(
         width: Int,
         isDarkMode: Boolean,
     ) {
-        val textPaint = fontDataSource.buildTextPaint(viewerStyle)
         val charWidths = fontDataSource.getCharWidthArray(viewerStyle)
+        val textPaint = fontDataSource.buildTextPaint(viewerStyle)
         if (isDarkMode) {
             textPaint.color = viewerStyle.darkTextColor
         } else {

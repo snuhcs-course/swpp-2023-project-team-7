@@ -9,7 +9,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.readability.ui.animation.SharedAxis
 import com.example.readability.ui.animation.composableSharedAxis
-import com.example.readability.ui.viewmodels.BookListViewModel
 import com.example.readability.ui.viewmodels.SettingViewModel
 import com.example.readability.ui.viewmodels.UserViewModel
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +17,6 @@ import kotlinx.coroutines.withContext
 
 sealed class SettingsScreens(val route: String) {
     object Settings : SettingsScreens("settings")
-    object PasswordCheck : SettingsScreens("password_check")
     object Account : SettingsScreens("account")
     object ChangePassword : SettingsScreens("change_password")
     object Viewer : SettingsScreens("viewer")
@@ -37,50 +35,28 @@ fun SettingsScreen(
     NavHost(navController = navController, startDestination = startDestination) {
         composableSharedAxis(SettingsScreens.Settings.route, axis = SharedAxis.X) {
             val userViewModel: UserViewModel = hiltViewModel()
-            val bookListViewModel: BookListViewModel = hiltViewModel()
-//            val userData by userViewModel.userData.collectAsState()
+            val user by userViewModel.user.collectAsState()
 
-
-            // TODO: put correct user info to SettingsView
             SettingsView(
-                onSignOut = {
-                    withContext(Dispatchers.IO) {
-                        userViewModel.signOut()
-                        bookListViewModel.clearBookList()
-                    }
-                    Result.success(Unit)
-                },
+                username = user?.userName ?: "",
                 onBack = { onBack() },
-                onNavigatePasswordCheck = { navController.navigate(SettingsScreens.Account.route) },
+                onNavigateAccountSetting = { navController.navigate(SettingsScreens.Account.route) },
                 onNavigateViewer = { navController.navigate(SettingsScreens.Viewer.route) },
-                onNavigateIntro = { onNavigateAuth() },
-//                userData = userData
             )
-        }
-        composableSharedAxis(SettingsScreens.PasswordCheck.route, axis = SharedAxis.X) {
-            val userViewModel: UserViewModel = hiltViewModel()
-            PasswordCheckView(onBack = { navController.popBackStack() }, onPasswordSubmitted = {
-                withContext(Dispatchers.IO) {
-                    // TODO: check password again using userViewModel
-                    delay(1000L)
-                    Result.success(Unit)
-                }
-            }, onNavigateAccount = {
-                navController.navigate(SettingsScreens.Account.route)
-            })
         }
         composableSharedAxis(SettingsScreens.Account.route, axis = SharedAxis.X) {
             val userViewModel: UserViewModel = hiltViewModel()
-            // TODO: put correct user info to AccountView
+            val user by userViewModel.user.collectAsState()
             AccountView(
+                email = user?.userEmail ?: "",
+                username = user?.userName ?: "",
                 onBack = { navController.popBackStack() },
                 onNavigateChangePassword = { navController.navigate(SettingsScreens.ChangePassword.route) },
-                onUpdatePersonalInfo = {
+                onSignOut = {
                     withContext(Dispatchers.IO) {
-                        // TODO: update personal info using userViewModel
-                        delay(1000L)
-                        Result.success(Unit)
+                        userViewModel.signOut()
                     }
+                    Result.success(Unit)
                 },
                 onDeleteAccount = {
                     withContext(Dispatchers.IO) {
@@ -95,13 +71,12 @@ fun SettingsScreen(
             )
         }
         composableSharedAxis(SettingsScreens.ChangePassword.route, axis = SharedAxis.X) {
+            val userViewModel: UserViewModel = hiltViewModel()
             ChangePasswordView(
                 onBack = { navController.popBackStack() },
                 onPasswordSubmitted = { newPassword ->
                     withContext(Dispatchers.IO) {
-                        // TODO: change password using userViewModel
-                        delay(1000L)
-                        Result.success(Unit)
+                        userViewModel.changePassword(newPassword)
                     }
                 },
             )
