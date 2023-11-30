@@ -69,6 +69,7 @@ android {
         unitTests {
             isIncludeAndroidResources = true
         }
+        unitTests.all { it.jvmArgs("-noverify") }
     }
 }
 

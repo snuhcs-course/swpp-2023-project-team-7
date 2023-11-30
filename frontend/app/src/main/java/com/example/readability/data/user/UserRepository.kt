@@ -108,6 +108,14 @@ class UserRepository @Inject constructor(
         })
     }
 
+    suspend fun changePassword(newPassword: String): Result<Unit> {
+        val accessToken = getAccessToken() ?: return Result.failure(UserNotSignedInException())
+        if (!networkStatusRepository.isConnected) {
+            return Result.failure(Exception("Network not connected"))
+        }
+        return userRemoteDataSource.changePassword(accessToken, newPassword)
+    }
+
     fun signOut() {
         userDao.deleteAll()
     }

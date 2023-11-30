@@ -52,45 +52,53 @@ class QuizRepository @Inject constructor(
             _quizCount.update { 0 }
             try {
                 lastQuizLoadJob?.cancel()
+                var error: Throwable? = null
                 lastQuizLoadJob = quizLoadScope.launch {
-                    var receivingQuiz = true
-                    quizRemoteDataSource.getQuiz(bookId, progress, accessToken).collect { response ->
-                        if (!isActive) return@collect
-                        if (response.type == QuizResponseType.COUNT) {
-                            _quizCount.value = response.intData
-                            _quizList.update { listOf(Quiz("", "")) }
-                        } else if (response.type == QuizResponseType.QUESTION_END) {
-                            receivingQuiz = false
-                        } else if (response.type == QuizResponseType.ANSWER_END) {
-                            receivingQuiz = true
-                            if (_quizList.value.size < _quizCount.value) {
-                                _quizList.update {
-                                    it.toMutableList().apply {
-                                        add(Quiz("", ""))
+                    try {
+                        var receivingQuiz = true
+                        quizRemoteDataSource.getQuiz(bookId, progress, accessToken).collect { response ->
+                            if (!isActive) return@collect
+                            if (response.type == QuizResponseType.COUNT) {
+                                _quizCount.value = response.intData
+                                _quizList.update { listOf(Quiz("", "")) }
+                            } else if (response.type == QuizResponseType.QUESTION_END) {
+                                receivingQuiz = false
+                            } else if (response.type == QuizResponseType.ANSWER_END) {
+                                receivingQuiz = true
+                                if (_quizList.value.size < _quizCount.value) {
+                                    _quizList.update {
+                                        it.toMutableList().apply {
+                                            add(Quiz("", ""))
+                                        }
                                     }
                                 }
-                            }
-                        } else {
-                            val lastIndex = _quizList.value.lastIndex
-                            _quizList.update {
-                                it.toMutableList().apply {
-                                    if (receivingQuiz) {
-                                        set(
-                                            lastIndex,
-                                            Quiz(it[lastIndex].question + response.data, it[lastIndex].answer),
-                                        )
-                                    } else {
-                                        set(
-                                            lastIndex,
-                                            Quiz(it[lastIndex].question, it[lastIndex].answer + response.data),
-                                        )
+                            } else {
+                                val lastIndex = _quizList.value.lastIndex
+                                _quizList.update {
+                                    it.toMutableList().apply {
+                                        if (receivingQuiz) {
+                                            set(
+                                                lastIndex,
+                                                Quiz(it[lastIndex].question + response.data, it[lastIndex].answer),
+                                            )
+                                        } else {
+                                            set(
+                                                lastIndex,
+                                                Quiz(it[lastIndex].question, it[lastIndex].answer + response.data),
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
+                    } catch (e: Throwable) {
+                        error = e
                     }
                 }
                 lastQuizLoadJob?.join()
+                if (error != null) {
+                    return@withContext Result.failure(error!!)
+                }
             } catch (e: Throwable) {
                 e.printStackTrace()
                 return@withContext Result.failure(e)

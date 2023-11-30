@@ -81,6 +81,9 @@ interface UserAPI {
 
     @GET("/user/info")
     fun getUserInfo(@Query("access_token") accessToken: String): Call<UserInfoResponse>
+
+    @POST("/user/change_password")
+    fun changePassword(@Query("access_token") accessToken: String, @Query("password") newPassword: String): Call<Unit>
 }
 
 @InstallIn(SingletonComponent::class)
@@ -164,6 +167,15 @@ class UserRemoteDataSource @Inject constructor(
             } else {
                 return Result.failure(Throwable("Empty Response Body"))
             }
+        } else {
+            return Result.failure(Throwable(parseErrorBody(result.errorBody())))
+        }
+    }
+
+    suspend fun changePassword(accessToken: String, newPassword: String): Result<Unit> {
+        val result = userApi.changePassword(accessToken, newPassword).execute()
+        if (result.isSuccessful) {
+            return Result.success(Unit)
         } else {
             return Result.failure(Throwable(parseErrorBody(result.errorBody())))
         }
