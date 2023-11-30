@@ -37,14 +37,22 @@ class SummaryRepository @Inject constructor(
             )
             try {
                 lastSummaryLoadJob?.cancel()
+                var error: Throwable? = null
                 lastSummaryLoadJob = summaryLoadScope.launch {
-                    _summary.value = ""
-                    summaryRemoteDataSource.getSummary(bookId, progress, accessToken).collect { response ->
-                        if (!isActive) return@collect
-                        _summary.value += response
+                    try {
+                        _summary.value = ""
+                        summaryRemoteDataSource.getSummary(bookId, progress, accessToken).collect { response ->
+                            if (!isActive) return@collect
+                            _summary.value += response
+                        }
+                    } catch (e: Throwable) {
+                        error = e
                     }
                 }
                 lastSummaryLoadJob?.join()
+                if (error != null) {
+                    return@withContext Result.failure(error!!)
+                }
             } catch (e: Throwable) {
                 return@withContext Result.failure(e)
             }

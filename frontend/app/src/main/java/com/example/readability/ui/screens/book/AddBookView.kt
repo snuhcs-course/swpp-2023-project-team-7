@@ -106,7 +106,9 @@ fun AddBookView(
     val maxChar = 80
 
     var defaultImageString = ""
-    val defaultUri = Uri.parse("android.resource://"+context.packageName+"/drawable/" + R.drawable.defaul_book_cover_image)
+    val defaultUri = Uri.parse(
+        "android.resource://" + context.packageName + "/drawable/" + R.drawable.defaul_book_cover_image,
+    )
     defaultbitmap = if (Build.VERSION.SDK_INT < 28) {
         MediaStore.Images.Media.getBitmap(context.contentResolver, defaultUri)
     } else {
@@ -255,7 +257,8 @@ fun AddBookView(
                 modifier = Modifier.fillMaxWidth(),
                 value = title,
                 onValueChange = {
-                    if (it.length <= maxChar) title = it },
+                    if (it.length <= maxChar) title = it
+                },
                 label = { Text(text = "Book Title") },
                 leadingIcon = {
                     Icon(
@@ -269,7 +272,7 @@ fun AddBookView(
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = author,
-                onValueChange = {if (it.length <= maxChar) author = it },
+                onValueChange = { if (it.length <= maxChar) author = it },
                 label = { Text(text = "Author (Optional)") },
                 leadingIcon = {
                     Icon(
@@ -366,7 +369,11 @@ fun AddBookView(
                                     title = title,
                                     content = content,
                                     author = author,
-                                    coverImage = if ( imageString == "" ){ defaultImageString }else{ imageString },
+                                    coverImage = if (imageString == "") {
+                                        defaultImageString
+                                    } else {
+                                        imageString
+                                    },
                                 ),
                             ).onSuccess {
                                 onBookUploaded()

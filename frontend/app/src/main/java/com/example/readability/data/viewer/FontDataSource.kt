@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.core.content.res.ResourcesCompat
 import com.example.readability.R
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -35,13 +36,25 @@ class FontDataSource @Inject constructor(
 
     private var lastTextSize = 0f
     private var lastLetterSpacing = 0f
-    private var customTypeface: Typeface? = null
+    var customTypeface: MutableStateFlow<Typeface?> = MutableStateFlow(null)
+
+    // line height with 16dp text size
+    var referenceLineHeight: MutableStateFlow<Float> = MutableStateFlow(0f)
     private var customTypefaceName = ""
 
     init {
         customTypefaceName = "garamond"
-        customTypeface = ResourcesCompat.getFont(context, R.font.garamond)
+        customTypeface.value = ResourcesCompat.getFont(context, R.font.garamond)
         calculateReferenceCharWidth(ViewerStyle())
+        updateReferenceLineHeight()
+    }
+
+    /**
+     * Update reference line height with current typeface
+     */
+    private fun updateReferenceLineHeight() {
+        val fontMetrics = buildTextPaint(ViewerStyle(textSize = 16f, letterSpacing = 0f)).fontMetrics
+        referenceLineHeight.value = fontMetrics.bottom - fontMetrics.top + fontMetrics.leading
     }
 
     /**
@@ -52,10 +65,11 @@ class FontDataSource @Inject constructor(
     fun getCharWidthArray(viewerStyle: ViewerStyle): FloatArray {
         if (viewerStyle.fontFamily != customTypefaceName) {
             customTypefaceName = viewerStyle.fontFamily
-            customTypeface = ResourcesCompat.getFont(
+            customTypeface.value = ResourcesCompat.getFont(
                 context, fontMap[viewerStyle.fontFamily] ?: R.font.garamond,
             )
             calculateReferenceCharWidth(viewerStyle)
+            updateReferenceLineHeight()
         } else if (viewerStyle.textSize != lastTextSize || viewerStyle.letterSpacing != lastLetterSpacing) {
             lastTextSize = viewerStyle.textSize
             lastLetterSpacing = viewerStyle.letterSpacing
@@ -73,7 +87,7 @@ class FontDataSource @Inject constructor(
         val textPaint = TextPaint()
         textPaint.isAntiAlias = true
         textPaint.textSize = viewerStyle.textSize * density
-        textPaint.typeface = customTypeface
+        textPaint.typeface = customTypeface.value
         textPaint.letterSpacing = viewerStyle.letterSpacing
         return textPaint
     }

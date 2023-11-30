@@ -1,5 +1,6 @@
 package com.example.readability.screens
 
+import android.graphics.Typeface
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
@@ -76,6 +77,7 @@ class ViewerScreenTest {
             openBoatBookData.copy(progress = (1.5 / pageSplitData.pageSplits.size))
         composeTestRule.setContent {
             ViewerView(
+                isNetworkConnected = true,
                 bookData = openBoatBookData,
                 pageSplitData = pageSplitData,
                 onProgressChange = {
@@ -104,6 +106,7 @@ class ViewerScreenTest {
             openBoatBookData.copy(progress = 0.0)
         composeTestRule.setContent {
             ViewerView(
+                isNetworkConnected = true,
                 bookData = openBoatBookData,
                 pageSplitData = pageSplitData,
                 onProgressChange = {
@@ -132,6 +135,7 @@ class ViewerScreenTest {
             openBoatBookData.copy(progress = (1.5 / pageSplitData.pageSplits.size))
         composeTestRule.setContent {
             ViewerView(
+                isNetworkConnected = true,
                 bookData = openBoatBookData,
                 pageSplitData = pageSplitData,
                 onProgressChange = {
@@ -157,6 +161,7 @@ class ViewerScreenTest {
         openBoatBookData = openBoatBookData.copy(progress = 0.0)
         composeTestRule.setContent {
             ViewerView(
+                isNetworkConnected = true,
                 bookData = openBoatBookData,
                 pageSplitData = pageSplitData,
                 onProgressChange = {
@@ -178,6 +183,7 @@ class ViewerScreenTest {
             openBoatBookData.copy(progress = (1.5 / pageSplitData.pageSplits.size))
         composeTestRule.setContent {
             ViewerView(
+                isNetworkConnected = true,
                 bookData = openBoatBookData,
                 pageSplitData = pageSplitData,
                 onProgressChange = {
@@ -200,6 +206,7 @@ class ViewerScreenTest {
         var onBack = false
         composeTestRule.setContent {
             ViewerView(
+                isNetworkConnected = true,
                 bookData = openBoatBookData,
                 pageSplitData = pageSplitData,
                 onBack = {
@@ -229,6 +236,7 @@ class ViewerScreenTest {
         var onNavigateSettings = false
         composeTestRule.setContent {
             ViewerView(
+                isNetworkConnected = true,
                 bookData = openBoatBookData,
                 pageSplitData = pageSplitData,
                 onNavigateSettings = {
@@ -258,6 +266,7 @@ class ViewerScreenTest {
         var onNavigateSummary = false
         composeTestRule.setContent {
             ViewerView(
+                isNetworkConnected = true,
                 bookData = openBoatBookData,
                 pageSplitData = pageSplitData,
                 onNavigateSummary = {
@@ -287,6 +296,7 @@ class ViewerScreenTest {
         var onNavigateQuiz = false
         composeTestRule.setContent {
             ViewerView(
+                isNetworkConnected = true,
                 bookData = openBoatBookData,
                 pageSplitData = pageSplitData,
                 onNavigateQuiz = {
@@ -400,7 +410,12 @@ class ViewerScreenTest {
     @Test
     fun summaryView_Displayed() {
         composeTestRule.setContent {
-            SummaryView(summary = "this is a summary")
+            SummaryView(
+                summary = "this is a summary",
+                viewerStyle = ViewerStyle(),
+                typeface = Typeface.DEFAULT,
+                referenceLineHeight = 16f
+            )
         }
 
         // check if summary is displayed
@@ -412,7 +427,13 @@ class ViewerScreenTest {
     fun summaryView_BackButtonClicked() {
         var onBack = false
         composeTestRule.setContent {
-            SummaryView(summary = "this is a summary", onBack = { onBack = true })
+            SummaryView(
+                summary = "this is a summary",
+                onBack = { onBack = true },
+                viewerStyle = ViewerStyle(),
+                typeface = Typeface.DEFAULT,
+                referenceLineHeight = 16f
+            )
         }
 
         // click back button

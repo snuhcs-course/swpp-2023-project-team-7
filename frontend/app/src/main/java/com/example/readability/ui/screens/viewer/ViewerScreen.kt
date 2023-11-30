@@ -1,11 +1,22 @@
 package com.example.readability.ui.screens.viewer
 
+import android.os.Build
+import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.readability.ui.animation.SharedAxis
 import com.example.readability.ui.animation.composableSharedAxis
@@ -20,16 +31,56 @@ import kotlinx.coroutines.withContext
 sealed class ViewerScreens(val route: String) {
     object Viewer : ViewerScreens("viewer")
     object Quiz : ViewerScreens("quiz")
-    object QuizReport : ViewerScreens("quiz/report/{question}/{answer}") {
-        fun createRoute(question: String, answer: String) = "quiz/report/$question/$answer"
+    object QuizReport : ViewerScreens("quiz/report?question={question}&answer={answer}") {
+        fun createRoute(question: String, answer: String) = "quiz/report?question=$question&answer=$answer"
     }
 
     object Summary : ViewerScreens("summary")
 }
 
 @Composable
-fun ViewerScreen(id: Int, onNavigateSettings: () -> Unit, onBack: () -> Unit) {
-    val navController = rememberNavController()
+fun ViewerScreen(
+    id: Int,
+    navController: NavHostController = rememberNavController(),
+    onNavigateSettings: () -> Unit,
+    onBack: () -> Unit,
+) {
+    val context = LocalContext.current
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val immersiveModeEnabled = navBackStackEntry?.destination?.route == ViewerScreens.Viewer.route
+    var firstImmersiveMode by remember { mutableStateOf(true) }
+
+    LaunchedEffect(immersiveModeEnabled) {
+        if (firstImmersiveMode) {
+            firstImmersiveMode = false
+            return@LaunchedEffect
+        }
+        val activity = context.findActivity() ?: return@LaunchedEffect
+        if (immersiveModeEnabled) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                activity.window.insetsController?.let {
+                    it.hide(WindowInsets.Type.systemBars())
+                    it.systemBarsBehavior =
+                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                activity.window.decorView.systemUiVisibility =
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                    View.SYSTEM_UI_FLAG_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            }
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                activity.window.insetsController?.show(WindowInsets.Type.systemBars())
+            } else {
+                @Suppress("DEPRECATION")
+                activity.window.decorView.systemUiVisibility =
+                    View.SYSTEM_UI_FLAG_VISIBLE
+            }
+        }
+    }
+
     NavHost(navController = navController, startDestination = ViewerScreens.Viewer.route) {
         composableSharedAxis(ViewerScreens.Viewer.route, axis = SharedAxis.X) {
             val viewerViewModel: ViewerViewModel = hiltViewModel()
@@ -106,9 +157,18 @@ fun ViewerScreen(id: Int, onNavigateSettings: () -> Unit, onBack: () -> Unit) {
         composableSharedAxis(ViewerScreens.Summary.route, axis = SharedAxis.X) {
             val summaryViewModel: SummaryViewModel = hiltViewModel()
             val summary by summaryViewModel.summary.collectAsState()
-            SummaryView(summary = summary, onBack = {
-                navController.popBackStack()
-            })
+            val viewerStyle by summaryViewModel.viewerStyle.collectAsState()
+            val typeface by summaryViewModel.typeface.collectAsState()
+            val referenceLineHeight by summaryViewModel.referenceLineHeight.collectAsState()
+            SummaryView(
+                summary = summary,
+                viewerStyle = viewerStyle,
+                typeface = typeface,
+                referenceLineHeight = referenceLineHeight,
+                onBack = {
+                    navController.popBackStack()
+                },
+            )
         }
     }
 }

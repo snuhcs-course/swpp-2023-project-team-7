@@ -6,13 +6,8 @@ import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -29,11 +24,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.PagerSnapDistance
@@ -46,7 +40,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,6 +67,7 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
@@ -97,6 +91,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.math.roundToInt
 
 @Composable
 fun ViewerView(
@@ -112,6 +107,11 @@ fun ViewerView(
     onNavigateSummary: () -> Unit = {},
 ) {
     var overlayVisible by remember { mutableStateOf(false) }
+    val shrinkAnimation by animateFloatAsState(
+        targetValue = if (overlayVisible) 1f else 0f,
+        label = "ViewerScreen.ViewerView.PageShrinkAnimation",
+        animationSpec = tween(durationMillis = DURATION_EMPHASIZED, 0, EASING_EMPHASIZED),
+    )
     var closeLoading by remember { mutableStateOf(true) }
     var transitionDuration by remember { mutableStateOf(0) }
     var lastBookReady by remember { mutableStateOf(true) }
@@ -145,24 +145,21 @@ fun ViewerView(
     val pageSize = pageSplitData?.pageSplits?.size ?: 0
     val pageIndex = maxOf(minOf((pageSize * (bookData?.progress ?: 0.0)).toInt(), pageSize - 1), 0)
 
-    Scaffold(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .navigationBarsPadding()
-            .systemBarsPadding(),
-    ) { innerPadding ->
+            .displayCutoutPadding(),
+    ) {
         ViewerSizeMeasurer(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+                .fillMaxSize(),
             onPageSizeChanged = { width, height ->
                 onPageSizeChanged(width, height)
             },
         )
         AnimatedContent(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+                .fillMaxSize(),
             targetState = bookReady,
             label = "ViewerScreen.ViewerView.Content",
             transitionSpec = {
@@ -178,9 +175,9 @@ fun ViewerView(
             when (it) {
                 true -> ViewerOverlay(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
+                        .fillMaxSize(),
                     visible = overlayVisible,
+                    shrinkAnimation = shrinkAnimation,
                     bookData = bookData,
                     pageSize = pageSize,
                     isNetworkConnected = isNetworkConnected,
@@ -201,6 +198,7 @@ fun ViewerView(
                             },
                             pageIndex = pageIndex,
                             overlayVisible = overlayVisible,
+                            shrinkAnimation = shrinkAnimation,
                             onPageChanged = { pageIndex ->
                                 onProgressChange((pageIndex + 0.5) / pageSize)
                             },
@@ -343,6 +341,7 @@ fun BookPager(
     pageSize: Int,
     pageIndex: Int,
     overlayVisible: Boolean,
+    shrinkAnimation: Float,
     onPageDraw: (canvas: NativeCanvas, pageIndex: Int) -> Unit = { _, _ -> },
     onPageChanged: (Int) -> Unit = {},
     onOverlayVisibleChanged: (Boolean) -> Unit = {},
@@ -357,12 +356,6 @@ fun BookPager(
     var animationFinishedTime by remember { mutableLongStateOf(0L) }
     val overlayChangeScope = rememberCoroutineScope()
     val animationScope = rememberCoroutineScope()
-
-    val shrinkAnimation by animateFloatAsState(
-        targetValue = if (overlayVisible) 1f else 0f,
-        label = "ViewerScreen.ViewerView.PageShrinkAnimation",
-        animationSpec = tween(durationMillis = DURATION_EMPHASIZED, 0, EASING_EMPHASIZED),
-    )
 
     LaunchedEffect(pagerState.currentPage) {
         if (System.currentTimeMillis() - animationFinishedTime < 100) return@LaunchedEffect
@@ -583,6 +576,7 @@ fun ViewerSizeMeasurer(modifier: Modifier = Modifier, onPageSizeChanged: (Int, I
 fun ViewerOverlay(
     modifier: Modifier = Modifier,
     visible: Boolean,
+    shrinkAnimation: Float,
     bookData: Book?,
     pageSize: Int,
     isNetworkConnected: Boolean,
@@ -603,65 +597,52 @@ fun ViewerOverlay(
 //        aiStatus = if (bookData?.numTotalInference == 0) 0 else bookData?.numCurrentInference!! / bookData.numTotalInference
 //    }, 10000)
 
-    Column(
+    Layout(
         modifier = modifier,
-    ) {
-        AnimatedVisibility(
-            visible = visible,
-            label = "EbookView.ViewerOverlay.TopContent",
-            enter = fadeIn(tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)) + expandVertically(
-                tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED),
-            ),
-            exit = fadeOut(tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)) + shrinkVertically(
-                tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED),
-            ),
-        ) {
-            CenterAlignedTopAppBar(windowInsets = WindowInsets(0, 0, 0, 0), title = {
-                Text(
-                    text = bookData?.title ?: "",
-                    style = MaterialTheme.typography.bodyLarge.copy(lineBreak = LineBreak.Paragraph),
-                    textAlign = TextAlign.Center,
-                )
-            }, navigationIcon = {
-                IconButton(onClick = {
-                    onBack()
-                }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+        content = {
+            CenterAlignedTopAppBar(
+                modifier = Modifier.alpha(shrinkAnimation),
+                windowInsets = WindowInsets(0, 0, 0, 0),
+                title = {
+                    Text(
+                        text = bookData?.title ?: "",
+                        style = MaterialTheme.typography.bodyLarge.copy(lineBreak = LineBreak.Paragraph),
+                        textAlign = TextAlign.Center,
                     )
-                }
-            }, actions = {
-                IconButton(onClick = {
-                    onNavigateSettings()
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.settings),
-                        contentDescription = "Settings",
-                    )
-                }
-            })
-        }
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        onBack()
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        onNavigateSettings()
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.settings),
+                            contentDescription = "Settings",
+                        )
+                    }
+                },
+            )
 
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-        ) {
-            content()
-        }
+            Box(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                content()
+            }
 
-        AnimatedVisibility(
-            visible = visible,
-            label = "EbookView.ViewerOverlay.BottomContent",
-            enter = fadeIn(tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)) + expandVertically(
-                tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED), expandFrom = Alignment.Top,
-            ),
-            exit = fadeOut(tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED)) + shrinkVertically(
-                tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED), shrinkTowards = Alignment.Top,
-            ),
-        ) {
-            Box(modifier = Modifier.fillMaxWidth()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .alpha(shrinkAnimation),
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -729,15 +710,47 @@ fun ViewerOverlay(
                     )
                 }
             }
-        }
 
-        Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            text = "${pageIndex + 1} / $pageSize",
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodyMedium,
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.background)
+                    .padding(vertical = 8.dp),
+                text = "${pageIndex + 1} / $pageSize",
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        },
+    ) { measureables, constraints ->
+        val width = constraints.maxWidth
+        val height = constraints.maxHeight
+        val columnConstraints = constraints.copy(
+            minWidth = 0,
+            maxWidth = width,
+            minHeight = 0,
+            maxHeight = height,
         )
+        val topBar = measureables[0].measure(columnConstraints)
+        val bottomBar = measureables[2].measure(columnConstraints)
+        val bottomProgress = measureables[3].measure(columnConstraints)
+
+        val topBarTop = (topBar.height * (-1 + shrinkAnimation)).roundToInt()
+        val contentTop = (topBar.height * shrinkAnimation).roundToInt()
+        val bottomBarTop = (height - bottomProgress.height - bottomBar.height * shrinkAnimation).roundToInt()
+        val bottomProgressTop = height - bottomProgress.height
+        val contentHeight = maxOf(0, bottomBarTop - contentTop)
+        val content = measureables[1].measure(
+            constraints.copy(
+                minHeight = contentHeight,
+                maxHeight = contentHeight,
+            ),
+        )
+
+        layout(width, height) {
+            topBar.placeRelative(0, topBarTop)
+            content.placeRelative(0, contentTop)
+            bottomBar.placeRelative(0, bottomBarTop)
+            bottomProgress.placeRelative(0, bottomProgressTop)
+        }
     }
 }
