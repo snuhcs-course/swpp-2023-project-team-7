@@ -44,7 +44,7 @@ import com.example.readability.ui.theme.ReadabilityTheme
 @Preview(device = "id:pixel_5")
 fun EmailPreview() {
     ReadabilityTheme {
-        EmailView()
+        EmailView("test@example.com")
     }
 }
 
@@ -52,10 +52,15 @@ private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@(.+)\$")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EmailView(onBack: () -> Unit = {}, onNavigateSignIn: (String) -> Unit = {}, onNavigateSignUp: () -> Unit = {}) {
+fun EmailView(
+    email: String,
+    onEmailChanged: (String) -> Unit = {},
+    onBack: () -> Unit = {},
+    onNavigateSignIn: (String) -> Unit = {},
+    onNavigateSignUp: () -> Unit = {},
+) {
     var showError by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf(false) }
-    var email by remember { mutableStateOf("") }
 
     val emailFocusRequester = remember { FocusRequester() }
 
@@ -118,7 +123,7 @@ fun EmailView(onBack: () -> Unit = {}, onNavigateSignIn: (String) -> Unit = {}, 
                         .testTag("EmailTextField"),
                     value = email,
                     onValueChange = {
-                        email = it
+                        onEmailChanged(it)
                         emailError = checkEmailError()
                     },
                     singleLine = true,

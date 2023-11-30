@@ -50,7 +50,7 @@ import kotlinx.coroutines.withContext
 @Preview(device = "id:pixel_5")
 fun ForgotPasswordPreview() {
     ReadabilityTheme {
-        ForgotPasswordView()
+        ForgotPasswordView("test@example.com")
     }
 }
 
@@ -59,11 +59,12 @@ private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@(.+)\$")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgotPasswordView(
+    email: String,
+    onEmailChanged: (String) -> Unit = {},
     onBack: () -> Unit = {},
     onNavigateVerify: (String) -> Unit = {},
     onEmailSubmitted: suspend (String) -> Result<Unit> = { Result.success(Unit) },
 ) {
-    var email by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf(false) }
     var showError by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
@@ -141,7 +142,7 @@ fun ForgotPasswordView(
                     .testTag("EmailTextField"),
                 value = email,
                 onValueChange = {
-                    email = it
+                    onEmailChanged(it)
                     emailError = checkEmailError()
                 },
                 singleLine = true,

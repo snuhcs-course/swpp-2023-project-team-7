@@ -1,8 +1,10 @@
 package com.example.readability.ui.screens.auth
 
-import android.util.Base64
-import android.util.Base64.URL_SAFE
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -18,15 +20,11 @@ import java.lang.Thread.sleep
 
 sealed class AuthScreens(val route: String) {
     object Intro : AuthScreens("intro")
-    object SignIn : AuthScreens("sign_in/{email}") {
-        fun createRoute(email: String) = "sign_in/$email"
-    }
+    object SignIn : AuthScreens("sign_in")
 
     object SignUp : AuthScreens("sign_up")
-    object VerifyEmail : AuthScreens("verify_email/{email}/{fromSignUp}") {
-        fun createRoute(email: String, fromSignUp: Boolean) = "verify_email/${
-            Base64.encodeToString(email.toByteArray(), URL_SAFE).trim()
-        }/$fromSignUp"
+    object VerifyEmail : AuthScreens("verify_email/{fromSignUp}") {
+        fun createRoute(fromSignUp: Boolean) = "verify_email/$fromSignUp"
     }
 
     object ResetPassword : AuthScreens("reset_password")
@@ -36,6 +34,7 @@ sealed class AuthScreens(val route: String) {
 
 @Composable
 fun AuthScreen(navController: NavHostController = rememberNavController(), onNavigateBookList: () -> Unit = {}) {
+    var email by remember { mutableStateOf("") }
     NavHost(navController = navController, startDestination = AuthScreens.Intro.route) {
         composableSharedAxis(AuthScreens.Intro.route, axis = SharedAxis.X) {
             IntroView(
@@ -44,13 +43,14 @@ fun AuthScreen(navController: NavHostController = rememberNavController(), onNav
         }
         composableSharedAxis(AuthScreens.Email.route, axis = SharedAxis.X) {
             EmailView(
+                email = email,
+                onEmailChanged = { email = it },
                 onBack = { navController.popBackStack() },
-                onNavigateSignIn = { navController.navigate(AuthScreens.SignIn.createRoute(it)) },
+                onNavigateSignIn = { navController.navigate(AuthScreens.SignIn.route) },
                 onNavigateSignUp = { navController.navigate(AuthScreens.SignUp.route) },
             )
         }
         composableSharedAxis(AuthScreens.SignIn.route, axis = SharedAxis.X) {
-            val email = it.arguments?.getString("email") ?: ""
             val userViewModel: UserViewModel = hiltViewModel()
             SignInView(
                 email = email,
@@ -79,6 +79,8 @@ fun AuthScreen(navController: NavHostController = rememberNavController(), onNav
         }
         composableSharedAxis(AuthScreens.ForgotPassword.route, axis = SharedAxis.X) {
             ForgotPasswordView(
+                email = email,
+                onEmailChanged = { email = it },
                 onBack = { navController.popBackStack() },
                 onEmailSubmitted = {
                     withContext(Dispatchers.IO) {
@@ -89,7 +91,6 @@ fun AuthScreen(navController: NavHostController = rememberNavController(), onNav
                 onNavigateVerify = {
                     navController.navigate(
                         AuthScreens.VerifyEmail.createRoute(
-                            it,
                             false,
                         ),
                     )
@@ -101,16 +102,10 @@ fun AuthScreen(navController: NavHostController = rememberNavController(), onNav
             axis = SharedAxis.X,
             arguments = listOf(
                 navArgument("fromSignUp") { defaultValue = false },
-                navArgument("email") { defaultValue = "" },
             ),
         ) {
             VerifyEmailView(
-                email = String(
-                    Base64.decode(
-                        it.arguments?.getString("email") ?: "",
-                        URL_SAFE,
-                    ),
-                ),
+                email = email,
                 fromSignUp = it.arguments?.getBoolean("fromSignUp") ?: false,
                 onBack = { navController.popBackStack() },
                 onNavigateBookList = { onNavigateBookList() },
