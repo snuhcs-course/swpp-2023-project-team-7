@@ -52,7 +52,9 @@ class SummaryRemoteDataSource @Inject constructor(
                     while (currentCoroutineContext().isActive) {
                         val line = it.readLine() ?: break
                         if (line.startsWith("data:")) {
-                            emit(line.substring(6))
+                            var token = line.substring(6)
+                            if (token.isEmpty()) token = "\n"
+                            emit(token)
                         }
                     }
                 } catch (e: Exception) {

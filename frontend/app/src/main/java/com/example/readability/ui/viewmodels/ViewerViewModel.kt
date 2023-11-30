@@ -9,7 +9,10 @@ import com.example.readability.data.viewer.PageSplitRepository
 import com.example.readability.data.viewer.SettingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -23,6 +26,7 @@ class ViewerViewModel @Inject constructor(
 
     val pageSplitData = MutableStateFlow<PageSplitData?>(null)
     val viewerStyle = settingRepository.viewerStyle
+    private var job: Job? = null
 
     fun setPageSize(bookId: Int, width: Int, height: Int) {
         if (pageSplitData.value?.width == width &&
@@ -44,10 +48,14 @@ class ViewerViewModel @Inject constructor(
         }
     }
 
-    fun setAIStatus(bookId: Int, aiStatus: Double) {
-        viewModelScope.launch {
+    fun updateSummaryProgress(bookId: Int) {
+        job?.cancel()
+        job = viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                bookRepository.updateAIStatus(bookId, aiStatus)
+                while (bookRepository.getBook(bookId).first()?.summaryProgress!! < 1.0) {
+                    bookRepository.updateSummaryProgress(bookId)
+                    delay(1000)
+                }
             }
         }
     }

@@ -73,6 +73,9 @@ interface BookDao {
 
     @Query("UPDATE BookEntity SET progress = :progress WHERE book_id = :bookId")
     fun updateProgress(bookId: Int, progress: Double)
+
+    @Query("UPDATE BookEntity SET summary_progress = :summaryProgress WHERE book_id = :bookId")
+    fun updateSummaryProgress(bookId: Int, summaryProgress: Double)
 }
 
 @Database(entities = [BookEntity::class], version = 3)

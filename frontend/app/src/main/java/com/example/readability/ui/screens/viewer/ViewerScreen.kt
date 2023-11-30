@@ -118,6 +118,9 @@ fun ViewerScreen(
                 onPageDraw = { canvas, pageIndex ->
                     viewerViewModel.drawPage(id, canvas, pageIndex, isDarkTheme)
                 },
+                onOverlayView = {
+                    viewerViewModel.updateSummaryProgress(id)
+                }
             )
         }
         composableSharedAxis(ViewerScreens.Quiz.route, axis = SharedAxis.X) {

@@ -56,6 +56,10 @@ data class BooksResponse(
     val books: List<BookResponse>,
 )
 
+data class SummaryProgressResponse(
+    val summary_progress: String,
+)
+
 interface BookAPI {
     @Headers("Accept: application/json")
     @GET("/books")
@@ -74,6 +78,12 @@ interface BookAPI {
         @Query("content_url") contentUrl: String,
         @Query("access_token") accessToken: String,
     ): Call<ResponseBody>
+
+    @GET("/book/{book_id}/current_inference")
+    fun getSummaryProgress(
+        @Path("book_id") bookId: Int,
+        @Query("access_token") accessToken: String,
+    ): Call<SummaryProgressResponse>
 
     @POST("/book/add")
     fun addBook(@Query("access_token") accessToken: String, @Body book: AddBookRequest): Call<Unit>
@@ -155,6 +165,20 @@ class BookRemoteDataSource @Inject constructor(
             if (response.isSuccessful) {
                 val responseBody = response.body() ?: return Result.failure(Throwable("No body"))
                 return Result.success(responseBody.string())
+            } else {
+                return Result.failure(Throwable(parseErrorBody(response.errorBody())))
+            }
+        } catch (e: Exception) {
+            return Result.failure(e)
+        }
+    }
+
+    fun getSummaryProgress(accessToken: String, bookId: Int): Result<String> {
+        try {
+            val response = bookAPI.getSummaryProgress(bookId, accessToken).execute()
+            if (response.isSuccessful) {
+                val responseBody = response.body() ?: return Result.failure(Throwable("No body"))
+                return Result.success(responseBody.summary_progress)
             } else {
                 return Result.failure(Throwable(parseErrorBody(response.errorBody())))
             }

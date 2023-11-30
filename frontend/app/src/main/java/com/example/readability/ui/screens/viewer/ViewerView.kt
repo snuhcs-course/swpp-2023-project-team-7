@@ -86,6 +86,7 @@ import com.example.readability.ui.animation.DURATION_EMPHASIZED
 import com.example.readability.ui.animation.EASING_EMPHASIZED
 import com.example.readability.ui.animation.EASING_LEGACY
 import com.example.readability.ui.components.RoundedRectFilledTonalButton
+import com.example.readability.ui.components.SummaryProgressBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -105,6 +106,7 @@ fun ViewerView(
     onNavigateSettings: () -> Unit = {},
     onNavigateQuiz: () -> Unit = {},
     onNavigateSummary: () -> Unit = {},
+    onOverlayView: () -> Unit = {},
 ) {
     var overlayVisible by remember { mutableStateOf(false) }
     val shrinkAnimation by animateFloatAsState(
@@ -186,6 +188,7 @@ fun ViewerView(
                     onNavigateSettings = { onNavigateSettings() },
                     onNavigateSummary = { onNavigateSummary() },
                     onNavigateQuiz = { onNavigateQuiz() },
+                    onOverlayView = { onOverlayView() },
                 ) {
                     if (bookData != null && pageSize > 0) {
                         BookPager(
@@ -585,17 +588,17 @@ fun ViewerOverlay(
     onNavigateSettings: () -> Unit,
     onNavigateSummary: () -> Unit,
     onNavigateQuiz: () -> Unit,
+    onOverlayView: () -> Unit,
     content: @Composable () -> Unit = {},
 ) {
     val pageIndex = minOf(
         (pageSize * (bookData?.progress ?: 0.0)).toInt(),
         pageSize - 1,
     )
-//    var aiStatus = 0
-//    Handler(Looper.getMainLooper()).postDelayed({
-//        println("aiStatus = ${bookData?.numCurrentInference} / ${bookData?.numTotalInference}")
-//        aiStatus = if (bookData?.numTotalInference == 0) 0 else bookData?.numCurrentInference!! / bookData.numTotalInference
-//    }, 10000)
+
+    fun updateSummaryProgress() {
+        onOverlayView()
+    }
 
     Layout(
         modifier = modifier,
@@ -661,17 +664,11 @@ fun ViewerOverlay(
                             ) {
                                 Text("No Internet Connection")
                             }
-                        }
-                        // TODO: add ai status
-//                        if (bookData?.numTotalInference == 0) {
-                        else if (false) {
-                            RoundedRectFilledTonalButton(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onNavigateSummary() },
-                                enabled = false,
-                            ) {
-                                Text("Too short to generate Summary and Quiz")
-                            }
+                        } else if (bookData?.summaryProgress!! < 1) {
+                            updateSummaryProgress()
+                            SummaryProgressBar(
+                                progress = bookData.summaryProgress,
+                            )
                         } else if (pageIndex < 4) {
                             RoundedRectFilledTonalButton(
                                 modifier = Modifier.weight(1f),
@@ -680,14 +677,6 @@ fun ViewerOverlay(
                             ) {
                                 Text("4 pages required for Summary and Quiz")
                             }
-//                        } else if (aiStatus < 1) {
-//                            RoundedRectFilledTonalButton(
-//                                modifier = Modifier.weight(1f),
-//                                onClick = { onNavigateSummary() },
-//                                enabled = false,
-//                            ) {
-//                                Text("Waiting for Summary and Quiz...(${aiStatus * 100 / 1}%)")
-//                            }
                         } else {
                             RoundedRectFilledTonalButton(
                                 modifier = Modifier.weight(1f),

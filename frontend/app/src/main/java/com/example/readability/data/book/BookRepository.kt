@@ -202,6 +202,27 @@ class BookRepository @Inject constructor(
             })
     }
 
+    suspend fun updateSummaryProgress(bookId: Int): Result<Unit> {
+        val accessToken =
+            userRepository.getAccessToken() ?: return Result.failure(UserNotSignedInException())
+        if (!networkStatusRepository.isConnected) {
+            return Result.failure(Exception("Network not connected"))
+        }
+        return bookRemoteDataSource.getSummaryProgress(accessToken, bookId)
+            .fold(onSuccess = { summaryProgress ->
+                delay(1000L)
+                bookDao.updateSummaryProgress(bookId, summaryProgress.toDouble())
+                bookMap.update {
+                    it.toMutableMap().apply {
+                        this[bookId] = this[bookId]!!.copy(summaryProgress = summaryProgress.toDouble())
+                    }
+                }
+                Result.success(Unit)
+            }, onFailure = {
+                Result.failure(it)
+            })
+    }
+
     suspend fun addBook(data: AddBookRequest): Result<Unit> {
         val accessToken =
             userRepository.getAccessToken() ?: return Result.failure(UserNotSignedInException())
@@ -264,14 +285,5 @@ class BookRepository @Inject constructor(
         bookFileDataSource.deleteAll()
         bookDao.deleteAll()
         bookMap.value = mutableMapOf()
-    }
-
-    fun updateAIStatus(bookId: Int, aiStatus: Double) {
-//        bookDao.getNumTotalInference(bookId) ?: return
-//        bookMap.update {
-//            it.toMutableMap().apply {
-// //                this[bookId] = this[bookId]!!.copy(aiStatus = aiStatus)
-//            }
-//        }
     }
 }
