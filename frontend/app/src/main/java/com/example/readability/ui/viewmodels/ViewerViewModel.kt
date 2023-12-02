@@ -10,9 +10,7 @@ import com.example.readability.data.viewer.SettingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -48,16 +46,8 @@ class ViewerViewModel @Inject constructor(
         }
     }
 
-    fun updateSummaryProgress(bookId: Int) {
-        job?.cancel()
-        job = viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                while (bookRepository.getBook(bookId).first()?.summaryProgress!! < 1.0) {
-                    bookRepository.updateSummaryProgress(bookId)
-                    delay(1000)
-                }
-            }
-        }
+    suspend fun updateSummaryProgress(bookId: Int): Result<Unit> {
+        return bookRepository.updateSummaryProgress(bookId)
     }
 
     fun getBookData(id: Int) = bookRepository.getBook(id)

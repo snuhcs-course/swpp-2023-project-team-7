@@ -6,7 +6,10 @@ import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -27,11 +30,13 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.PagerSnapDistance
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -57,6 +62,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.NativeCanvas
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -82,16 +89,23 @@ import coil.compose.AsyncImage
 import com.example.readability.R
 import com.example.readability.data.book.Book
 import com.example.readability.data.viewer.PageSplitData
+import com.example.readability.data.viewer.getPageIndex
+import com.example.readability.data.viewer.getPageProgress
 import com.example.readability.ui.animation.DURATION_EMPHASIZED
+import com.example.readability.ui.animation.DURATION_STANDARD
 import com.example.readability.ui.animation.EASING_EMPHASIZED
 import com.example.readability.ui.animation.EASING_LEGACY
+import com.example.readability.ui.animation.EASING_STANDARD
 import com.example.readability.ui.components.RoundedRectFilledTonalButton
-import com.example.readability.ui.components.SummaryProgressBar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 @Composable
@@ -106,7 +120,7 @@ fun ViewerView(
     onNavigateSettings: () -> Unit = {},
     onNavigateQuiz: () -> Unit = {},
     onNavigateSummary: () -> Unit = {},
-    onOverlayView: () -> Unit = {},
+    onUpdateSummaryProgress: suspend () -> Result<Unit> = { Result.success(Unit) },
 ) {
     var overlayVisible by remember { mutableStateOf(false) }
     val shrinkAnimation by animateFloatAsState(
@@ -145,7 +159,8 @@ fun ViewerView(
     }
 
     val pageSize = pageSplitData?.pageSplits?.size ?: 0
-    val pageIndex = maxOf(minOf((pageSize * (bookData?.progress ?: 0.0)).toInt(), pageSize - 1), 0)
+    val pageIndex = pageSplitData?.getPageIndex(bookData?.progress ?: 0.0) ?: 0
+    var pageChangedByAnimation by remember { mutableStateOf(true) }
 
     Box(
         modifier = Modifier
@@ -178,17 +193,19 @@ fun ViewerView(
                 true -> ViewerOverlay(
                     modifier = Modifier
                         .fillMaxSize(),
-                    visible = overlayVisible,
                     shrinkAnimation = shrinkAnimation,
                     bookData = bookData,
-                    pageSize = pageSize,
+                    pageSplitData = pageSplitData,
                     isNetworkConnected = isNetworkConnected,
-                    onProgressChange = { onProgressChange(it.toDouble()) },
+                    onPageChanged = { pageIndex, changedByAnimation ->
+                        pageChangedByAnimation = changedByAnimation
+                        onProgressChange(pageSplitData?.getPageProgress(pageIndex) ?: 0.0)
+                    },
                     onBack = { onBack() },
                     onNavigateSettings = { onNavigateSettings() },
                     onNavigateSummary = { onNavigateSummary() },
                     onNavigateQuiz = { onNavigateQuiz() },
-                    onOverlayView = { onOverlayView() },
+                    onUpdateSummaryProgress = onUpdateSummaryProgress,
                 ) {
                     if (bookData != null && pageSize > 0) {
                         BookPager(
@@ -200,10 +217,12 @@ fun ViewerView(
                                 onPageDraw(canvas, pageIndex)
                             },
                             pageIndex = pageIndex,
+                            pageChangedByAnimation = pageChangedByAnimation,
                             overlayVisible = overlayVisible,
                             shrinkAnimation = shrinkAnimation,
-                            onPageChanged = { pageIndex ->
-                                onProgressChange((pageIndex + 0.5) / pageSize)
+                            onPageChanged = { pageIndex, changedByAnimation ->
+                                pageChangedByAnimation = changedByAnimation
+                                onProgressChange(pageSplitData?.getPageProgress(pageIndex) ?: 0.0)
                             },
                             onOverlayVisibleChanged = { overlayVisible = it },
                         )
@@ -343,10 +362,11 @@ fun BookPager(
     pageSplitData: PageSplitData?,
     pageSize: Int,
     pageIndex: Int,
+    pageChangedByAnimation: Boolean,
     overlayVisible: Boolean,
     shrinkAnimation: Float,
     onPageDraw: (canvas: NativeCanvas, pageIndex: Int) -> Unit = { _, _ -> },
-    onPageChanged: (Int) -> Unit = {},
+    onPageChanged: (Int, Boolean) -> Unit = { _, _ -> },
     onOverlayVisibleChanged: (Boolean) -> Unit = {},
 ) {
     val pagerState = rememberPagerState(
@@ -364,19 +384,19 @@ fun BookPager(
         if (System.currentTimeMillis() - animationFinishedTime < 100) return@LaunchedEffect
         if (animationCount == 0) {
             if (pageIndex != pagerState.currentPage) {
-                onPageChanged(pagerState.currentPage)
+                onPageChanged(pagerState.currentPage, false)
             }
         }
     }
 
-    LaunchedEffect(bookData.progress) {
-        if (pageIndex != pagerState.currentPage) {
+    LaunchedEffect(pageIndex) {
+        if (pageIndex != pagerState.currentPage && pageChangedByAnimation) {
             println("isMovingByAnimation = true")
             mutex.withLock { animationCount++ }
             try {
                 pagerState.animateScrollToPage(
                     pageIndex,
-                    animationSpec = tween(300, 0, EASING_LEGACY),
+                    animationSpec = tween(DURATION_STANDARD, 0, EASING_STANDARD),
                 )
             } finally {
                 println("isMovingByAnimation = false")
@@ -423,27 +443,30 @@ fun BookPager(
             .pointerInput(pageIndex, pageSize, overlayVisible) {
                 awaitEachGesture {
                     val downEvent = awaitFirstDown(requireUnconsumed = false, PointerEventPass.Main)
-                    var upEventOrCancellation: PointerInputChange? = null
-                    while (upEventOrCancellation == null) {
-                        val event = awaitPointerEvent(pass = PointerEventPass.Main)
+                    val upEvent: PointerInputChange
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Main)
                         if (event.changes.fastAll { it.changedToUp() }) {
                             // All pointers are up
-                            upEventOrCancellation = event.changes[0]
+                            upEvent = event.changes[0]
+                            break
                         }
                     }
-                    val diff = upEventOrCancellation.position - downEvent.position
-                    if (diff.getDistanceSquared() < 10000) {
+                    val diff = abs(upEvent.position.x - downEvent.position.x)
+                    val timeDiff = upEvent.uptimeMillis - downEvent.uptimeMillis
+                    println("[DEBUG] diff: $diff, timeDiff: $timeDiff")
+                    if (diff < 25 && timeDiff < 150) {
                         if (downEvent.position.x < 0.25 * width) {
-                            onPageChanged(maxOf(pageIndex - 1, 0))
+                            onPageChanged(maxOf(pageIndex - 1, 0), true)
                         } else if (downEvent.position.x > 0.75 * width) {
-                            onPageChanged(minOf(pageIndex + 1, pageSize - 1))
+                            onPageChanged(minOf(pageIndex + 1, pageSize - 1), true)
                         } else {
                             // if the page size is changed with offset, the page stops at the middle of the page
                             // to prevent that, force remove the offset and close the overlay
                             val targetValue = !overlayVisible
                             overlayChangeScope.launch {
                                 animationScope.launch { pagerState.animateScrollToPage(pagerState.currentPage) }
-                                while (pagerState.currentPageOffsetFraction != 0f && isActive) {
+                                while (abs(pagerState.currentPageOffsetFraction) > 1e-3 && isActive) {
                                     delay(16)
                                 }
                                 if (isActive) onOverlayVisibleChanged(targetValue)
@@ -468,11 +491,11 @@ fun BookPager(
         ),
         pageSpacing = 32.dp * shrinkAnimation,
         userScrollEnabled = animationCount == 0,
-    ) { pageIndex ->
+    ) { index ->
         BookPage(
             pageSplitData = pageSplitData,
             pageSize = pageSize,
-            pageIndex = pageIndex,
+            pageIndex = index,
             onPageDraw = onPageDraw,
         )
     }
@@ -488,7 +511,7 @@ fun BookPage(
 ) {
     val padding = with(LocalDensity.current) { 16.dp.toPx() }
 
-    val ratio =
+    val aspectRatio =
         ((pageSplitData?.width ?: 0) + padding * 2) / ((pageSplitData?.height ?: 0) + padding * 2)
 
     Column(
@@ -498,7 +521,7 @@ fun BookPage(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(ratio)
+                .aspectRatio(aspectRatio)
                 .background(MaterialTheme.colorScheme.background),
         ) {
             AnimatedContent(
@@ -511,11 +534,10 @@ fun BookPage(
                             modifier = Modifier.fillMaxSize(),
                         ) {
                             drawIntoCanvas { canvas ->
-                                // red background
-                                val ratio = size.width / (pageSplitData!!.width + 32.dp.toPx())
+                                val sizeRatio = size.width / (pageSplitData!!.width + 32.dp.toPx())
                                 // scale with pivot left top
                                 scale(
-                                    scale = ratio,
+                                    scale = sizeRatio,
                                     pivot = Offset(0f, 0f),
                                 ) {
                                     translate(left = 16.dp.toPx(), top = 16.dp.toPx()) {
@@ -578,27 +600,19 @@ fun ViewerSizeMeasurer(modifier: Modifier = Modifier, onPageSizeChanged: (Int, I
 @Composable
 fun ViewerOverlay(
     modifier: Modifier = Modifier,
-    visible: Boolean,
     shrinkAnimation: Float,
     bookData: Book?,
-    pageSize: Int,
+    pageSplitData: PageSplitData?,
     isNetworkConnected: Boolean,
-    onProgressChange: (Float) -> Unit,
+    onPageChanged: (Int, Boolean) -> Unit = { _, _ -> },
     onBack: () -> Unit,
     onNavigateSettings: () -> Unit,
     onNavigateSummary: () -> Unit,
     onNavigateQuiz: () -> Unit,
-    onOverlayView: () -> Unit,
+    onUpdateSummaryProgress: suspend () -> Result<Unit>,
     content: @Composable () -> Unit = {},
 ) {
-    val pageIndex = minOf(
-        (pageSize * (bookData?.progress ?: 0.0)).toInt(),
-        pageSize - 1,
-    )
-
-    fun updateSummaryProgress() {
-        onOverlayView()
-    }
+    val pageIndex = pageSplitData?.getPageIndex(bookData?.progress ?: 0.0) ?: 0
 
     Layout(
         modifier = modifier,
@@ -651,51 +665,24 @@ fun ViewerOverlay(
                         .fillMaxWidth()
                         .background(color = MaterialTheme.colorScheme.surface),
                 ) {
-                    Row(
+                    SummaryActions(
                         modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 0.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        if (!isNetworkConnected) {
-                            RoundedRectFilledTonalButton(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onNavigateSummary() },
-                                enabled = false,
-                            ) {
-                                Text("No Internet Connection")
-                            }
-                        } else if (bookData?.summaryProgress!! < 1) {
-                            updateSummaryProgress()
-                            SummaryProgressBar(
-                                progress = bookData.summaryProgress,
-                            )
-                        } else if (pageIndex < 4) {
-                            RoundedRectFilledTonalButton(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onNavigateSummary() },
-                                enabled = false,
-                            ) {
-                                Text("4 pages required for Summary and Quiz")
-                            }
-                        } else {
-                            RoundedRectFilledTonalButton(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onNavigateSummary() },
-                            ) {
-                                Text("Generate Summary")
-                            }
-                            RoundedRectFilledTonalButton(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onNavigateQuiz() },
-                            ) {
-                                Text("Generate Quiz")
-                            }
-                        }
-                    }
+                        isNetworkConnected = isNetworkConnected,
+                        summaryProgress = bookData?.summaryProgress ?: 0.0,
+                        pageIndex = pageIndex,
+                        onNavigateSummary = onNavigateSummary,
+                        onNavigateQuiz = onNavigateQuiz,
+                        onUpdateSummaryProgress = onUpdateSummaryProgress,
+                    )
                     Slider(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         value = bookData?.progress?.toFloat() ?: 0f,
-                        onValueChange = onProgressChange,
+                        onValueChange = {
+                            val newIndex = pageSplitData?.getPageIndex(it.toDouble()) ?: 0
+                            if (newIndex != pageIndex) {
+                                onPageChanged(newIndex, true)
+                            }
+                        },
                     )
                 }
             }
@@ -705,7 +692,7 @@ fun ViewerOverlay(
                     .fillMaxWidth()
                     .background(color = MaterialTheme.colorScheme.background)
                     .padding(vertical = 8.dp),
-                text = "${pageIndex + 1} / $pageSize",
+                text = "${pageIndex + 1} / ${pageSplitData?.pageSplits?.size ?: 0}",
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodyMedium,
             )
@@ -740,6 +727,162 @@ fun ViewerOverlay(
             content.placeRelative(0, contentTop)
             bottomBar.placeRelative(0, bottomBarTop)
             bottomProgress.placeRelative(0, bottomProgressTop)
+        }
+    }
+}
+
+@Composable
+fun SummaryActions(
+    modifier: Modifier = Modifier,
+    isNetworkConnected: Boolean,
+    summaryProgress: Double,
+    pageIndex: Int,
+    onNavigateSummary: () -> Unit = {},
+    onNavigateQuiz: () -> Unit = {},
+    onUpdateSummaryProgress: suspend () -> Result<Unit> = { Result.success(Unit) },
+) {
+    // update summary progress on every 2 seconds, if the progress is not 1
+    val summaryUpdateScope = rememberCoroutineScope()
+    val summaryUpdateJob = remember { mutableStateOf<Job?>(null) }
+    LaunchedEffect(summaryProgress) {
+        if (summaryProgress < 1 && summaryUpdateJob.value == null) {
+            summaryUpdateJob.value = summaryUpdateScope.launch(Dispatchers.IO) {
+                while (isActive) {
+                    onUpdateSummaryProgress().onFailure {
+                        println("update summary progress failed: $it")
+                    }
+                    delay(2000)
+                }
+            }
+        } else if (summaryProgress >= 1) {
+            summaryUpdateJob.value?.cancel()
+            summaryUpdateJob.value = null
+        }
+    }
+
+    val animatedSummaryProgress by animateFloatAsState(
+        targetValue = summaryProgress.toFloat(),
+        label = "ViewerScreen.SummaryActions.SummaryProgressAnimation",
+        animationSpec = tween(DURATION_STANDARD, 0, EASING_STANDARD),
+    )
+
+    val infiniteTransition =
+        rememberInfiniteTransition(label = "ViewerScreen.SummaryActions.ThreeDotsAnimation")
+    val dotCount by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 3f,
+        animationSpec = infiniteRepeatable(tween(durationMillis = 2000, easing = { it })),
+        label = "ViewerScreen.SummaryActions.ThreeDotsAnimation",
+    )
+
+    if (!isNetworkConnected) {
+        Box(
+            modifier = modifier
+                .background(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .height(48.dp)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                "No Internet Connection",
+                style = MaterialTheme.typography.labelLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
+            )
+        }
+    } else if (summaryProgress < 1) {
+        Box(
+            modifier = modifier
+                .background(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .height(48.dp)
+                .clip(RoundedCornerShape(12.dp)),
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "Preparing AI${
+                        ".".repeat(
+                            dotCount.toInt() + 1,
+                        )
+                    } (${(summaryProgress * 100).toInt()}%)",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
+                )
+            }
+            Layout(
+                modifier = Modifier
+                    .clipToBounds()
+                    .background(color = MaterialTheme.colorScheme.secondaryContainer)
+                    .align(Alignment.CenterStart),
+                content = {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "Preparing AI${
+                                ".".repeat(
+                                    dotCount.toInt() + 1,
+                                )
+                            } (${(summaryProgress * 100).toInt()}%)",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            ),
+                        )
+                    }
+                },
+            ) { measureables, constraints ->
+                val foregroundText = measureables[0].measure(constraints)
+                layout((constraints.maxWidth * animatedSummaryProgress).roundToInt(), constraints.maxHeight) {
+                    foregroundText.placeRelative(0, 0)
+                }
+            }
+        }
+    } else if (pageIndex < 4) {
+        Box(
+            modifier = modifier
+                .background(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .height(48.dp)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                "4 pages required for Summary and Quiz",
+                style = MaterialTheme.typography.labelLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
+            )
+        }
+    } else {
+        Row(
+            modifier = modifier,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            RoundedRectFilledTonalButton(
+                modifier = Modifier.weight(1f),
+                onClick = { onNavigateSummary() },
+            ) {
+                Text("Generate Summary")
+            }
+            RoundedRectFilledTonalButton(
+                modifier = Modifier.weight(1f),
+                onClick = { onNavigateQuiz() },
+            ) {
+                Text("Generate Quiz")
+            }
         }
     }
 }

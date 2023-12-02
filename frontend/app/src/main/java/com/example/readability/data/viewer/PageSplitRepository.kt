@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.roundToInt
 
 data class PageSplitData(
     var pageSplits: List<Int>,
@@ -18,7 +19,12 @@ data class PageSplitData(
 
 fun PageSplitData.getPageIndex(progress: Double): Int {
     assert(progress in 0.0..1.0)
-    return (pageSplits.size * progress).toInt()
+    return ((pageSplits.size - 1) * progress).roundToInt()
+}
+
+fun PageSplitData.getPageProgress(page: Int): Double {
+    assert(page in pageSplits.indices)
+    return page.toDouble() / (pageSplits.size - 1)
 }
 
 @Singleton

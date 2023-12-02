@@ -414,7 +414,7 @@ class ViewerScreenTest {
                 summary = "this is a summary",
                 viewerStyle = ViewerStyle(),
                 typeface = Typeface.DEFAULT,
-                referenceLineHeight = 16f
+                referenceLineHeight = 16f,
             )
         }
 
@@ -432,7 +432,7 @@ class ViewerScreenTest {
                 onBack = { onBack = true },
                 viewerStyle = ViewerStyle(),
                 typeface = Typeface.DEFAULT,
-                referenceLineHeight = 16f
+                referenceLineHeight = 16f,
             )
         }
 
