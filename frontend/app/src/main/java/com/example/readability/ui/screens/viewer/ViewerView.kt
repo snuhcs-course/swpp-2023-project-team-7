@@ -99,7 +99,6 @@ import com.example.readability.ui.animation.EASING_STANDARD
 import com.example.readability.ui.components.RoundedRectFilledTonalButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
