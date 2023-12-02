@@ -107,7 +107,7 @@ fun AddBookView(
 
     var defaultImageString = ""
     val defaultUri = Uri.parse(
-        "android.resource://" + context.packageName + "/drawable/" + R.drawable.defaul_book_cover_image,
+        "android.resource://" + context.packageName + "/drawable/" + R.drawable.default_book_cover_image,
     )
     defaultbitmap = if (Build.VERSION.SDK_INT < 28) {
         MediaStore.Images.Media.getBitmap(context.contentResolver, defaultUri)

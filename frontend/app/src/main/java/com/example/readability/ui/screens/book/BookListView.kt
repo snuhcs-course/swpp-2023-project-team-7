@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -46,6 +47,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -63,6 +65,7 @@ import com.example.readability.ui.theme.Gabarito
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
@@ -290,10 +293,11 @@ fun BookCard(
                     .padding(16.dp, 16.dp, 0.dp, 16.dp)
                     .height(100.dp)
                     .width(64.dp)
+                    .clip(RoundedCornerShape(4.dp))
                     .testTag(bookCardData.coverImage ?: ""),
                 bitmap = bookCardData.coverImageData,
                 contentDescription = "Book Cover Image",
-                contentScale = ContentScale.Fit,
+                contentScale = ContentScale.Crop,
             )
         }
         Column(
@@ -348,7 +352,7 @@ fun BookCard(
                         tint = MaterialTheme.colorScheme.onBackground,
                     )
                     Text(
-                        text = "${(bookCardData.progress * 100).toInt()}%",
+                        text = "${(bookCardData.progress * 100).roundToInt()}%",
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }

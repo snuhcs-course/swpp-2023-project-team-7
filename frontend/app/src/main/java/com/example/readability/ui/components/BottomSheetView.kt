@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -92,7 +91,7 @@ fun BottomSheetPreview() {
                 .padding(0.dp, 48.dp, 0.dp, 0.dp),
         ) {
             BottomSheetContent(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxWidth(),
                 bookCardData = BookCardData(
                     id = 1,
                     title = "The Open Boat",
@@ -226,8 +225,9 @@ fun BookInfo(modifier: Modifier = Modifier, coverImage: ImageBitmap?, title: Str
                 contentDescription = "Book Image",
                 modifier = Modifier
                     .width(90.dp)
-                    .height(140.dp),
-                contentScale = ContentScale.Fit,
+                    .height(140.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop,
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
