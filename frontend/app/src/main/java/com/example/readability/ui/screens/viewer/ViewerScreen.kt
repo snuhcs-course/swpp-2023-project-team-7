@@ -45,6 +45,7 @@ fun ViewerScreen(
     onNavigateSettings: () -> Unit,
     onBack: () -> Unit,
 ) {
+    val networkStatusViewModel: NetworkStatusViewModel = hiltViewModel()
     val context = LocalContext.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val immersiveModeEnabled = navBackStackEntry?.destination?.route == ViewerScreens.Viewer.route
@@ -80,13 +81,15 @@ fun ViewerScreen(
             }
         }
     }
+    LaunchedEffect(navBackStackEntry?.destination?.route){
+        networkStatusViewModel.isConnected
+    }
 
     NavHost(navController = navController, startDestination = ViewerScreens.Viewer.route) {
         composableSharedAxis(ViewerScreens.Viewer.route, axis = SharedAxis.X) {
             val viewerViewModel: ViewerViewModel = hiltViewModel()
             val quizViewModel: QuizViewModel = hiltViewModel()
             val summaryViewModel: SummaryViewModel = hiltViewModel()
-            val networkStatusViewModel: NetworkStatusViewModel = hiltViewModel()
             val bookData by viewerViewModel.getBookData(id).collectAsState(initial = null)
             val pageSplitData by viewerViewModel.pageSplitData.collectAsState(initial = null)
             val isDarkTheme = isSystemInDarkTheme()
@@ -98,7 +101,6 @@ fun ViewerScreen(
                 isNetworkConnected = isNetworkConnected,
                 onNavigateQuiz = {
                     if (bookData != null) {
-                        quizViewModel.loadQuiz(id, bookData!!.progress)
                         navController.navigate(ViewerScreens.Quiz.route)
                     }
                 },
@@ -108,7 +110,6 @@ fun ViewerScreen(
                 },
                 onNavigateSummary = {
                     if (bookData != null) {
-                        summaryViewModel.loadSummary(id, bookData!!.progress)
                         navController.navigate(ViewerScreens.Summary.route)
                     }
                 },
@@ -141,6 +142,7 @@ fun ViewerScreen(
                         ),
                     )
                 },
+                onLoadQuiz = {quizViewModel.loadQuiz(id)}
             )
         }
         composableSharedAxis(ViewerScreens.QuizReport.route, axis = SharedAxis.X) {
@@ -171,6 +173,7 @@ fun ViewerScreen(
                 onBack = {
                     navController.popBackStack()
                 },
+                onLoadSummary = { summaryViewModel.loadSummary(id) }
             )
         }
     }

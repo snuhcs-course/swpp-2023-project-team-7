@@ -1,5 +1,6 @@
 package com.example.readability.ui.screens.viewer
 
+import android.widget.Toast
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -35,6 +36,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -48,6 +50,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -65,7 +68,9 @@ import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.components.RoundedRectFilledTonalButton
 import com.example.readability.ui.theme.Gabarito
 import com.example.readability.ui.theme.ReadabilityTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 @Composable
@@ -95,9 +100,25 @@ fun QuizView(
     quizLoadState: QuizLoadState,
     onBack: () -> Unit = {},
     onNavigateReport: (Int) -> Unit = {},
+    onLoadQuiz: suspend () -> Result<Unit> = { Result.success(Unit) }
 ) {
     val pagerScope = rememberCoroutineScope()
     val pagerState = rememberPagerState(initialPage = 0) { quizList.size }
+    val context = LocalContext.current
+
+    LaunchedEffect(
+        Unit
+    ) {
+        withContext(Dispatchers.IO) {
+            onLoadQuiz()
+        }.onFailure {
+            Toast.makeText(
+                context, "Failed to generate quiz\n:${it.message}", Toast.LENGTH_SHORT
+            ).show()
+            onBack()
+        }
+    }
+
     Scaffold(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.background)
@@ -208,7 +229,9 @@ fun QuizProgress(
             )
         }
         LinearProgressIndicator(
-            modifier = Modifier.clip(RoundedCornerShape(2.dp)),
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(2.dp)),
             progress = { animatedProgress.value },
         )
         IconButton(onClick = { onRegenerate() }) {
