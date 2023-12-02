@@ -49,11 +49,13 @@ class SummaryRemoteDataSource @Inject constructor(
             val responseBody = response.body() ?: throw Throwable("No body")
             responseBody.byteStream().bufferedReader().use {
                 try {
+                    var isFirstToken = true
                     while (currentCoroutineContext().isActive) {
                         val line = it.readLine() ?: break
                         if (line.startsWith("data:")) {
                             var token = line.substring(6)
-                            if (token.isEmpty()) token = "\n"
+                            if (isFirstToken) isFirstToken = false
+                            else if (token.isEmpty()) token = "\n"
                             emit(token)
                         }
                     }
