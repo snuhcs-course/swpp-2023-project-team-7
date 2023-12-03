@@ -197,7 +197,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     insert_access_token_to_user(email, access_token)
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
-@user.post("/user/info")
+@user.get("/user/info")
 def get_user_info(
     access_token: str
 ):
@@ -265,3 +265,46 @@ def refresh_access_token(refresh_token: str):
 
     insert_access_token_to_user(email, new_access_token)
     return {"access_token": new_access_token, "token_type": "bearer"}
+
+@user.post("/user/change_password")
+def update_user_password(password: str, email: str = Depends(get_user_with_access_token)):
+    if email is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
+    users_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
+    hashed_password = get_password_hash(password)
+    cursor = users_db.cursor()
+    cursor.execute(f"UPDATE Users SET password = '{hashed_password}' WHERE email = '{email}'")
+    users_db.commit()
+    return {}
+
+@user.delete("/user/delete_user")
+def update_user_password(email: str = Depends(get_user_with_access_token)):
+    if email is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
+    users_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
+
+    user_cursor = users_db.cursor()
+    user_cursor.execute(f"DELETE FROM Users WHERE email = '{email}'")
+    user_cursor.execute(f"DELETE FROM Books WHERE email = '{email}'")
+    users_db.commit()
+    return {}

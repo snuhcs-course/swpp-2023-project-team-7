@@ -60,10 +60,10 @@ def book_list(email: str = Depends(get_user_with_access_token)):
             "book_id": row[0],
             "title": row[2],
             "author": row[3],
-            "progress": row[4],
+            "progress": float(row[4]),
             "cover_image": row[5],
-            "content": result[0][6],
-            "summary_tree": result[0][7]
+            "content": row[6],
+            "summary_tree": row[7]
         })
     return {"books": books}
 
@@ -90,7 +90,7 @@ def book_detail(book_id: str, email: str = Depends(get_user_with_access_token)):
     return {
         "title": result[0][2],
         "author": result[0][3],
-        "progress": result[0][4],
+        "progress": float(result[0][4]),
         "cover_image": result[0][5],
         "content": result[0][6],
     }
@@ -215,3 +215,27 @@ def book_delete(book_id: str, email: str = Depends(get_user_with_access_token)):
     books_db.cursor().execute(f"DELETE FROM Books WHERE id = '{book_id}'")
     books_db.commit()
     return {}
+
+@book.get("/book/{book_id}/current_inference")
+def book_inference(book_id: str, email: str = Depends(get_user_with_access_token)):
+    if email is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    books_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
+    cursor = books_db.cursor()
+    cursor.execute(f"SELECT * FROM Books WHERE id = '{book_id}'")
+    result = cursor.fetchall()
+
+    num_total_inference = result[0][8]
+    num_current_inference = result[0][9]
+    current_ratio = float(num_current_inference/ num_total_inference)
+    return {"summary_progress": current_ratio}
