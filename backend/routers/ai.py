@@ -102,7 +102,7 @@ def ai_quiz(request: Request, book_id: str, progress: float, email: str = Depend
 
     if result[0][8] == 1:
         async def event_generator():
-            for delta_content, finished in ai_backend.get_quizzes_from_text(progress, book_content_url):
+            for delta_content, finished in ai_backend.get_quiz_from_text(progress, book_content_url):
                 if await request.is_disconnected():
                     return
                 yield {
@@ -113,7 +113,7 @@ def ai_quiz(request: Request, book_id: str, progress: float, email: str = Depend
 
     summary_tree_url = os.path.join(user_dirname,result[0][7])
     async def event_generator():
-        for delta_content, finished in ai_backend.get_quizzes_from_intermediate(progress, book_content_url, summary_tree_url):
+        for delta_content, finished in ai_backend.get_quiz_from_intermediate(progress, book_content_url, summary_tree_url):
             if await request.is_disconnected():
                 return
             yield {
