@@ -22,7 +22,6 @@ enum class SharedAxis {
     Y,
     Z,
 }
-
 fun lerp(startFraction: Float, endFraction: Float, fraction: Float): Float {
     if (fraction <= startFraction) {
         return 0f

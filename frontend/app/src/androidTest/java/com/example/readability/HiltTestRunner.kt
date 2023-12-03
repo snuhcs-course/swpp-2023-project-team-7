@@ -1,4 +1,4 @@
-package com.example.readability.screens
+package com.example.readability
 
 import android.app.Application
 import android.content.Context

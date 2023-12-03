@@ -19,12 +19,16 @@ sealed class BookScreens(val route: String) {
 }
 
 @Composable
-fun BookScreen(onNavigateSettings: () -> Unit = {}, onNavigateViewer: (id: Int) -> Unit = {}) {
+fun BookScreen(
+    onNavigateSettings: () -> Unit = {},
+    onNavigateViewer: (id: Int) -> Unit = {},
+    bookListViewModel: BookListViewModel = hiltViewModel(),
+    addBookViewModel: AddBookViewModel = hiltViewModel(),
+) {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = BookScreens.BookList.route) {
         composableSharedAxis(BookScreens.BookList.route, axis = SharedAxis.X) {
-            val bookListViewModel: BookListViewModel = hiltViewModel()
             val bookCardDataList by bookListViewModel.bookCardDataList.collectAsState()
             BookListView(
                 bookCardDataList = bookCardDataList,
@@ -54,7 +58,6 @@ fun BookScreen(onNavigateSettings: () -> Unit = {}, onNavigateViewer: (id: Int) 
             )
         }
         composableSharedAxis(BookScreens.AddBook.route, axis = SharedAxis.X) {
-            val addBookViewModel: AddBookViewModel = hiltViewModel()
             AddBookView(
                 onBack = { navController.popBackStack() },
                 onBookUploaded = { navController.popBackStack() },
