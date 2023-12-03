@@ -42,18 +42,20 @@ fun SummaryView(
     typeface: Typeface?,
     referenceLineHeight: Float,
     onBack: () -> Unit = {},
-    onLoadSummary: suspend () -> Result<Unit>
+    onLoadSummary: suspend () -> Result<Unit>,
 ) {
     val context = LocalContext.current
 
     LaunchedEffect(
-        Unit
+        Unit,
     ) {
         withContext(Dispatchers.IO) {
             onLoadSummary()
         }.onFailure {
             Toast.makeText(
-                context, "Failed to generate summary\n:${it.message}", Toast.LENGTH_SHORT
+                context,
+                "Failed to generate summary\n:${it.message}",
+                Toast.LENGTH_SHORT,
             ).show()
             onBack()
         }

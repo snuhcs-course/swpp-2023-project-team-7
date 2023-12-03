@@ -10,7 +10,7 @@ import javax.inject.Inject
 @HiltViewModel
 class QuizViewModel @Inject constructor(
     private val quizRepository: QuizRepository,
-    private val bookRepository: BookRepository
+    private val bookRepository: BookRepository,
 
 ) : ViewModel() {
     val quizList = quizRepository.quizList

@@ -54,8 +54,9 @@ class SummaryRemoteDataSource @Inject constructor(
                         val line = it.readLine() ?: break
                         if (line.startsWith("data:")) {
                             var token = line.substring(6)
-                            if (isFirstToken) isFirstToken = false
-                            else if (token.isEmpty()) token = "\n"
+                            if (isFirstToken) {
+                                isFirstToken = false
+                            } else if (token.isEmpty()) token = "\n"
                             emit(token)
                         }
                     }

@@ -14,7 +14,7 @@ class SummaryViewModel @Inject constructor(
     private val summaryRepository: SummaryRepository,
     private val settingRepository: SettingRepository,
     private val fontDataSource: FontDataSource,
-    private val bookRepository: BookRepository
+    private val bookRepository: BookRepository,
 ) : ViewModel() {
     val summary = summaryRepository.summary
     val viewerStyle = settingRepository.viewerStyle

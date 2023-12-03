@@ -100,20 +100,22 @@ fun QuizView(
     quizLoadState: QuizLoadState,
     onBack: () -> Unit = {},
     onNavigateReport: (Int) -> Unit = {},
-    onLoadQuiz: suspend () -> Result<Unit> = { Result.success(Unit) }
+    onLoadQuiz: suspend () -> Result<Unit> = { Result.success(Unit) },
 ) {
     val pagerScope = rememberCoroutineScope()
     val pagerState = rememberPagerState(initialPage = 0) { quizList.size }
     val context = LocalContext.current
 
     LaunchedEffect(
-        Unit
+        Unit,
     ) {
         withContext(Dispatchers.IO) {
             onLoadQuiz()
         }.onFailure {
             Toast.makeText(
-                context, "Failed to generate quiz\n:${it.message}", Toast.LENGTH_SHORT
+                context,
+                "Failed to generate quiz\n:${it.message}",
+                Toast.LENGTH_SHORT,
             ).show()
             onBack()
         }

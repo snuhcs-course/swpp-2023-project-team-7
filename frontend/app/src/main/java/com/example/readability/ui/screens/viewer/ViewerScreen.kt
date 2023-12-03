@@ -81,7 +81,7 @@ fun ViewerScreen(
             }
         }
     }
-    LaunchedEffect(navBackStackEntry?.destination?.route){
+    LaunchedEffect(navBackStackEntry?.destination?.route) {
         networkStatusViewModel.isConnected
     }
 
@@ -142,7 +142,7 @@ fun ViewerScreen(
                         ),
                     )
                 },
-                onLoadQuiz = {quizViewModel.loadQuiz(id)}
+                onLoadQuiz = { quizViewModel.loadQuiz(id) },
             )
         }
         composableSharedAxis(ViewerScreens.QuizReport.route, axis = SharedAxis.X) {
@@ -173,7 +173,7 @@ fun ViewerScreen(
                 onBack = {
                     navController.popBackStack()
                 },
-                onLoadSummary = { summaryViewModel.loadSummary(id) }
+                onLoadSummary = { summaryViewModel.loadSummary(id) },
             )
         }
     }

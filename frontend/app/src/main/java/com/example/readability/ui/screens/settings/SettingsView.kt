@@ -56,7 +56,9 @@ fun SettingsView(
         ) {
             SettingTitle(text = "General")
             ListItem(
-                modifier = Modifier.clickable {
+                modifier = Modifier.clickable(
+                    onClickLabel = "Account Settings",
+                ) {
                     onNavigateAccountSetting()
                 },
                 leadingContent = {
@@ -94,7 +96,9 @@ fun SettingsView(
                 },
             )
             ListItem(
-                modifier = Modifier.clickable {
+                modifier = Modifier.clickable(
+                    onClickLabel = "Viewer Settings",
+                ) {
                     onNavigateViewer()
                 },
                 headlineContent = {

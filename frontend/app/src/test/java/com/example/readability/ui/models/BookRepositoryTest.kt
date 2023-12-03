@@ -51,9 +51,33 @@ class BookRepositoryTest {
     fun init() = runBlocking {
         `when`(bookDao.getAll()).thenReturn(
             listOf(
-                BookEntity(bookId = 1, title = "test", author = "test", progress = 0.0, coverImage = null, content = "test",  summaryProgress = 0.5,),
-                BookEntity(bookId = 2, title = "test", author = "test", progress = 0.7, coverImage = "test", content = "test",  summaryProgress = 1.0,),
-                BookEntity(bookId = 3, title = "test", author = "test", progress = 0.7, coverImage = "test", content = "test",  summaryProgress = 1.0,),
+                BookEntity(
+                    bookId = 1,
+                    title = "test",
+                    author = "test",
+                    progress = 0.0,
+                    coverImage = null,
+                    content = "test",
+                    summaryProgress = 0.5,
+                ),
+                BookEntity(
+                    bookId = 2,
+                    title = "test",
+                    author = "test",
+                    progress = 0.7,
+                    coverImage = "test",
+                    content = "test",
+                    summaryProgress = 1.0,
+                ),
+                BookEntity(
+                    bookId = 3,
+                    title = "test",
+                    author = "test",
+                    progress = 0.7,
+                    coverImage = "test",
+                    content = "test",
+                    summaryProgress = 1.0,
+                ),
             ),
         )
         `when`(bookRemoteDataSource.getBookList("test")).thenReturn(
@@ -67,7 +91,8 @@ class BookRepositoryTest {
                         coverImage = "test",
                         content = "test",
                         summaryProgress = 0.5,
-                    ), Book(
+                    ),
+                    Book(
                         bookId = 2,
                         title = "test",
                         author = "test",
@@ -75,9 +100,9 @@ class BookRepositoryTest {
                         coverImage = "test",
                         content = "test",
                         summaryProgress = 1.0,
-                    )
-                )
-            )
+                    ),
+                ),
+            ),
         )
         `when`(networkStatusRepository.isConnected).thenReturn(true)
         `when`(userRepository.getAccessToken()).thenReturn("test")
@@ -114,8 +139,9 @@ class BookRepositoryTest {
         val summaryProgress = 0.5
         `when`(
             bookRemoteDataSource.getSummaryProgress(
-                "test", bookId
-            )
+                "test",
+                bookId,
+            ),
         ).thenReturn(Result.success(summaryProgress.toString()))
         doNothing().`when`(bookDao).updateSummaryProgress(bookId, summaryProgress)
 
@@ -153,7 +179,7 @@ class BookRepositoryTest {
                 coverImage = "test",
                 content = "test",
                 summaryProgress = 0.5,
-            )
+            ),
         )
 
         // Act
@@ -185,7 +211,16 @@ class BookRepositoryTest {
         val updatedProgressBookId = 2
         val insertedBookId = 4
         val updatedProgress = 0.6
-        val insertedBook = BookEntity(bookId = insertedBookId, title = "test", author = "test", progress = 0.7, coverImage = "test", content = "test",  summaryProgress = 1.0,)
+        val insertedBook =
+            BookEntity(
+                bookId = insertedBookId,
+                title = "test",
+                author = "test",
+                progress = 0.7,
+                coverImage = "test",
+                content = "test",
+                summaryProgress = 1.0,
+            )
 
         doNothing().`when`(bookDao).insert(insertedBook)
         doNothing().`when`(bookDao).updateProgress(updatedProgressBookId, updatedProgress)
@@ -194,23 +229,71 @@ class BookRepositoryTest {
         `when`(bookRemoteDataSource.getBookList("test")).thenReturn(
             Result.success(
                 listOf(
-                    Book(bookId = 2, title = "test", author = "test", progress = updatedProgress, coverImage = "test", content = "test",  summaryProgress = 1.0,),
-                    Book(bookId = 3, title = "test", author = "test", progress = 0.7, coverImage = "test", content = "test",  summaryProgress = 1.0,),
-                    Book(bookId = insertedBookId, title = "test", author = "test", progress = 0.7, coverImage = "test", content = "test",  summaryProgress = 1.0,),
-                )
-            )
+                    Book(
+                        bookId = 2,
+                        title = "test",
+                        author = "test",
+                        progress = updatedProgress,
+                        coverImage = "test",
+                        content = "test",
+                        summaryProgress = 1.0,
+                    ),
+                    Book(
+                        bookId = 3,
+                        title = "test",
+                        author = "test",
+                        progress = 0.7,
+                        coverImage = "test",
+                        content = "test",
+                        summaryProgress = 1.0,
+                    ),
+                    Book(
+                        bookId = insertedBookId,
+                        title = "test",
+                        author = "test",
+                        progress = 0.7,
+                        coverImage = "test",
+                        content = "test",
+                        summaryProgress = 1.0,
+                    ),
+                ),
+            ),
         )
         `when`(bookDao.getBook(1)).thenReturn(
-            BookEntity(bookId = insertedBookId, title = "test", author = "test", progress = 0.0, coverImage = "test", content = "test",  summaryProgress = 0.5,),
+            BookEntity(
+                bookId = insertedBookId,
+                title = "test",
+                author = "test",
+                progress = 0.0,
+                coverImage = "test",
+                content = "test",
+                summaryProgress = 0.5,
+            ),
         )
         `when`(bookDao.getBook(2)).thenReturn(
-            BookEntity(bookId = 2, title = "test", author = "test", progress = 0.7, coverImage = "test", content = "test",  summaryProgress = 1.0,),
+            BookEntity(
+                bookId = 2,
+                title = "test",
+                author = "test",
+                progress = 0.7,
+                coverImage = "test",
+                content = "test",
+                summaryProgress = 1.0,
+            ),
         )
         `when`(bookDao.getBook(3)).thenReturn(
-            BookEntity(bookId = 3, title = "test", author = "test", progress = 0.7, coverImage = "test", content = "test",  summaryProgress = 1.0,),
+            BookEntity(
+                bookId = 3,
+                title = "test",
+                author = "test",
+                progress = 0.7,
+                coverImage = "test",
+                content = "test",
+                summaryProgress = 1.0,
+            ),
         )
         `when`(bookDao.getBook(4)).thenReturn(
-            null
+            null,
         )
 
         // Act
@@ -351,24 +434,73 @@ class BookRepositoryTest {
             title = "test",
             content = "test",
             author = "test",
-            coverImage = ""
+            coverImage = "",
         )
-        val insertedBookEntity = BookEntity(bookId = 4, title = "test", author = "test", progress = 0.0, coverImage = "test", content = "test",  summaryProgress = 1.0,)
+        val insertedBookEntity =
+            BookEntity(
+                bookId = 4,
+                title = "test",
+                author = "test",
+                progress = 0.0,
+                coverImage = "test",
+                content = "test",
+                summaryProgress = 1.0,
+            )
 
         `when`(bookDao.getAll()).thenReturn(
             listOf(
-                BookEntity(bookId = 2, title = "test", author = "test", progress = 0.7, coverImage = "test", content = "test",  summaryProgress = 1.0,),
-                BookEntity(bookId = 3, title = "test", author = "test", progress = 0.7, coverImage = "test", content = "test",  summaryProgress = 1.0,),
+                BookEntity(
+                    bookId = 2,
+                    title = "test",
+                    author = "test",
+                    progress = 0.7,
+                    coverImage = "test",
+                    content = "test",
+                    summaryProgress = 1.0,
+                ),
+                BookEntity(
+                    bookId = 3,
+                    title = "test",
+                    author = "test",
+                    progress = 0.7,
+                    coverImage = "test",
+                    content = "test",
+                    summaryProgress = 1.0,
+                ),
             ),
         )
         `when`(bookRemoteDataSource.getBookList("test")).thenReturn(
             Result.success(
                 listOf(
-                    Book(bookId = 2, title = "test", author = "test", progress = 0.7, coverImage = "test", content = "test",  summaryProgress = 1.0,),
-                    Book(bookId = 3, title = "test", author = "test", progress = 0.7, coverImage = "test", content = "test",  summaryProgress = 1.0,),
-                    Book(bookId = 4, title = "test", author = "test", progress = 0.0, coverImage = "test", content = "test",  summaryProgress = 1.0,),
-                )
-            )
+                    Book(
+                        bookId = 2,
+                        title = "test",
+                        author = "test",
+                        progress = 0.7,
+                        coverImage = "test",
+                        content = "test",
+                        summaryProgress = 1.0,
+                    ),
+                    Book(
+                        bookId = 3,
+                        title = "test",
+                        author = "test",
+                        progress = 0.7,
+                        coverImage = "test",
+                        content = "test",
+                        summaryProgress = 1.0,
+                    ),
+                    Book(
+                        bookId = 4,
+                        title = "test",
+                        author = "test",
+                        progress = 0.0,
+                        coverImage = "test",
+                        content = "test",
+                        summaryProgress = 1.0,
+                    ),
+                ),
+            ),
         )
 
         `when`(bookRemoteDataSource.addBook("test", addBookRequest)).thenReturn(Result.success(Unit))
@@ -391,7 +523,7 @@ class BookRepositoryTest {
             title = "test",
             content = "test",
             author = "test",
-            coverImage = ""
+            coverImage = "",
         )
 
         `when`(bookRemoteDataSource.addBook("test", addBookRequest)).thenReturn(Result.failure(Throwable("test")))
@@ -413,10 +545,26 @@ class BookRepositoryTest {
         doNothing().`when`(bookFileDataSource).deleteCoverImageFile(bookId)
         doNothing().`when`(bookDao).delete(bookId)
         `when`(bookDao.getBook(1)).thenReturn(
-            BookEntity(bookId = 1, title = "test", author = "test", progress = 0.0, coverImage = "test", content = "test",  summaryProgress = 0.5,),
+            BookEntity(
+                bookId = 1,
+                title = "test",
+                author = "test",
+                progress = 0.0,
+                coverImage = "test",
+                content = "test",
+                summaryProgress = 0.5,
+            ),
         )
         `when`(bookDao.getBook(2)).thenReturn(
-            BookEntity(bookId = 2, title = "test", author = "test", progress = 0.7, coverImage = "test", content = "test",  summaryProgress = 1.0,),
+            BookEntity(
+                bookId = 2,
+                title = "test",
+                author = "test",
+                progress = 0.7,
+                coverImage = "test",
+                content = "test",
+                summaryProgress = 1.0,
+            ),
         )
         doNothing().`when`(bookDao).updateProgress(1, 0.0)
         doNothing().`when`(bookDao).updateProgress(2, 0.7)
