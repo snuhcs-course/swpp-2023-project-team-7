@@ -136,7 +136,7 @@ class SettingScreenTest {
                 },
                 onNavigateIntro = {
                     onNavigateIntroCalled = true
-                }
+                },
             )
         }
         composeTestRule.onNodeWithText("Delete Account").performClick()
@@ -182,7 +182,7 @@ class SettingScreenTest {
                 onPasswordSubmitted = {
                     onPasswordSubmitted = true
                     Result.success(Unit)
-                }
+                },
             )
         }
         composeTestRule.onNodeWithTag("PasswordTextField").performTextInput("testtest")
@@ -238,7 +238,7 @@ class SettingScreenTest {
     fun viewerView_isDisplayed() {
         composeTestRule.setContent {
             ViewerView(
-                viewerStyle = ViewerStyle()
+                viewerStyle = ViewerStyle(),
             )
         }
 

@@ -51,7 +51,7 @@ class ViewerScreenTest {
                 contentData = content,
                 progress = 0.5,
                 coverImage = "",
-                summaryProgress = 1.0
+                summaryProgress = 1.0,
             )
             val pageSplits = mutableListOf<Int>()
             for (i in 0..content.length step 100) {
@@ -161,7 +161,6 @@ class ViewerScreenTest {
 
     @Test
     fun viewerView_LeftSwipe() {
-
         var bookData = openBoatBookData.copy(progress = 0.0)
         composeTestRule.setContent {
             ViewerView(
@@ -428,7 +427,7 @@ class ViewerScreenTest {
                 },
                 onBack = {
                     onBack = true
-                }
+                },
             )
         }
 
@@ -443,7 +442,7 @@ class ViewerScreenTest {
                 viewerStyle = ViewerStyle(),
                 typeface = Typeface.DEFAULT,
                 referenceLineHeight = 16f,
-                onLoadSummary = { Result.success(Unit) }
+                onLoadSummary = { Result.success(Unit) },
             )
         }
 
@@ -462,7 +461,7 @@ class ViewerScreenTest {
                 viewerStyle = ViewerStyle(),
                 typeface = Typeface.DEFAULT,
                 referenceLineHeight = 16f,
-                onLoadSummary = { Result.success(Unit) }
+                onLoadSummary = { Result.success(Unit) },
             )
         }
 

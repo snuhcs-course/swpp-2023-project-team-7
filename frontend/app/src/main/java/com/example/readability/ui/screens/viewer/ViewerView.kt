@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.graphics.Bitmap
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -453,7 +454,6 @@ fun BookPager(
                     }
                     val diff = abs(upEvent.position.x - downEvent.position.x)
                     val timeDiff = upEvent.uptimeMillis - downEvent.uptimeMillis
-                    println("[DEBUG] diff: $diff, timeDiff: $timeDiff")
                     if (diff < 25 && timeDiff < 150) {
                         if (downEvent.position.x < 0.25 * width) {
                             onPageChanged(maxOf(pageIndex - 1, 0), true)
@@ -513,6 +513,10 @@ fun BookPage(
     val aspectRatio =
         ((pageSplitData?.width ?: 0) + padding * 2) / ((pageSplitData?.height ?: 0) + padding * 2)
 
+    var drawCache by remember(pageIndex, pageSplitData?.width, pageSplitData?.height, pageSplitData?.viewerStyle) {
+        mutableStateOf<Bitmap?>(null)
+    }
+
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -533,14 +537,24 @@ fun BookPage(
                             modifier = Modifier.fillMaxSize(),
                         ) {
                             drawIntoCanvas { canvas ->
-                                val sizeRatio = size.width / (pageSplitData!!.width + 32.dp.toPx())
-                                // scale with pivot left top
-                                scale(
-                                    scale = sizeRatio,
-                                    pivot = Offset(0f, 0f),
-                                ) {
-                                    translate(left = 16.dp.toPx(), top = 16.dp.toPx()) {
-                                        onPageDraw(canvas.nativeCanvas, pageIndex)
+                                if (pageSplitData != null) {
+                                    if (drawCache == null) {
+                                        drawCache = Bitmap.createBitmap(
+                                            pageSplitData.width,
+                                            pageSplitData.height,
+                                            Bitmap.Config.ARGB_8888,
+                                        )
+                                        val tempCanvas = NativeCanvas(drawCache!!)
+                                        onPageDraw(tempCanvas, pageIndex)
+                                    }
+                                    val sizeRatio = size.width / (pageSplitData.width + 32.dp.toPx())
+                                    scale(
+                                        scale = sizeRatio,
+                                        pivot = Offset(0f, 0f),
+                                    ) {
+                                        translate(left = 16.dp.toPx(), top = 16.dp.toPx()) {
+                                            canvas.nativeCanvas.drawBitmap(drawCache!!, 0f, 0f, null)
+                                        }
                                     }
                                 }
                             }
