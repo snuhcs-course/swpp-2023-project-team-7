@@ -288,7 +288,7 @@ def update_user_password(password: str, email: str = Depends(get_user_with_acces
     return {}
 
 @user.delete("/user/delete_user")
-def update_user_password(email: str = Depends(get_user_with_access_token)):
+def delete_user(email: str = Depends(get_user_with_access_token)):
     if email is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
