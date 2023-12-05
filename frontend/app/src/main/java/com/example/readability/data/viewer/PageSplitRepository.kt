@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.roundToInt
 
 data class PageSplitData(
     var pageSplits: List<Int>,
@@ -18,7 +19,12 @@ data class PageSplitData(
 
 fun PageSplitData.getPageIndex(progress: Double): Int {
     assert(progress in 0.0..1.0)
-    return (pageSplits.size * progress).toInt()
+    return ((pageSplits.size - 1) * progress).roundToInt()
+}
+
+fun PageSplitData.getPageProgress(page: Int): Double {
+    assert(page in pageSplits.indices)
+    return page.toDouble() / (pageSplits.size - 1)
 }
 
 @Singleton
@@ -53,8 +59,8 @@ class PageSplitRepository @Inject constructor(
         }.firstOrNull() ?: return null
         val content = book.contentData ?: return null
         val viewerStyle = settingRepository.viewerStyle.firstOrNull() ?: return null
-        val textPaint = fontDataSource.buildTextPaint(viewerStyle)
         val charWidths = fontDataSource.getCharWidthArray(viewerStyle)
+        val textPaint = fontDataSource.buildTextPaint(viewerStyle)
         val pageSplits = pageSplitDataSource.splitPage(
             width = width,
             height = height,
@@ -89,13 +95,13 @@ class PageSplitRepository @Inject constructor(
             pageSplitData.pageSplits[page],
         )
         val viewerStyle = pageSplitData.viewerStyle
+        val charWidths = fontDataSource.getCharWidthArray(viewerStyle)
         val textPaint = fontDataSource.buildTextPaint(viewerStyle)
         if (isDarkMode) {
             textPaint.color = viewerStyle.darkTextColor
         } else {
             textPaint.color = viewerStyle.brightTextColor
         }
-        val charWidths = fontDataSource.getCharWidthArray(viewerStyle)
         pageSplitDataSource.drawPage(
             canvas = canvas,
             width = pageSplitData.width,
@@ -113,8 +119,8 @@ class PageSplitRepository @Inject constructor(
         width: Int,
         isDarkMode: Boolean,
     ) {
-        val textPaint = fontDataSource.buildTextPaint(viewerStyle)
         val charWidths = fontDataSource.getCharWidthArray(viewerStyle)
+        val textPaint = fontDataSource.buildTextPaint(viewerStyle)
         if (isDarkMode) {
             textPaint.color = viewerStyle.darkTextColor
         } else {

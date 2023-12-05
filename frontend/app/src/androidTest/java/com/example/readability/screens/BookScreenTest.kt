@@ -54,6 +54,7 @@ class BookScreenTest {
                 content = "",
                 progress = 0.1,
                 coverImage = "asd",
+                summaryProgress = 0.1,
             ),
             BookCardData(
                 id = 2,
@@ -62,6 +63,7 @@ class BookScreenTest {
                 content = "",
                 progress = 0.2,
                 coverImage = "asd",
+                summaryProgress = 0.1,
             ),
         )
         composeTestRule.setContent {

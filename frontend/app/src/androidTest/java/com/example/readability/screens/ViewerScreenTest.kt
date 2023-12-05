@@ -1,9 +1,12 @@
 package com.example.readability.screens
 
+import android.graphics.Typeface
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -46,8 +49,9 @@ class ViewerScreenTest {
                 author = "Stephen Crane",
                 content = "",
                 contentData = content,
-                progress = 0.0,
+                progress = 0.5,
                 coverImage = "",
+                summaryProgress = 1.0,
             )
             val pageSplits = mutableListOf<Int>()
             for (i in 0..content.length step 100) {
@@ -72,14 +76,15 @@ class ViewerScreenTest {
     fun viewerView_LeftClick() {
         var width = 0f
         var height = 0f
-        openBoatBookData =
+        var bookData =
             openBoatBookData.copy(progress = (1.5 / pageSplitData.pageSplits.size))
         composeTestRule.setContent {
             ViewerView(
-                bookData = openBoatBookData,
+                isNetworkConnected = true,
+                bookData = bookData,
                 pageSplitData = pageSplitData,
                 onProgressChange = {
-                    openBoatBookData = openBoatBookData.copy(progress = it)
+                    bookData = bookData.copy(progress = it)
                 },
             )
             with(LocalDensity.current) {
@@ -93,21 +98,22 @@ class ViewerScreenTest {
             up()
         }
         // check if progress is decreased by one page
-        assert(pageSplitData.getPageIndex(openBoatBookData.progress) == 0)
+        assert(pageSplitData.getPageIndex(bookData.progress) == 0)
     }
 
     @Test
     fun viewerView_RightClick() {
         var width = 0f
         var height = 0f
-        openBoatBookData =
+        var bookData =
             openBoatBookData.copy(progress = 0.0)
         composeTestRule.setContent {
             ViewerView(
-                bookData = openBoatBookData,
+                isNetworkConnected = true,
+                bookData = bookData,
                 pageSplitData = pageSplitData,
                 onProgressChange = {
-                    openBoatBookData = openBoatBookData.copy(progress = it)
+                    bookData = bookData.copy(progress = it)
                 },
             )
             with(LocalDensity.current) {
@@ -121,21 +127,22 @@ class ViewerScreenTest {
             up()
         }
         // check if progress is increased by one page
-        assert(pageSplitData.getPageIndex(openBoatBookData.progress) == 1)
+        assert(pageSplitData.getPageIndex(bookData.progress) == 1)
     }
 
     @Test
     fun viewerView_CenterClick() {
         var width = 0f
         var height = 0f
-        openBoatBookData =
+        var bookData =
             openBoatBookData.copy(progress = (1.5 / pageSplitData.pageSplits.size))
         composeTestRule.setContent {
             ViewerView(
-                bookData = openBoatBookData,
+                isNetworkConnected = true,
+                bookData = bookData,
                 pageSplitData = pageSplitData,
                 onProgressChange = {
-                    openBoatBookData = openBoatBookData.copy(progress = it)
+                    bookData = bookData.copy(progress = it)
                 },
             )
             with(LocalDensity.current) {
@@ -154,13 +161,14 @@ class ViewerScreenTest {
 
     @Test
     fun viewerView_LeftSwipe() {
-        openBoatBookData = openBoatBookData.copy(progress = 0.0)
+        var bookData = openBoatBookData.copy(progress = 0.0)
         composeTestRule.setContent {
             ViewerView(
-                bookData = openBoatBookData,
+                isNetworkConnected = true,
+                bookData = bookData,
                 pageSplitData = pageSplitData,
                 onProgressChange = {
-                    openBoatBookData = openBoatBookData.copy(progress = it)
+                    bookData = bookData.copy(progress = it)
                 },
             )
         }
@@ -169,19 +177,20 @@ class ViewerScreenTest {
             swipeLeft()
         }
         // check if progress is increased by one page
-        assert(pageSplitData.getPageIndex(openBoatBookData.progress) == 1)
+        assert(pageSplitData.getPageIndex(bookData.progress) == 1)
     }
 
     @Test
     fun viewerView_RightSwipe() {
-        openBoatBookData =
+        var bookData =
             openBoatBookData.copy(progress = (1.5 / pageSplitData.pageSplits.size))
         composeTestRule.setContent {
             ViewerView(
-                bookData = openBoatBookData,
+                isNetworkConnected = true,
+                bookData = bookData,
                 pageSplitData = pageSplitData,
                 onProgressChange = {
-                    openBoatBookData = openBoatBookData.copy(progress = it)
+                    bookData = bookData.copy(progress = it)
                 },
             )
         }
@@ -190,7 +199,7 @@ class ViewerScreenTest {
             swipeRight()
         }
         // check if progress is decreased by one page
-        assert(pageSplitData.getPageIndex(openBoatBookData.progress) == 0)
+        assert(pageSplitData.getPageIndex(bookData.progress) == 0)
     }
 
     @Test
@@ -200,6 +209,7 @@ class ViewerScreenTest {
         var onBack = false
         composeTestRule.setContent {
             ViewerView(
+                isNetworkConnected = true,
                 bookData = openBoatBookData,
                 pageSplitData = pageSplitData,
                 onBack = {
@@ -229,6 +239,7 @@ class ViewerScreenTest {
         var onNavigateSettings = false
         composeTestRule.setContent {
             ViewerView(
+                isNetworkConnected = true,
                 bookData = openBoatBookData,
                 pageSplitData = pageSplitData,
                 onNavigateSettings = {
@@ -251,6 +262,7 @@ class ViewerScreenTest {
         assert(onNavigateSettings)
     }
 
+    @OptIn(ExperimentalTestApi::class)
     @Test
     fun viewerView_GenerateSummaryClicked() {
         var width = 0f
@@ -258,7 +270,8 @@ class ViewerScreenTest {
         var onNavigateSummary = false
         composeTestRule.setContent {
             ViewerView(
-                bookData = openBoatBookData,
+                isNetworkConnected = true,
+                bookData = openBoatBookData.copy(progress = 0.5),
                 pageSplitData = pageSplitData,
                 onNavigateSummary = {
                     onNavigateSummary = true
@@ -274,12 +287,14 @@ class ViewerScreenTest {
             down(Offset(width * 0.5f, height * 0.5f))
             up()
         }
+        composeTestRule.waitUntilAtLeastOneExists(hasText("Generate Summary"), 1000L)
         // click generate summary
         composeTestRule.onNodeWithText("Generate Summary").performClick()
         // check if onNavigateSummary is true
         assert(onNavigateSummary)
     }
 
+    @OptIn(ExperimentalTestApi::class)
     @Test
     fun viewerView_GenerateQuizClicked() {
         var width = 0f
@@ -287,6 +302,7 @@ class ViewerScreenTest {
         var onNavigateQuiz = false
         composeTestRule.setContent {
             ViewerView(
+                isNetworkConnected = true,
                 bookData = openBoatBookData,
                 pageSplitData = pageSplitData,
                 onNavigateQuiz = {
@@ -303,6 +319,7 @@ class ViewerScreenTest {
             down(Offset(width * 0.5f, height * 0.5f))
             up()
         }
+        composeTestRule.waitUntilAtLeastOneExists(hasText("Generate Quiz"), 1000L)
         // click generate quiz
         composeTestRule.onNodeWithText("Generate Quiz").performClick()
         // check if onNavigateQuiz is true
@@ -397,10 +414,36 @@ class ViewerScreenTest {
         assert(reason == "It isn't true.")
     }
 
+    fun summaryView_OnLoadFailed() {
+        var onBack = false
+        composeTestRule.setContent {
+            SummaryView(
+                summary = "",
+                viewerStyle = ViewerStyle(),
+                typeface = Typeface.DEFAULT,
+                referenceLineHeight = 16f,
+                onLoadSummary = {
+                    Result.failure(Exception())
+                },
+                onBack = {
+                    onBack = true
+                },
+            )
+        }
+
+        assert(onBack)
+    }
+
     @Test
     fun summaryView_Displayed() {
         composeTestRule.setContent {
-            SummaryView(summary = "this is a summary")
+            SummaryView(
+                summary = "this is a summary",
+                viewerStyle = ViewerStyle(),
+                typeface = Typeface.DEFAULT,
+                referenceLineHeight = 16f,
+                onLoadSummary = { Result.success(Unit) },
+            )
         }
 
         // check if summary is displayed
@@ -412,7 +455,14 @@ class ViewerScreenTest {
     fun summaryView_BackButtonClicked() {
         var onBack = false
         composeTestRule.setContent {
-            SummaryView(summary = "this is a summary", onBack = { onBack = true })
+            SummaryView(
+                summary = "this is a summary",
+                onBack = { onBack = true },
+                viewerStyle = ViewerStyle(),
+                typeface = Typeface.DEFAULT,
+                referenceLineHeight = 16f,
+                onLoadSummary = { Result.success(Unit) },
+            )
         }
 
         // click back button

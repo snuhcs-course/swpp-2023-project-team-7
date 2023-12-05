@@ -9,6 +9,7 @@ import com.example.readability.data.viewer.PageSplitRepository
 import com.example.readability.data.viewer.SettingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -23,6 +24,7 @@ class ViewerViewModel @Inject constructor(
 
     val pageSplitData = MutableStateFlow<PageSplitData?>(null)
     val viewerStyle = settingRepository.viewerStyle
+    private var job: Job? = null
 
     fun setPageSize(bookId: Int, width: Int, height: Int) {
         if (pageSplitData.value?.width == width &&
@@ -42,6 +44,10 @@ class ViewerViewModel @Inject constructor(
                 bookRepository.updateProgress(bookId, progress)
             }
         }
+    }
+
+    suspend fun updateSummaryProgress(bookId: Int): Result<Unit> {
+        return bookRepository.updateSummaryProgress(bookId)
     }
 
     fun getBookData(id: Int) = bookRepository.getBook(id)

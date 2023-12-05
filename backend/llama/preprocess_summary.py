@@ -6,6 +6,7 @@ import openai
 import mysql.connector
 import os
 import math
+from llama.custom_type import ProxyAIBackend, GPT4Backend, GPT3Backend, LLaMABackend
 
 from tenacity import (
     retry,
@@ -17,25 +18,8 @@ from tenacity import (
 def completion_with_backoff(**kwargs):
     return openai.ChatCompletion.create(**kwargs)
 
-books_db = mysql.connector.connect(
-    host=os.environ["MYSQL_ENDPOINT"],
-    user=os.environ["MYSQL_USER"],
-    password=os.environ["MYSQL_PWD"],
-    database="readability",
-)
-
 tokenizer = tiktoken.get_encoding("cl100k_base")
 MAX_SIZE = 3900
-
-INTERMEDIATE_SYSTEM_PROMPT = '''
-"Hello, ChatGPT. I have a passage from a novel that I need help with. 
-It's quite long and detailed, and I'm looking to create a summary of the larger text it's a part of. 
-Can you assist me by identifying and extracting the most crucial bullet points from this passage? 
-These points should capture key events, character developments, themes, or any significant literary elements that are essential to the overall narrative and its context in the larger story. 
-Only provide bulletpoints, and do not say anything else.
-If there isn't enough information to extract bullet points, just say "No bullet points".
-Thank you!"
-'''
 
 # FINAL_SYSTEM_SUMMARY_PROMPT='''
 # Hello again, ChatGPT. 
@@ -46,25 +30,44 @@ Thank you!"
 # Could you please help me formulate this into a well-structured summary? Thank you!
 # '''
 
-FINAL_SYSTEM_SUMMARY_PROMPT = '''
-You will be provided with several bullet points that outline key aspects of a story. Your task is to synthesize these points into a coherent and concise summary that captures the most crucial elements necessary for understanding the story’s overall plot. Your summary should make it easy for a reader to grasp the main ideas, themes, and developments within the story.
-Read the bullet points carefully: Carefully analyze each bullet point to understand the fundamental components of the story, such as the main events, character motivations, conflicts, and resolutions.
+def get_book_content_url(books_db, book_id):
+    cursor = books_db.cursor()
+    cursor.execute(f"SELECT content FROM Books where id = {book_id}")
+    results = cursor.fetchall()
+    book_content_url = results[0][0]
+    return book_content_url
 
-Your summary should be well-organized, flowing seamlessly from one point to the next to create a cohesive understanding of the story.
-Focus on conveying the key elements that are central to the story’s plot and overall message.
-Avoid including overly detailed or minor points that do not significantly contribute to understanding the core plot.
+def update_summary_path_url(books_db, book_id, summary_path_url):
+    cursor = books_db.cursor()
+    cursor.execute(f"UPDATE Books SET summary_tree = '{summary_path_url}' WHERE id = {book_id}")
+    books_db.commit()
 
-Aim for a summary that is concise yet comprehensive enough to convey the essential plot points.
-Ensure that the summary is not overly lengthy or cluttered with less pertinent details.
+def update_num_current_inference(books_db, book_id):
+    cursor = books_db.cursor()
+    cursor.execute(f"UPDATE Books SET num_current_inference = num_current_inference + 1 WHERE id = {book_id}")
+    books_db.commit()
 
-Review your summary to ensure that it accurately represents the main ideas and themes presented in the bullet points.
-Ensure that the language used is clear and easily understandable.
-'''
+def update_num_total_inference(books_db, book_id, num_total_inference):
+    cursor = books_db.cursor()
+    cursor.execute(f"UPDATE Books SET num_total_inference = {num_total_inference} WHERE id = {book_id}")
+    books_db.commit()
+    cursor.execute(f"UPDATE Books SET num_current_inference = {0} WHERE id = {book_id}")
+    books_db.commit()
+
+def get_number_of_inferences(num_splits):
+    assert num_splits >= 0
+    if num_splits == 0:
+        return 0
+    return num_splits + get_number_of_inferences(num_splits//2)
 
 def split_large_text(story):
     tokens = tokenizer.encode(story)
     # calculate the number of splits
     number_of_splits = math.ceil(len(tokens) / MAX_SIZE)
+    # Division by 0 is theoretically possible if len(tokens) == 0
+    # However, uploading an empty txt file is not allowed
+    # from the frontend, so this should never happen.
+
     # divide the tokens evenly across the number of splits
     start_end_indices = [len(tokens)//number_of_splits] * number_of_splits
     # add the remainder evenly across the splits
@@ -97,6 +100,13 @@ def split_list(input_list):
     # split the input_list into groups
     num_groups = len(input_list) // split_size
     remainder = len(input_list) % split_size
+
+    # if num_groups 0, but remainder is 1,
+    # we will run into an infinite loop when 
+    # distributing the remainder.
+    if num_groups == 0:
+        return [input_list]
+
     output_sizes = []
     output_list = []
     start_idx = 0
@@ -114,6 +124,7 @@ def split_list(input_list):
                     remainder -= 1
                 else:
                     break
+
     # create output_list
     for i in range(num_groups):
         output_list.append(input_list[:output_sizes[i]])
@@ -122,118 +133,100 @@ def split_list(input_list):
     return output_list
 
 
-def reduce_multiple_summaries_to_one(summary_list, is_intermediate):
+def reduce_multiple_summaries_to_one(proxy_ai_backend, books_db, book_id, summary_list, is_intermediate):
     summary_content_list = [summary.summary_content for summary in summary_list]
     reduced_start_idx = min([summary.start_idx for summary in summary_list])
     reduced_end_idx = max([summary.end_idx for summary in summary_list])
     content = '\n'.join(summary_content_list)
-
-    print("THIS IS CONTENT: ", content)
+    print("CONTENT INPUT TO REDUCE MULTIPLE SUMMARIES TO ONE: ", content)
 
     if is_intermediate:
         response = ""
         for attempt in range(10):
             try:
-                for resp in completion_with_backoff(
-                    model="gpt-4", messages=[
-                        {"role": "system", "content": INTERMEDIATE_SYSTEM_PROMPT},
-                        {"role": "user", "content": content}
-                    ], stream=True
-                ):
-                    finished = resp.choices[0].finish_reason is not None
-                    delta_content = "\n" if (finished) else resp.choices[0].delta.content
+                for delta_content, finished in proxy_ai_backend.precompute_intermediate_from_intermediate(content):
+                    delta_content = "\n" if (finished) else delta_content
                     response += delta_content
 
-                    sys.stdout.write(delta_content)
-                    sys.stdout.flush()
-                    if finished:
-                        break
             except Exception as e:
-                print(e)
+                if attempt == 5:
+                    proxy_ai_backend.summary_generator = GPT3Backend()
+                print("EXCEPTION IN REDUCE_MULTIPLE_SUMMARIES_TO_ONE INTERMEDIATE " + e)
                 continue
             break
     else:
         response = ""
         for attempt in range(10):
             try:
-                for resp in completion_with_backoff(
-                    model="gpt-4", messages=[
-                        {"role": "system", "content": FINAL_SYSTEM_SUMMARY_PROMPT},
-                        {"role": "user", "content": content}
-                    ], stream=True
-                ):
-                    finished = resp.choices[0].finish_reason is not None
-                    delta_content = "\n" if (finished) else resp.choices[0].delta.content
+                for delta_content, finished in proxy_ai_backend.precompute_final_from_intermediate(content):
+                    delta_content = "\n" if (finished) else delta_content
                     response += delta_content
 
-                    sys.stdout.write(delta_content)
-                    sys.stdout.flush()
-                    if finished:
-                        break
             except Exception as e:
-                print(e)
+                if attempt == 5:
+                    proxy_ai_backend.summary_generator = GPT3Backend()
+                print("EXCEPTION IN REDUCE_MULTIPLE_SUMMARIES_TO_ONE FINAL " + e)
                 continue
             break
 
+    update_num_current_inference(books_db, book_id)
     reduced_summary = Summary(summary_content=response,
                               start_idx=reduced_start_idx, end_idx=reduced_end_idx, children=summary_list)
     for summary in summary_list:
         summary.parent = reduced_summary
-
     return reduced_summary
 
 
-def reduce_summaries_list(summaries_list):
+def reduce_summaries_list(proxy_ai_backend, books_db, book_id, summaries_list):
     while len(summaries_list) > 1:
         double_paired_list = split_list(summaries_list)
-        summaries_list = [reduce_multiple_summaries_to_one(double_pair, is_intermediate=(
+        summaries_list = [reduce_multiple_summaries_to_one(proxy_ai_backend, books_db, book_id, double_pair, is_intermediate=(
             len(summaries_list) > 3)) for double_pair in double_paired_list]
     return summaries_list[0]
 
 
-async def generate_summary_tree(book_id, story):
+def generate_summary_tree(book_id, story):
+    books_db = mysql.connector.connect(
+        host=os.environ["MYSQL_ENDPOINT"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PWD"],
+        database="readability",
+    )
+
     summaries_list = []
     sliced_text_dict_list = split_large_text(story)
+    num_total_inferences = get_number_of_inferences(len(sliced_text_dict_list))
+
+    if num_total_inferences == 1:
+        update_num_total_inference(books_db, book_id, 1)
+        update_num_current_inference(books_db, book_id)
+        return
+    proxy_ai_backend = ProxyAIBackend(GPT4Backend())
+    update_num_total_inference(books_db, book_id, num_total_inferences)
+
     for prompt in sliced_text_dict_list:
         response = ""
         for attempt in range(10):
             try:
-                for resp in completion_with_backoff(
-                    model="gpt-4", messages=[
-                        {"role": "system", "content": INTERMEDIATE_SYSTEM_PROMPT},
-                        {"role": "user", "content": prompt["sliced_text"]}
-                    ], stream=True
-                ):
-                    finished = resp.choices[0].finish_reason is not None
-                    delta_content = "\n" if (finished) else resp.choices[0].delta.content
+                for delta_content, finished in proxy_ai_backend.precompute_intermediate_from_text(prompt["sliced_text"]):
+                    delta_content = "\n" if (finished) else delta_content
                     response += delta_content
-
-                    sys.stdout.write(delta_content)
-                    sys.stdout.flush()
-                    if finished:
-                        break 
-
+                update_num_current_inference(books_db, book_id)
                 first_level_summary = Summary(summary_content=response,
                                         start_idx=prompt["start_idx"],
                                         end_idx=prompt["end_idx"])
                 summaries_list.append(first_level_summary)
             except Exception as e:
-                print(e)
+                if attempt == 5:
+                    proxy_ai_backend.summary_generator = GPT3Backend()
+                print("EXCEPTION IN INTERMEDAITE FROM TEXT " + e)
                 continue
             break
-    single_summary = reduce_summaries_list(summaries_list)
 
-    if not books_db.is_connected():
-        books_db.reconnect()
-    cursor = books_db.cursor()
-    cursor.execute(f"SELECT content FROM Books where id = {book_id}")
-    results = cursor.fetchall()
-    #TODO: results might be none?
-    book_content_url = results[0][0]
+    single_summary = reduce_summaries_list(proxy_ai_backend, books_db, book_id, summaries_list)
+    book_content_url = get_book_content_url(books_db, book_id)
     summary_path_url = book_content_url.split('.')[0] + "_summary.pkl"
-
-    cursor.execute(f"UPDATE Books SET summary_tree = '{summary_path_url}' WHERE id = {book_id}")
-    books_db.commit()
+    update_summary_path_url(books_db, book_id, summary_path_url)
 
     user_dirname = f"/home/swpp/readability_users/"
     summary_path_url = os.path.join(user_dirname, summary_path_url)
@@ -241,44 +234,44 @@ async def generate_summary_tree(book_id, story):
         pickle.dump(single_summary, pickle_file)
 
 
-def main():
-    story_path = sys.argv[1]
-    story = open(story_path, "r").read()
-    summaries_list = []
+# def main():
+#     story_path = sys.argv[1]
+#     story = open(story_path, "r").read()
+#     summaries_list = []
 
-    print("\n\n*** Generate:")
-    sliced_text_dict_list = split_large_text(story)
+#     print("\n\n*** Generate:")
+#     sliced_text_dict_list = split_large_text(story)
 
-    for prompt in sliced_text_dict_list:
-        response = ""
-        for resp in completion_with_backoff(
-            model="gpt-4", messages=[
-                {"role": "system", "content": INTERMEDIATE_SYSTEM_PROMPT},
-                {"role": "user", "content": prompt["sliced_text"]}
-            ], stream=True
-        ):
-            finished = resp.choices[0].finish_reason is not None
-            delta_content = "\n" if (finished) else resp.choices[0].delta.content
-            response += delta_content
+#     for prompt in sliced_text_dict_list:
+#         response = ""
+#         for resp in completion_with_backoff(
+#             model="gpt-4", messages=[
+#                 {"role": "system", "content": INTERMEDIATE_SYSTEM_PROMPT},
+#                 {"role": "user", "content": prompt["sliced_text"]}
+#             ], stream=True
+#         ):
+#             finished = resp.choices[0].finish_reason is not None
+#             delta_content = "\n" if (finished) else resp.choices[0].delta.content
+#             response += delta_content
 
-            sys.stdout.write(delta_content)
-            sys.stdout.flush()
-            if finished:
-                break 
+#             sys.stdout.write(delta_content)
+#             sys.stdout.flush()
+#             if finished:
+#                 break 
 
-        first_level_summary = Summary(summary_content=response,
-                                start_idx=prompt["start_idx"],
-                                end_idx=prompt["end_idx"])
-        summaries_list.append(first_level_summary)
+#         first_level_summary = Summary(summary_content=response,
+#                                 start_idx=prompt["start_idx"],
+#                                 end_idx=prompt["end_idx"])
+#         summaries_list.append(first_level_summary)
 
-    single_summary = reduce_summaries_list(summaries_list)
-    print("\n\n*** FINAL Summary:")
-    print(single_summary)
+#     single_summary = reduce_summaries_list(summaries_list)
+#     print("\n\n*** FINAL Summary:")
+#     print(single_summary)
 
-    summary_tree_path = f"{story_path.split('.')[0]}_summary.pkl"
-    with open(summary_tree_path, 'wb') as pickle_file:
-        pickle.dump(single_summary, pickle_file)
+#     summary_tree_path = f"{story_path.split('.')[0]}_summary.pkl"
+#     with open(summary_tree_path, 'wb') as pickle_file:
+#         pickle.dump(single_summary, pickle_file)
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main() 

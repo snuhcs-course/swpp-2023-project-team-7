@@ -76,17 +76,6 @@ android {
         }
         unitTests.all { it.jvmArgs("-noverify") }
     }
-    sourceSets {
-        getByName("main") {
-            java.srcDirs("src/main/kotlin")
-        }
-        getByName("test") {
-            java.srcDirs("src/test/kotlin")
-        }
-        getByName("androidTest") {
-            java.srcDirs("src/androidTest/kotlin")
-        }
-    }
 }
 
 dependencies {
@@ -116,12 +105,14 @@ dependencies {
     implementation("androidx.compose.ui:ui:1.5.4")
     implementation("androidx.compose.ui:ui-graphics:1.5.4")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.4")
-    implementation("androidx.compose.foundation:foundation-android:1.5.4")
+    implementation("androidx.compose.foundation:foundation-android:1.6.0-beta01")
     implementation("io.coil-kt:coil:2.4.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("androidx.compose.runtime:runtime-tracing:1.0.0-alpha05")
+    implementation("androidx.compose.material:material:1.3.1")
+    implementation("com.github.skydoves:cloudy:0.1.2")
 
     testImplementation("androidx.room:room-testing:$roomVersion")
     testImplementation("junit:junit:4.13.2")

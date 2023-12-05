@@ -1,5 +1,5 @@
 package com.example.readability.ui.models
-import com.example.readability.data.book.BookDao
+import com.example.readability.data.NetworkStatusRepository
 import com.example.readability.data.user.TokenResponse
 import com.example.readability.data.user.UserDao
 import com.example.readability.data.user.UserRemoteDataSource
@@ -24,7 +24,7 @@ class UserRepositoryTest {
     // classes to be mocked
     private lateinit var userRemoteDataSource: UserRemoteDataSource
     private lateinit var userDao: UserDao
-    private lateinit var bookDao: BookDao
+    private lateinit var networkStatusRepository: NetworkStatusRepository
 
     // class under test
     private lateinit var userRepository: UserRepository
@@ -34,11 +34,12 @@ class UserRepositoryTest {
         Dispatchers.setMain(Dispatchers.Unconfined)
         userRemoteDataSource = mock(UserRemoteDataSource::class.java)
         userDao = mock(UserDao::class.java)
-        bookDao = mock(BookDao::class.java)
+        networkStatusRepository = mock(NetworkStatusRepository::class.java)
+        `when`(networkStatusRepository.isConnected).thenReturn(true)
         userRepository = UserRepository(
             userRemoteDataSource = userRemoteDataSource,
             userDao = userDao,
-            bookDao = bookDao,
+            networkStatusRepository = networkStatusRepository,
         )
     }
 

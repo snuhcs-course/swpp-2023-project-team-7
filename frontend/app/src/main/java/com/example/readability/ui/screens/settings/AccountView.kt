@@ -1,8 +1,7 @@
 package com.example.readability.ui.screens.settings
 
-import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,12 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -35,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,17 +37,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import com.example.readability.LocalSnackbarHost
 import com.example.readability.R
-import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.components.SettingTitle
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.launch
@@ -62,56 +51,29 @@ import kotlinx.coroutines.launch
 @Preview
 fun AccountPreview() {
     ReadabilityTheme {
-        AccountView()
+        AccountView(
+            email = "test@example.com",
+            username = "John Doe",
+        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountView(
+    email: String,
+    username: String,
     onBack: () -> Unit = {},
     onNavigateChangePassword: () -> Unit = {},
-    onUpdatePhoto: suspend () -> Result<Unit> = { Result.success(Unit) },
-    onUpdatePersonalInfo: suspend () -> Result<Unit> = { Result.success(Unit) },
+    onSignOut: suspend () -> Result<Unit> = { Result.success(Unit) },
     onDeleteAccount: suspend () -> Result<Unit> = { Result.success(Unit) },
     onNavigateIntro: () -> Unit = {},
 ) {
-    var email by remember { mutableStateOf("") }
-    var emailError by remember { mutableStateOf(false) }
-    var username by remember { mutableStateOf("") }
-    var usernameError by remember { mutableStateOf(false) }
-    var showError by remember { mutableStateOf(false) }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
-    var updatePhotoLoading by remember { mutableStateOf(false) }
     var updatePersonalInfoLoading by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
-    val snackbarHost = LocalSnackbarHost.current
-
-    val checkEmailError = {
-        email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()
-    }
-    val checkUsernameError = {
-        username.isEmpty()
-    }
-    val checkError = { checkEmailError() || checkUsernameError() }
-
-    val submit = {
-        if (checkError()) {
-            showError = true
-        } else {
-            showError = false
-            updatePersonalInfoLoading = true
-            scope.launch {
-                onUpdatePersonalInfo().onSuccess {
-                    snackbarHost.showSnackbar("Personal info updated")
-                }.onFailure {
-                    snackbarHost.showSnackbar("Failed to update personal info: " + it.message)
-                }
-                updatePersonalInfoLoading = false
-            }
-        }
-    }
+    val context = LocalContext.current
 
     if (showDeleteAccountDialog) {
         AlertDialog(icon = {
@@ -130,10 +92,14 @@ fun AccountView(
                 onClick = {
                     scope.launch {
                         onDeleteAccount().onSuccess {
-                            snackbarHost.showSnackbar("Account deleted")
+                            Toast.makeText(context, "Account deleted", Toast.LENGTH_SHORT).show()
                             onNavigateIntro()
                         }.onFailure {
-                            snackbarHost.showSnackbar("Failed to delete account: " + it.message)
+                            Toast.makeText(
+                                context,
+                                "Failed to delete account: " + it.message,
+                                Toast.LENGTH_SHORT,
+                            ).show()
                         }
                     }
                 },
@@ -169,48 +135,13 @@ fun AccountView(
             })
         },
     ) { innerPadding ->
-        LaunchedEffect(Unit) {
-            emailError = checkEmailError()
-            usernameError = checkUsernameError()
-        }
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                AsyncImage(
-                    modifier = Modifier
-                        .size(96.dp)
-                        .clip(RoundedCornerShape(48.dp)),
-                    model = "https://picsum.photos/200/200",
-                    contentDescription = "Profile Image",
-                )
-                RoundedRectButton(
-                    onClick = {
-                        updatePhotoLoading = true
-                        scope.launch {
-                            onUpdatePhoto().onSuccess {
-                                snackbarHost.showSnackbar("Photo updated")
-                            }.onFailure {
-                                snackbarHost.showSnackbar("Failed to update photo: " + it.message)
-                            }
-                            updatePhotoLoading = false
-                        }
-                    },
-                    loading = updatePhotoLoading,
-                ) {
-                    Text(text = "Update Photo")
-                }
-            }
-            SettingTitle(modifier = Modifier.padding(top = 24.dp), text = "Personal Info")
+            SettingTitle(text = "Personal Info")
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 modifier = Modifier
@@ -218,10 +149,7 @@ fun AccountView(
                     .padding(horizontal = 16.dp)
                     .testTag("EmailTextField"),
                 value = email,
-                onValueChange = {
-                    email = it
-                    emailError = checkEmailError()
-                },
+                onValueChange = { },
                 singleLine = true,
                 label = {
                     Text(text = "Email")
@@ -232,16 +160,7 @@ fun AccountView(
                         contentDescription = "email",
                     )
                 },
-                isError = showError && emailError,
-                supportingText = if (showError && emailError) {
-                    { Text(text = "Please enter a valid email address") }
-                } else {
-                    null
-                },
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Next,
-                    keyboardType = KeyboardType.Email,
-                ),
+                enabled = false,
             )
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
@@ -250,10 +169,7 @@ fun AccountView(
                     .padding(horizontal = 16.dp)
                     .testTag("UsernameTextField"),
                 value = username,
-                onValueChange = {
-                    username = it
-                    usernameError = checkUsernameError()
-                },
+                onValueChange = {},
                 singleLine = true,
                 label = {
                     Text(text = "Username")
@@ -264,26 +180,40 @@ fun AccountView(
                         contentDescription = "user",
                     )
                 },
-                isError = showError && usernameError,
-                supportingText = if (showError && usernameError) {
-                    { Text(text = "Please enter a valid username") }
-                } else {
-                    null
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                ),
-                keyboardActions = KeyboardActions(onDone = { submit() }),
+                enabled = false,
             )
             Spacer(modifier = Modifier.height(16.dp))
-            RoundedRectButton(
-                modifier = Modifier.padding(16.dp),
-                loading = updatePersonalInfoLoading,
-                onClick = { submit() },
-            ) {
-                Text(text = "Update Personal Info")
-            }
             SettingTitle(modifier = Modifier.padding(top = 24.dp), text = "Actions")
+            // sign out
+            ListItem(
+                modifier = Modifier.clickable {
+                    scope.launch {
+                        onSignOut().onSuccess {
+                            Toast.makeText(context, "Signed out", Toast.LENGTH_SHORT).show()
+                            onNavigateIntro()
+                        }.onFailure {
+                            Toast.makeText(
+                                context,
+                                "Failed to sign out: " + it.message,
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+                    }
+                },
+                leadingContent = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.sign_out),
+                        contentDescription = "Sign Out",
+                    )
+                },
+                headlineContent = { Text(text = "Sign Out") },
+                trailingContent = {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "Navigate",
+                    )
+                },
+            )
             ListItem(
                 modifier = Modifier.clickable {
                     onNavigateChangePassword()

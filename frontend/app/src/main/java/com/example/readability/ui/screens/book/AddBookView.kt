@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -48,7 +49,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.readability.LocalSnackbarHost
 import com.example.readability.R
 import com.example.readability.data.book.AddBookRequest
 import com.example.readability.ui.components.RoundedRectButton
@@ -96,14 +96,34 @@ fun AddBookView(
     var author by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var defaultbitmap by remember { mutableStateOf<Bitmap?>(null) }
     var imageString by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     var fileName by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
+    val maxChar = 80
 
-    val snackbarHost = LocalSnackbarHost.current
+    var defaultImageString = ""
+    val defaultUri = Uri.parse(
+        "android.resource://" + context.packageName + "/drawable/" + R.drawable.default_book_cover_image,
+    )
+    defaultbitmap = if (Build.VERSION.SDK_INT < 28) {
+        MediaStore.Images.Media.getBitmap(context.contentResolver, defaultUri)
+    } else {
+        val source = ImageDecoder.createSource(context.contentResolver, defaultUri)
+        ImageDecoder.decodeBitmap(source)
+    }
+
+    if (defaultbitmap != null) {
+        // convert bitmap to hex string
+        ByteArrayOutputStream().use {
+            defaultbitmap!!.compress(Bitmap.CompressFormat.JPEG, 95, it)
+            val bytes = it.toByteArray()
+            defaultImageString = bytesToHex(bytes)
+        }
+    }
 
     val imageSelectLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -139,6 +159,9 @@ fun AddBookView(
                 .joinToString(" ") {
                     it.replaceFirstChar { it.uppercase() }
                 }
+            if (title.length > maxChar) {
+                title = title.substring(0, maxChar)
+            }
             val inputStream = contentResolver.openInputStream(uri)
             if (inputStream != null) {
                 inputStream.use {
@@ -233,7 +256,9 @@ fun AddBookView(
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = title,
-                onValueChange = { title = it },
+                onValueChange = {
+                    if (it.length <= maxChar) title = it
+                },
                 label = { Text(text = "Book Title") },
                 leadingIcon = {
                     Icon(
@@ -241,12 +266,13 @@ fun AddBookView(
                         contentDescription = "Book Icon",
                     )
                 },
+                singleLine = true,
             )
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = author,
-                onValueChange = { author = it },
+                onValueChange = { if (it.length <= maxChar) author = it },
                 label = { Text(text = "Author (Optional)") },
                 leadingIcon = {
                     Icon(
@@ -254,6 +280,7 @@ fun AddBookView(
                         contentDescription = "Book Icon",
                     )
                 },
+                singleLine = true,
             )
             Spacer(modifier = Modifier.height(32.dp))
             Box(
@@ -322,25 +349,52 @@ fun AddBookView(
                 modifier = Modifier.fillMaxWidth(),
                 loading = loading,
                 onClick = {
-                    loading = true
-                    scope.launch {
-                        onAddBookClicked(
-                            AddBookRequest(
-                                title = title,
-                                content = content,
-                                author = author,
-                                coverImage = imageString,
-                            ),
-                        ).onSuccess {
-                            onBookUploaded()
-                            snackbarHost.showSnackbar(
-                                "Book is successfully uploaded",
-                            )
-                        }.onFailure {
-                            loading = false
-                            snackbarHost.showSnackbar(
-                                it.message ?: "Unknown error happened while uploading book",
-                            )
+                    if (content.isEmpty()) {
+                        Toast.makeText(
+                            context,
+                            "File is empty.",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    } else if (fileName.substring(fileName.length - 4, fileName.length) != ".txt") {
+                        Toast.makeText(
+                            context,
+                            "Invalid file format.\nOnly txt file supported",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    } else {
+                        loading = true
+                        scope.launch {
+                            onAddBookClicked(
+                                AddBookRequest(
+                                    title = title,
+                                    content = content,
+                                    author = author,
+                                    coverImage = if (imageString == "") {
+                                        defaultImageString
+                                    } else {
+                                        imageString
+                                    },
+                                ),
+                            ).onSuccess {
+                                onBookUploaded()
+                                Toast.makeText(
+                                    context,
+                                    "Book is successfully uploaded",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            }.onFailure {
+                                loading = false
+                                val message = if (it.message?.isEmpty() == false) {
+                                    it.message!!
+                                } else {
+                                    "Unknown error happened while uploading book"
+                                }
+                                Toast.makeText(
+                                    context,
+                                    message,
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            }
                         }
                     }
                 },

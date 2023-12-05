@@ -14,9 +14,11 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
+import retrofit2.http.Streaming
 import javax.inject.Inject
 
 interface SummaryAPI {
+    @Streaming
     @GET("/summary")
     fun getSummary(
         @Query("book_id") bookId: Int,
@@ -47,10 +49,15 @@ class SummaryRemoteDataSource @Inject constructor(
             val responseBody = response.body() ?: throw Throwable("No body")
             responseBody.byteStream().bufferedReader().use {
                 try {
+                    var isFirstToken = true
                     while (currentCoroutineContext().isActive) {
-                        val line = it.readLine() ?: continue
+                        val line = it.readLine() ?: break
                         if (line.startsWith("data:")) {
-                            emit(line.substring(6))
+                            var token = line.substring(6)
+                            if (isFirstToken) {
+                                isFirstToken = false
+                            } else if (token.isEmpty()) token = "\n"
+                            emit(token)
                         }
                     }
                 } catch (e: Exception) {

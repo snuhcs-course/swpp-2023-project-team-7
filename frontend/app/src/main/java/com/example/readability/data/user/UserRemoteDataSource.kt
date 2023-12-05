@@ -11,6 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
+import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.Query
@@ -45,6 +46,17 @@ data class UserInfoResponse(
     val verified: Int,
 )
 
+data class UserData(
+    val userName: String? = "",
+    val userEmail: String,
+    val refreshToken: String?,
+    val refreshTokenLife: Long?,
+    val accessToken: String?,
+    val accessTokenLife: Long?,
+    val createdAt: String?,
+    val verified: Int?,
+)
+
 interface UserAPI {
     @Headers("Accept: application/json")
     @FormUrlEncoded
@@ -67,8 +79,11 @@ interface UserAPI {
     @POST("/user/signup")
     fun signUp(@Body signUpRequest: SignUpRequest): Call<SignUpResponse>
 
-    @POST("/user/info")
+    @GET("/user/info")
     fun getUserInfo(@Query("access_token") accessToken: String): Call<UserInfoResponse>
+
+    @POST("/user/change_password")
+    fun changePassword(@Query("access_token") accessToken: String, @Query("password") newPassword: String): Call<Unit>
 }
 
 @InstallIn(SingletonComponent::class)
@@ -152,6 +167,15 @@ class UserRemoteDataSource @Inject constructor(
             } else {
                 return Result.failure(Throwable("Empty Response Body"))
             }
+        } else {
+            return Result.failure(Throwable(parseErrorBody(result.errorBody())))
+        }
+    }
+
+    suspend fun changePassword(accessToken: String, newPassword: String): Result<Unit> {
+        val result = userApi.changePassword(accessToken, newPassword).execute()
+        if (result.isSuccessful) {
+            return Result.success(Unit)
         } else {
             return Result.failure(Throwable(parseErrorBody(result.errorBody())))
         }

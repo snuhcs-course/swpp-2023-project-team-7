@@ -14,10 +14,12 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
+import retrofit2.http.Streaming
 import javax.inject.Inject
 import javax.inject.Singleton
 
 interface QuizAPI {
+    @Streaming
     @GET("/quiz")
     fun getQuiz(
         @Query("book_id") bookId: Int,
@@ -39,8 +41,9 @@ class QuizAPIProviderModule {
 
 enum class QuizResponseType {
     COUNT,
-    QUESTION,
-    ANSWER,
+    QUESTION_END,
+    ANSWER_END,
+    STRING,
 }
 
 data class QuizResponse(
@@ -57,12 +60,14 @@ class QuizRemoteDataSource @Inject constructor(
         val response = quizAPI.getQuiz(bookId, progress, accessToken).execute()
         if (response.isSuccessful) {
             val responseBody = response.body() ?: throw Throwable("No body")
+            println("QuizRemoteDataSource: getQuiz: response.isSuccessful")
             responseBody.byteStream().bufferedReader().use {
                 try {
                     var content = ""
                     var quizCount = 0
                     var receivingQuizCount = false
-                    var receivingQuiz = true
+                    var receivingQuiz = false
+                    var receivingAnswer = false
                     var quizCountContent = ""
                     val updateContent = { token: String ->
                         if (receivingQuizCount) {
@@ -72,38 +77,49 @@ class QuizRemoteDataSource @Inject constructor(
                         }
                     }
                     while (currentCoroutineContext().isActive) {
-                        val line = it.readLine() ?: continue
+                        val line = it.readLine() ?: break
+//                        println(line)
                         if (line.startsWith("data:")) {
-                            val token = line.substring(6)
+                            var token = line.substring(6)
+                            if (token.isEmpty()) token = "\n"
                             if (token.contains(":")) {
                                 updateContent(token.substring(0, token.indexOf(":")))
                                 if (quizCount == 0) {
                                     receivingQuizCount = true
                                 } else {
                                     receivingQuiz = content.contains("Q")
+                                    receivingAnswer = !receivingQuiz
                                     content = ""
                                 }
                                 updateContent(token.substring(token.indexOf(":") + 1))
                             } else if (token.contains("\n")) {
-                                updateContent(token.substring(0, token.indexOf("\n")))
                                 if (receivingQuizCount) {
-                                    quizCount = quizCountContent.toInt()
-                                    receivingQuizCount = false
+                                    println("quizCountContent: $quizCountContent")
+                                    quizCount = (quizCountContent.trim()).toInt()
                                     emit(QuizResponse(QuizResponseType.COUNT, "", quizCount))
                                 } else if (receivingQuiz) {
-                                    emit(QuizResponse(QuizResponseType.QUESTION, content, 0))
-                                    content = ""
-                                } else {
-                                    emit(QuizResponse(QuizResponseType.ANSWER, content, token.toInt()))
-                                    content = ""
+                                    emit(QuizResponse(QuizResponseType.QUESTION_END, "", 0))
+                                } else if (receivingAnswer) {
+                                    emit(QuizResponse(QuizResponseType.ANSWER_END, "", 0))
                                 }
-                                updateContent(token.substring(token.indexOf("\n") + 1))
+                                receivingQuizCount = false
+                                receivingAnswer = false
+                                receivingQuiz = false
+                                content = ""
                             } else {
                                 updateContent(token)
+                                if (receivingQuiz) {
+                                    emit(QuizResponse(QuizResponseType.STRING, content, 0))
+                                    content = ""
+                                } else if (receivingAnswer) {
+                                    emit(QuizResponse(QuizResponseType.STRING, content, 0))
+                                    content = ""
+                                }
                             }
                         }
                     }
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
+                    e.printStackTrace()
                     throw Throwable("Failed to parse quiz")
                 }
             }

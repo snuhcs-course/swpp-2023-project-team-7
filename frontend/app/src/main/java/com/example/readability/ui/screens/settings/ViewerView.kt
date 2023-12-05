@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -45,7 +45,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.NativeCanvas
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
@@ -61,8 +60,6 @@ import com.example.readability.data.viewer.FontDataSource
 import com.example.readability.data.viewer.ViewerStyle
 import com.example.readability.ui.theme.Gabarito
 import com.example.readability.ui.theme.ReadabilityTheme
-import com.example.readability.ui.theme.md_theme_dark_outline
-import com.example.readability.ui.theme.md_theme_light_outline
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -109,13 +106,17 @@ fun ViewerView(
     var maxHeight by remember { mutableStateOf(0.dp) }
     val density = LocalDensity.current
 
-    Scaffold(topBar = {
-        TopAppBar(title = { Text(text = "Viewer Settings") }, navigationIcon = {
-            IconButton(onClick = { onBack() }) {
-                Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
-            }
-        })
-    }) { innerPadding ->
+    Scaffold(
+        modifier = Modifier
+            .safeDrawingPadding(),
+        topBar = {
+            TopAppBar(title = { Text(text = "Viewer Settings") }, navigationIcon = {
+                IconButton(onClick = { onBack() }) {
+                    Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
+                }
+            })
+        },
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -364,58 +365,6 @@ fun ViewerOptions(
                 )
             },
         )
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(text = "Background Color", style = MaterialTheme.typography.bodyLarge)
-            Spacer(modifier = Modifier.weight(1f))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Icon(painter = painterResource(id = R.drawable.sun), contentDescription = "Sun")
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .border(1.dp, md_theme_light_outline, RoundedCornerShape(4.dp))
-                        .background(Color(viewerStyle.brightBackgroundColor), RoundedCornerShape(4.dp)),
-                )
-                Icon(painter = painterResource(id = R.drawable.moon), contentDescription = "Moon")
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .border(1.dp, md_theme_dark_outline, RoundedCornerShape(4.dp))
-                        .background(Color(viewerStyle.darkBackgroundColor), RoundedCornerShape(4.dp)),
-                )
-            }
-        }
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(text = "Text Color", style = MaterialTheme.typography.bodyLarge)
-            Spacer(modifier = Modifier.weight(1f))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Icon(painter = painterResource(id = R.drawable.sun), contentDescription = "Sun")
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .border(1.dp, md_theme_light_outline, RoundedCornerShape(4.dp))
-                        .background(Color(viewerStyle.brightTextColor), RoundedCornerShape(4.dp)),
-                )
-                Icon(painter = painterResource(id = R.drawable.moon), contentDescription = "Moon")
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .border(1.dp, md_theme_dark_outline, RoundedCornerShape(4.dp))
-                        .background(Color(viewerStyle.darkTextColor), RoundedCornerShape(4.dp)),
-                )
-            }
-        }
     }
 }
 

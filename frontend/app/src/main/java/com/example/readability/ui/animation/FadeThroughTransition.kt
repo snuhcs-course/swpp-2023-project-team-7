@@ -31,10 +31,10 @@ fun NavGraphBuilder.composableFadeThrough(
                 animationSpec = tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED), initialScale = DEFAULT_START_SCALE,
             ) + fadeIn(
                 animationSpec = tween(
-                    (DURATION_EMPHASIZED * (1 - FADE_THROUGH_THRESHOLD)).toInt(),
-                    (DURATION_EMPHASIZED * FADE_THROUGH_THRESHOLD).toInt(),
-                    EASING_EMPHASIZED,
-                ),
+                    DURATION_EMPHASIZED,
+                ) {
+                    lerp(FADE_THROUGH_THRESHOLD, 1f, EASING_EMPHASIZED.transform(it))
+                },
             )
         },
         exitTransition = {
@@ -42,8 +42,10 @@ fun NavGraphBuilder.composableFadeThrough(
                 animationSpec = tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED), targetScale = DEFAULT_START_SCALE,
             ) + fadeOut(
                 animationSpec = tween(
-                    (DURATION_EMPHASIZED * FADE_THROUGH_THRESHOLD).toInt(), 0, EASING_EMPHASIZED,
-                ),
+                    DURATION_EMPHASIZED,
+                ) {
+                    lerp(0f, FADE_THROUGH_THRESHOLD, EASING_EMPHASIZED.transform(it))
+                },
             )
         },
         popEnterTransition = {
@@ -51,20 +53,21 @@ fun NavGraphBuilder.composableFadeThrough(
                 animationSpec = tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED), initialScale = DEFAULT_START_SCALE,
             ) + fadeIn(
                 animationSpec = tween(
-                    (DURATION_EMPHASIZED * (1 - FADE_THROUGH_THRESHOLD)).toInt(),
-                    (DURATION_EMPHASIZED * FADE_THROUGH_THRESHOLD).toInt(),
-                    EASING_EMPHASIZED,
-                ),
+                    DURATION_EMPHASIZED,
+                ) {
+                    lerp(FADE_THROUGH_THRESHOLD, 1f, EASING_EMPHASIZED.transform(it))
+                },
             )
         },
         popExitTransition = {
             scaleOut(
-
                 animationSpec = tween(DURATION_EMPHASIZED, 0, EASING_EMPHASIZED), targetScale = DEFAULT_START_SCALE,
             ) + fadeOut(
                 animationSpec = tween(
-                    (DURATION_EMPHASIZED * FADE_THROUGH_THRESHOLD).toInt(), 0, EASING_EMPHASIZED,
-                ),
+                    DURATION_EMPHASIZED,
+                ) {
+                    lerp(0f, FADE_THROUGH_THRESHOLD, EASING_EMPHASIZED.transform(it))
+                },
             )
         },
     )

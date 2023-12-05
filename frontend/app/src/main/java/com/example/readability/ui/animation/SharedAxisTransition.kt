@@ -22,6 +22,15 @@ enum class SharedAxis {
     Y,
     Z,
 }
+fun lerp(startFraction: Float, endFraction: Float, fraction: Float): Float {
+    if (fraction <= startFraction) {
+        return 0f
+    }
+    if (fraction >= endFraction) {
+        return 1f
+    }
+    return (fraction - startFraction) / (endFraction - startFraction)
+}
 
 fun NavGraphBuilder.composableSharedAxis(
     route: String,
@@ -49,10 +58,10 @@ fun NavGraphBuilder.composableSharedAxis(
                     ),
                 ) + fadeIn(
                     animationSpec = tween(
-                        (DURATION_EMPHASIZED * (1 - FADE_THROUGH_THRESHOLD)).toInt(),
-                        (DURATION_EMPHASIZED * FADE_THROUGH_THRESHOLD).toInt(),
-                        EASING_EMPHASIZED,
-                    ),
+                        DURATION_EMPHASIZED,
+                    ) {
+                        lerp(FADE_THROUGH_THRESHOLD, 1f, EASING_EMPHASIZED.transform(it))
+                    },
                 )
             },
             exitTransition = {
@@ -63,10 +72,10 @@ fun NavGraphBuilder.composableSharedAxis(
                     ),
                 ) + fadeOut(
                     animationSpec = tween(
-                        (DURATION_EMPHASIZED * (1 - FADE_THROUGH_THRESHOLD)).toInt(),
-                        0,
-                        EASING_EMPHASIZED,
-                    ),
+                        DURATION_EMPHASIZED,
+                    ) {
+                        lerp(0f, FADE_THROUGH_THRESHOLD, EASING_EMPHASIZED.transform(it))
+                    },
                 )
             },
             popEnterTransition = {
@@ -77,10 +86,10 @@ fun NavGraphBuilder.composableSharedAxis(
                     ),
                 ) + fadeIn(
                     animationSpec = tween(
-                        (DURATION_EMPHASIZED * (1 - FADE_THROUGH_THRESHOLD)).toInt(),
-                        (DURATION_EMPHASIZED * FADE_THROUGH_THRESHOLD).toInt(),
-                        EASING_EMPHASIZED,
-                    ),
+                        DURATION_EMPHASIZED,
+                    ) {
+                        lerp(FADE_THROUGH_THRESHOLD, 1f, EASING_EMPHASIZED.transform(it))
+                    },
                 )
             },
             popExitTransition = {
@@ -91,10 +100,10 @@ fun NavGraphBuilder.composableSharedAxis(
                     ),
                 ) + fadeOut(
                     animationSpec = tween(
-                        (DURATION_EMPHASIZED * (1 - FADE_THROUGH_THRESHOLD)).toInt(),
-                        0,
-                        EASING_EMPHASIZED,
-                    ),
+                        DURATION_EMPHASIZED,
+                    ) {
+                        lerp(0f, FADE_THROUGH_THRESHOLD, EASING_EMPHASIZED.transform(it))
+                    },
                 )
             },
         )

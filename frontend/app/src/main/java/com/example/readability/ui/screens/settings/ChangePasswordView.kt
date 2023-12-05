@@ -33,16 +33,26 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.readability.LocalSnackbarHost
 import com.example.readability.ui.animation.animateImeDp
 import com.example.readability.ui.components.PasswordTextField
 import com.example.readability.ui.components.RoundedRectButton
+import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private val passwordRegex = Regex("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}\$")
+
+@Composable
+@Preview(showBackground = true, device = "id:pixel_5")
+fun ChangePasswordViewPreview() {
+    ReadabilityTheme {
+        ChangePasswordView()
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,7 +88,10 @@ fun ChangePasswordView(
             scope.launch {
                 onPasswordSubmitted(newPassword).onSuccess {
                     snackbarHost.showSnackbar("Password is successfully changed.")
-                    withContext(Dispatchers.Main) { onBack() }
+                    withContext(Dispatchers.Main) {
+                        focusManager.clearFocus()
+                        onBack()
+                    }
                 }.onFailure {
                     loading = false
                     showError = true
@@ -94,7 +107,10 @@ fun ChangePasswordView(
             .navigationBarsPadding(),
         topBar = {
             TopAppBar(title = { Text("Change Password") }, navigationIcon = {
-                IconButton(onClick = { onBack() }) {
+                IconButton(onClick = {
+                    focusManager.clearFocus()
+                    onBack()
+                }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Arrow Back",

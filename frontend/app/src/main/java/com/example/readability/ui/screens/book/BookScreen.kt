@@ -26,6 +26,7 @@ fun BookScreen(
     addBookViewModel: AddBookViewModel = hiltViewModel(),
 ) {
     val navController = rememberNavController()
+
     NavHost(navController = navController, startDestination = BookScreens.BookList.route) {
         composableSharedAxis(BookScreens.BookList.route, axis = SharedAxis.X) {
             val bookCardDataList by bookListViewModel.bookCardDataList.collectAsState()
@@ -46,6 +47,13 @@ fun BookScreen(
                 },
                 onProgressChanged = { id, progress ->
                     bookListViewModel.updateProgress(id, progress)
+                },
+                onBookDeleted = { id ->
+                    bookListViewModel.deleteBook(id)
+                    Result.success(Unit)
+                },
+                onRefresh = {
+                    bookListViewModel.updateBookList()
                 },
             )
         }

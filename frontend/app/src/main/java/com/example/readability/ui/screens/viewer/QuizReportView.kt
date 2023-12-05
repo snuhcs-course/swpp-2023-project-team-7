@@ -1,5 +1,6 @@
 package com.example.readability.ui.screens.viewer
 
+import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,10 +31,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.readability.LocalSnackbarHost
 import com.example.readability.ui.components.CircularProgressIndicatorInButton
 import com.example.readability.ui.components.RoundedRectButton
 import com.example.readability.ui.theme.ReadabilityTheme
@@ -67,7 +68,7 @@ fun QuizReportView(
     var loading by remember { mutableStateOf(false) }
     var reasonIdx by remember { mutableIntStateOf(0) }
 
-    val snackbarHost = LocalSnackbarHost.current
+    val context = LocalContext.current
 
     ReadabilityTheme {
         Scaffold(topBar = {
@@ -96,16 +97,19 @@ fun QuizReportView(
                     loading = true
                     scope.launch {
                         onReport(REPORT_REASONS[reasonIdx]).onSuccess {
-                            snackbarHost.showSnackbar(
+                            Toast.makeText(
+                                context,
                                 "Thank you for the feedback! " +
                                     "We’ll continue to improve our service based on your opinion.",
-                            )
+                                Toast.LENGTH_SHORT,
+                            ).show()
                             onBack()
                         }.onFailure {
-                            snackbarHost.showSnackbar(
-                                it.message
-                                    ?: "Unknown error occurred while sending feedback. Please try again.",
-                            )
+                            Toast.makeText(
+                                context,
+                                "Unknown error occurred while sending feedback. Please try again.",
+                                Toast.LENGTH_SHORT,
+                            ).show()
                             loading = false
                         }
                     }
@@ -175,12 +179,12 @@ fun ReportSelection(modifier: Modifier = Modifier, value: Int, onChange: (Int) -
                     .fillMaxWidth()
                     .selectable(selected = (index == value), onClick = {
                         onChange(index)
-                    }),
+                    })
+                    .padding(horizontal = 16.dp),
             ) {
                 Text(
                     text = text,
                     modifier = Modifier
-                        .padding(start = 16.dp)
                         .align(Alignment.CenterVertically)
                         .weight(1f),
                 )

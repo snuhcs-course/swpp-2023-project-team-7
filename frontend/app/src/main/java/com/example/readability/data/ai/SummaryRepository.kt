@@ -1,10 +1,15 @@
 package com.example.readability.data.ai
 
+import com.example.readability.data.NetworkStatusRepository
 import com.example.readability.data.user.UserNotSignedInException
 import com.example.readability.data.user.UserRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -13,23 +18,49 @@ import javax.inject.Singleton
 class SummaryRepository @Inject constructor(
     private val summaryRemoteDataSource: SummaryRemoteDataSource,
     private val userRepository: UserRepository,
+    private val networkStatusRepository: NetworkStatusRepository,
 ) {
-    val summary = MutableStateFlow("")
+    private val summaryLoadScope = CoroutineScope(Dispatchers.IO)
+    private var lastSummaryLoadJob: Job? = null
+
+    private val _summary = MutableStateFlow("")
+
+    val summary = _summary.asStateFlow()
 
     suspend fun getSummary(bookId: Int, progress: Double): Result<Unit> {
+        if (!networkStatusRepository.isConnected) {
+            return Result.failure(Exception("Network not connected"))
+        }
         return withContext(Dispatchers.IO) {
             val accessToken = userRepository.getAccessToken() ?: return@withContext Result.failure(
                 UserNotSignedInException(),
             )
             try {
-                summaryRemoteDataSource.getSummary(bookId, progress, accessToken).collect { response ->
-                    if (!isActive) return@collect
-                    summary.value += response
+                lastSummaryLoadJob?.cancel()
+                var error: Throwable? = null
+                lastSummaryLoadJob = summaryLoadScope.launch {
+                    try {
+                        _summary.value = ""
+                        summaryRemoteDataSource.getSummary(bookId, progress, accessToken).collect { response ->
+                            if (!isActive) return@collect
+                            _summary.value += response
+                        }
+                    } catch (e: Throwable) {
+                        error = e
+                    }
                 }
-            } catch (e: Exception) {
+                lastSummaryLoadJob?.join()
+                if (error != null) {
+                    return@withContext Result.failure(error!!)
+                }
+            } catch (e: Throwable) {
                 return@withContext Result.failure(e)
             }
             Result.success(Unit)
         }
+    }
+
+    fun clearSummary() {
+        _summary.value = ""
     }
 }
