@@ -96,8 +96,7 @@ fun ViewerView(
 ) {
     val width = Resources.getSystem().displayMetrics.widthPixels
     val padding = with(LocalDensity.current) { 16.dp.toPx() }
-    val pageHorizontalPadding =
-        with(LocalDensity.current) { viewerStyle.horizontalPadding.dp.toPx() }
+    val pageHorizontalPadding = with(LocalDensity.current) { viewerStyle.horizontalPadding.dp.toPx() }
 
     val pagerState = rememberPagerState(initialPage = 0) {
         2
@@ -107,8 +106,7 @@ fun ViewerView(
     val density = LocalDensity.current
 
     Scaffold(
-        modifier = Modifier
-            .safeDrawingPadding(),
+        modifier = Modifier.safeDrawingPadding(),
         topBar = {
             TopAppBar(title = { Text(text = "Viewer Settings") }, navigationIcon = {
                 IconButton(onClick = { onBack() }) {
@@ -276,15 +274,16 @@ fun TextOptions(
             title = "Text Size",
             value = viewerStyle.textSize.roundToInt().toString(),
             onPlus = {
-                onViewerStyleChanged(viewerStyle.copy(textSize = viewerStyle.textSize + 1))
+                onViewerStyleChanged(
+                    viewerStyle.copy(
+                        textSize = minOf(50f, viewerStyle.textSize + 1)
+                    )
+                )
             },
             onMinus = {
                 onViewerStyleChanged(
                     viewerStyle.copy(
-                        textSize = maxOf(
-                            1f,
-                            viewerStyle.textSize - 1,
-                        ),
+                        textSize = maxOf(10f,viewerStyle.textSize - 1,),
                     ),
                 )
             },
@@ -293,30 +292,54 @@ fun TextOptions(
             title = "Line Height",
             value = "${(viewerStyle.lineHeight * 100).roundToInt()}%",
             onPlus = {
-                onViewerStyleChanged(viewerStyle.copy(lineHeight = viewerStyle.lineHeight + 0.05f))
+                onViewerStyleChanged(
+                    viewerStyle.copy(
+                        lineHeight = minOf(6f, viewerStyle.lineHeight + 0.05f)
+                    )
+                )
             },
             onMinus = {
-                onViewerStyleChanged(viewerStyle.copy(lineHeight = viewerStyle.lineHeight - 0.05f))
+                onViewerStyleChanged(
+                    viewerStyle.copy(
+                        lineHeight = maxOf(0.6f, viewerStyle.lineHeight - 0.05f)
+                    )
+                )
             },
         )
         OptionWithPlusMinus(
             title = "Letter Spacing",
             value = ((viewerStyle.letterSpacing * 100).roundToInt() / 100f).toString(),
             onPlus = {
-                onViewerStyleChanged(viewerStyle.copy(letterSpacing = viewerStyle.letterSpacing + 0.01f))
+                onViewerStyleChanged(
+                    viewerStyle.copy(
+                        letterSpacing = minOf(0.4f, viewerStyle.letterSpacing + 0.01f)
+                    )
+                )
             },
             onMinus = {
-                onViewerStyleChanged(viewerStyle.copy(letterSpacing = viewerStyle.letterSpacing - 0.01f))
+                onViewerStyleChanged(
+                    viewerStyle.copy(
+                        letterSpacing = maxOf(0f, viewerStyle.letterSpacing - 0.01f)
+                    )
+                )
             },
         )
         OptionWithPlusMinus(
             title = "Paragraph Spacing",
             value = "${(viewerStyle.paragraphSpacing * 100).roundToInt()}%",
             onPlus = {
-                onViewerStyleChanged(viewerStyle.copy(paragraphSpacing = viewerStyle.paragraphSpacing + 0.05f))
+                onViewerStyleChanged(
+                    viewerStyle.copy(
+                        paragraphSpacing = minOf(3f, viewerStyle.paragraphSpacing + 0.05f)
+                    )
+                )
             },
             onMinus = {
-                onViewerStyleChanged(viewerStyle.copy(paragraphSpacing = viewerStyle.paragraphSpacing - 0.05f))
+                onViewerStyleChanged(
+                    viewerStyle.copy(
+                        paragraphSpacing = maxOf(1f, viewerStyle.paragraphSpacing - 0.05f)
+                    )
+                )
             },
         )
     }
@@ -340,10 +363,7 @@ fun ViewerOptions(
             onMinus = {
                 onViewerStyleChanged(
                     viewerStyle.copy(
-                        horizontalPadding = maxOf(
-                            0f,
-                            viewerStyle.horizontalPadding - 1,
-                        ),
+                        horizontalPadding = maxOf(0f, viewerStyle.horizontalPadding - 1,),
                     ),
                 )
             },
@@ -357,10 +377,7 @@ fun ViewerOptions(
             onMinus = {
                 onViewerStyleChanged(
                     viewerStyle.copy(
-                        verticalPadding = maxOf(
-                            0f,
-                            viewerStyle.verticalPadding - 1,
-                        ),
+                        verticalPadding = maxOf(0f, viewerStyle.verticalPadding - 1,),
                     ),
                 )
             },
@@ -376,10 +393,10 @@ fun OptionWithPlusMinus(title: String, value: String, onPlus: () -> Unit, onMinu
     ) {
         Text(text = title, style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.weight(1f))
-        IconButton(onClick = { onPlus() }) {
+        IconButton(onClick = { onMinus() }) {
             Icon(
-                painter = painterResource(id = R.drawable.plus),
-                contentDescription = "Plus",
+                painter = painterResource(id = R.drawable.minus),
+                contentDescription = "Minus",
             )
         }
         Text(
@@ -388,10 +405,10 @@ fun OptionWithPlusMinus(title: String, value: String, onPlus: () -> Unit, onMinu
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
         )
-        IconButton(onClick = { onMinus() }) {
+        IconButton(onClick = { onPlus() }) {
             Icon(
-                painter = painterResource(id = R.drawable.minus),
-                contentDescription = "Minus",
+                painter = painterResource(id = R.drawable.plus),
+                contentDescription = "Plus",
             )
         }
     }

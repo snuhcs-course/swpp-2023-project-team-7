@@ -686,6 +686,7 @@ fun ViewerOverlay(
                         onNavigateSummary = onNavigateSummary,
                         onNavigateQuiz = onNavigateQuiz,
                         onUpdateSummaryProgress = onUpdateSummaryProgress,
+                        pageSplitData = pageSplitData,
                     )
                     Slider(
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -753,6 +754,7 @@ fun SummaryActions(
     onNavigateSummary: () -> Unit = {},
     onNavigateQuiz: () -> Unit = {},
     onUpdateSummaryProgress: suspend () -> Result<Unit> = { Result.success(Unit) },
+    pageSplitData: PageSplitData?
 ) {
     // update summary progress on every 2 seconds, if the progress is not 1
     val summaryUpdateScope = rememberCoroutineScope()
@@ -860,7 +862,7 @@ fun SummaryActions(
                 }
             }
         }
-    } else if (pageIndex < 4) {
+    } else if (pageSplitData?.pageSplits?.get(pageIndex)!! < 15000) {
         Box(
             modifier = modifier
                 .background(
@@ -872,7 +874,7 @@ fun SummaryActions(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                "4 pages required for Summary and Quiz",
+                "Not enough pages for Summary and Quiz",
                 style = MaterialTheme.typography.labelLarge.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
