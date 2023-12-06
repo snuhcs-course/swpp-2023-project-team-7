@@ -21,8 +21,8 @@ class SettingRepository @Inject constructor(
     val sampleText = MutableStateFlow("")
     val viewerStyle = settingDao.get().map {
         println("SettingRepository: viewerStyle: $it")
-        it ?: ViewerStyle()
-    }.stateIn(CoroutineScope(Dispatchers.Main), SharingStarted.Eagerly, ViewerStyle())
+        it ?: ViewerStyleBuilder().build()
+    }.stateIn(CoroutineScope(Dispatchers.Main), SharingStarted.Eagerly, ViewerStyleBuilder().build())
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
@@ -43,7 +43,7 @@ class SettingRepository @Inject constructor(
 
     fun resetViewerStyle() {
         settingDao.delete()
-        settingDao.insert(ViewerStyle())
+        settingDao.insert(ViewerStyleBuilder().build())
     }
 
     fun updateViewerStyle(viewerStyle: ViewerStyle) {

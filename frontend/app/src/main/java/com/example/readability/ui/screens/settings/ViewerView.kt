@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import com.example.readability.R
 import com.example.readability.data.viewer.FontDataSource
 import com.example.readability.data.viewer.ViewerStyle
+import com.example.readability.data.viewer.ViewerStyleBuilder
 import com.example.readability.ui.theme.Gabarito
 import com.example.readability.ui.theme.ReadabilityTheme
 import kotlinx.coroutines.launch
@@ -68,7 +69,7 @@ import kotlin.math.roundToInt
 fun ViewerPreview() {
     ReadabilityTheme {
         ViewerView(
-            viewerStyle = ViewerStyle(),
+            viewerStyle = ViewerStyleBuilder().build(),
         )
     }
 }
@@ -80,7 +81,7 @@ fun ViewerOptionsPreview() {
         Surface(
             modifier = Modifier.background(MaterialTheme.colorScheme.background),
         ) {
-            ViewerOptions(viewerStyle = ViewerStyle(), onViewerStyleChanged = {})
+            ViewerOptions(viewerStyle = ViewerStyleBuilder().build(), onViewerStyleChanged = {})
         }
     }
 }
@@ -258,7 +259,11 @@ fun TextOptions(
                 }) {
                     fontMap.forEach { selectionOption ->
                         DropdownMenuItem(onClick = {
-                            onViewerStyleChanged(viewerStyle.copy(fontFamily = selectionOption.key))
+                            onViewerStyleChanged(
+                                ViewerStyleBuilder(viewerStyle)
+                                    .fontFamily(selectionOption.key)
+                                    .build()
+                            )
                             fontFamilyExpanded = false
                         }, text = {
                             Text(
@@ -275,16 +280,16 @@ fun TextOptions(
             value = viewerStyle.textSize.roundToInt().toString(),
             onPlus = {
                 onViewerStyleChanged(
-                    viewerStyle.copy(
-                        textSize = minOf(50f, viewerStyle.textSize + 1)
-                    )
+                    ViewerStyleBuilder(viewerStyle)
+                        .textSize(minOf(50f, viewerStyle.textSize + 1f))
+                        .build()
                 )
             },
             onMinus = {
                 onViewerStyleChanged(
-                    viewerStyle.copy(
-                        textSize = maxOf(10f,viewerStyle.textSize - 1,),
-                    ),
+                    ViewerStyleBuilder(viewerStyle)
+                        .textSize(maxOf(10f, viewerStyle.textSize - 1f))
+                        .build()
                 )
             },
         )
@@ -293,16 +298,16 @@ fun TextOptions(
             value = "${(viewerStyle.lineHeight * 100).roundToInt()}%",
             onPlus = {
                 onViewerStyleChanged(
-                    viewerStyle.copy(
-                        lineHeight = minOf(6f, viewerStyle.lineHeight + 0.05f)
-                    )
+                    ViewerStyleBuilder(viewerStyle)
+                        .lineHeight(minOf(6f, viewerStyle.lineHeight + 0.05f))
+                        .build()
                 )
             },
             onMinus = {
                 onViewerStyleChanged(
-                    viewerStyle.copy(
-                        lineHeight = maxOf(0.6f, viewerStyle.lineHeight - 0.05f)
-                    )
+                    ViewerStyleBuilder(viewerStyle)
+                        .lineHeight(maxOf(0.6f, viewerStyle.lineHeight - 0.05f))
+                        .build()
                 )
             },
         )
@@ -311,16 +316,16 @@ fun TextOptions(
             value = ((viewerStyle.letterSpacing * 100).roundToInt() / 100f).toString(),
             onPlus = {
                 onViewerStyleChanged(
-                    viewerStyle.copy(
-                        letterSpacing = minOf(0.4f, viewerStyle.letterSpacing + 0.01f)
-                    )
+                    ViewerStyleBuilder(viewerStyle)
+                        .letterSpacing(minOf(0.4f, viewerStyle.letterSpacing + 0.01f))
+                        .build()
                 )
             },
             onMinus = {
                 onViewerStyleChanged(
-                    viewerStyle.copy(
-                        letterSpacing = maxOf(0f, viewerStyle.letterSpacing - 0.01f)
-                    )
+                    ViewerStyleBuilder(viewerStyle)
+                        .letterSpacing(maxOf(0f, viewerStyle.letterSpacing - 0.01f))
+                        .build()
                 )
             },
         )
@@ -329,16 +334,16 @@ fun TextOptions(
             value = "${(viewerStyle.paragraphSpacing * 100).roundToInt()}%",
             onPlus = {
                 onViewerStyleChanged(
-                    viewerStyle.copy(
-                        paragraphSpacing = minOf(3f, viewerStyle.paragraphSpacing + 0.05f)
-                    )
+                    ViewerStyleBuilder(viewerStyle)
+                        .paragraphSpacing(minOf(3f, viewerStyle.paragraphSpacing + 0.05f))
+                        .build()
                 )
             },
             onMinus = {
                 onViewerStyleChanged(
-                    viewerStyle.copy(
-                        paragraphSpacing = maxOf(1f, viewerStyle.paragraphSpacing - 0.05f)
-                    )
+                    ViewerStyleBuilder(viewerStyle)
+                        .paragraphSpacing(maxOf(1f, viewerStyle.paragraphSpacing - 0.05f))
+                        .build()
                 )
             },
         )
@@ -358,13 +363,17 @@ fun ViewerOptions(
             title = "Horizontal Padding",
             value = viewerStyle.horizontalPadding.roundToInt().toString(),
             onPlus = {
-                onViewerStyleChanged(viewerStyle.copy(horizontalPadding = viewerStyle.horizontalPadding + 1))
+                onViewerStyleChanged(
+                    ViewerStyleBuilder(viewerStyle)
+                        .horizontalPadding(minOf(70f, viewerStyle.horizontalPadding + 1))
+                        .build()
+                )
             },
             onMinus = {
                 onViewerStyleChanged(
-                    viewerStyle.copy(
-                        horizontalPadding = maxOf(0f, viewerStyle.horizontalPadding - 1,),
-                    ),
+                    ViewerStyleBuilder(viewerStyle)
+                        .horizontalPadding(maxOf(0f, viewerStyle.horizontalPadding - 1))
+                        .build()
                 )
             },
         )
@@ -372,13 +381,17 @@ fun ViewerOptions(
             title = "Vertical Padding",
             value = viewerStyle.verticalPadding.roundToInt().toString(),
             onPlus = {
-                onViewerStyleChanged(viewerStyle.copy(verticalPadding = viewerStyle.verticalPadding + 1))
+                onViewerStyleChanged(
+                    ViewerStyleBuilder(viewerStyle)
+                        .verticalPadding(minOf(110f, viewerStyle.verticalPadding + 1))
+                        .build()
+                )
             },
             onMinus = {
                 onViewerStyleChanged(
-                    viewerStyle.copy(
-                        verticalPadding = maxOf(0f, viewerStyle.verticalPadding - 1,),
-                    ),
+                    ViewerStyleBuilder(viewerStyle)
+                        .verticalPadding(maxOf(0f, viewerStyle.verticalPadding - 1))
+                        .build()
                 )
             },
         )

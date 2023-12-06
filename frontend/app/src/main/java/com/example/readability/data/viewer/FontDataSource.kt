@@ -45,7 +45,7 @@ class FontDataSource @Inject constructor(
     init {
         customTypefaceName = "garamond"
         customTypeface.value = ResourcesCompat.getFont(context, R.font.garamond)
-        calculateReferenceCharWidth(ViewerStyle())
+        calculateReferenceCharWidth(ViewerStyleBuilder().build())
         updateReferenceLineHeight()
     }
 
@@ -53,7 +53,12 @@ class FontDataSource @Inject constructor(
      * Update reference line height with current typeface
      */
     private fun updateReferenceLineHeight() {
-        val fontMetrics = buildTextPaint(ViewerStyle(textSize = 16f, letterSpacing = 0f)).fontMetrics
+        val fontMetrics = buildTextPaint(
+            ViewerStyleBuilder()
+                .textSize(16f)
+                .letterSpacing(0f)
+                .build()
+        ).fontMetrics
         referenceLineHeight.value = fontMetrics.bottom - fontMetrics.top + fontMetrics.leading
     }
 
@@ -129,8 +134,7 @@ class FontDataSource @Inject constructor(
         val textSizeRatio = viewerStyle.textSize / 16f
         val letterSpacing = viewerStyle.letterSpacing * viewerStyle.textSize * density
         for (i in 0 until 65536) {
-            charWidthArray[i] =
-                charWidthReferenceArray[i] * textSizeRatio + letterSpacing
+            charWidthArray[i] = charWidthReferenceArray[i] * textSizeRatio + letterSpacing
         }
     }
 }
