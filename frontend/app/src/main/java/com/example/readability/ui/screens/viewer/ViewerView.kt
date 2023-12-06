@@ -90,6 +90,7 @@ import coil.compose.AsyncImage
 import com.example.readability.R
 import com.example.readability.data.book.Book
 import com.example.readability.data.viewer.PageSplitData
+import com.example.readability.data.viewer.ViewerStyle
 import com.example.readability.data.viewer.getPageIndex
 import com.example.readability.data.viewer.getPageProgress
 import com.example.readability.ui.animation.DURATION_EMPHASIZED
@@ -160,7 +161,7 @@ fun ViewerView(
 
     val pageSize = pageSplitData?.pageSplits?.size ?: 0
     val pageIndex = pageSplitData?.getPageIndex(bookData?.progress ?: 0.0) ?: 0
-    var pageChangedByAnimation by remember { mutableStateOf(true) }
+    var pageChangedByAnimation by remember(pageSplitData) { mutableStateOf(true) }
 
     Box(
         modifier = Modifier
@@ -173,6 +174,7 @@ fun ViewerView(
             onPageSizeChanged = { width, height ->
                 onPageSizeChanged(width, height)
             },
+            viewerStyle = pageSplitData?.viewerStyle
         )
         AnimatedContent(
             modifier = Modifier
@@ -508,10 +510,11 @@ fun BookPage(
     pageIndex: Int,
     onPageDraw: (canvas: NativeCanvas, pageIndex: Int) -> Unit = { _, _ -> },
 ) {
-    val padding = with(LocalDensity.current) { 16.dp.toPx() }
+    val horizontalPadding = with(LocalDensity.current) { (pageSplitData?.viewerStyle?.horizontalPadding ?: 16f).dp.toPx() }
+    val verticalPadding = with(LocalDensity.current) { (pageSplitData?.viewerStyle?.verticalPadding ?: 16f).dp.toPx() }
 
     val aspectRatio =
-        ((pageSplitData?.width ?: 0) + padding * 2) / ((pageSplitData?.height ?: 0) + padding * 2)
+        ((pageSplitData?.width ?: 0) + horizontalPadding * 2) / ((pageSplitData?.height ?: 0) + verticalPadding * 2)
 
     var drawCache by remember(pageIndex, pageSplitData?.width, pageSplitData?.height, pageSplitData?.viewerStyle) {
         mutableStateOf<Bitmap?>(null)
@@ -547,12 +550,12 @@ fun BookPage(
                                         val tempCanvas = NativeCanvas(drawCache!!)
                                         onPageDraw(tempCanvas, pageIndex)
                                     }
-                                    val sizeRatio = size.width / (pageSplitData.width + 32.dp.toPx())
+                                    val sizeRatio = size.width / (pageSplitData.width + horizontalPadding * 2)
                                     scale(
                                         scale = sizeRatio,
                                         pivot = Offset(0f, 0f),
                                     ) {
-                                        translate(left = 16.dp.toPx(), top = 16.dp.toPx()) {
+                                        translate(left = horizontalPadding, top = verticalPadding) {
                                             canvas.nativeCanvas.drawBitmap(drawCache!!, 0f, 0f, null)
                                         }
                                     }
@@ -577,7 +580,14 @@ fun BookPage(
 }
 
 @Composable
-fun ViewerSizeMeasurer(modifier: Modifier = Modifier, onPageSizeChanged: (Int, Int) -> Unit = { _, _ -> }) {
+fun ViewerSizeMeasurer(
+    modifier: Modifier = Modifier,
+    viewerStyle: ViewerStyle?,
+    onPageSizeChanged: (Int, Int) -> Unit = { _, _ -> }
+) {
+    val horizontalPadding = (viewerStyle?.horizontalPadding ?: 16f).dp
+    val verticalPadding = (viewerStyle?.verticalPadding ?: 16f).dp
+
     Column(
         modifier = modifier,
     ) {
@@ -585,7 +595,10 @@ fun ViewerSizeMeasurer(modifier: Modifier = Modifier, onPageSizeChanged: (Int, I
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(
+                    horizontal = horizontalPadding,
+                    vertical = verticalPadding
+                )
                 .onGloballyPositioned {
                     onPageSizeChanged(
                         it.size.width,
