@@ -24,9 +24,9 @@ class UserRepository @Inject constructor(
                     userName = null,
                     userEmail = email,
                     refreshToken = it.refresh_token,
-                    refreshTokenLife = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(12),
+                    refreshTokenLife = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(730),
                     accessToken = it.access_token,
-                    accessTokenLife = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(30),
+                    accessTokenLife = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365),
                     createdAt = null,
                     verified = null,
                 ),
@@ -73,7 +73,7 @@ class UserRepository @Inject constructor(
         userRemoteDataSource.refreshAccessToken(refreshToken).fold(onSuccess = {
             userDao.updateAccessToken(
                 it,
-                System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(30),
+                System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365),
             )
             return Result.success(Unit)
         }, onFailure = {

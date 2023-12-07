@@ -61,6 +61,7 @@ fun SettingsScreen(
                 onDeleteAccount = {
                     withContext(Dispatchers.IO) {
                         // TODO: delete account using userViewModel
+                        userViewModel.signOut()
                         delay(1000L)
                         Result.success(Unit)
                     }

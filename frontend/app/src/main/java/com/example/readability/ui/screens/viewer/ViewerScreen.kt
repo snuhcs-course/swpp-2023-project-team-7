@@ -91,7 +91,7 @@ fun ViewerScreen(
             val quizViewModel: QuizViewModel = hiltViewModel()
             val summaryViewModel: SummaryViewModel = hiltViewModel()
             val bookData by viewerViewModel.getBookData(id).collectAsState(initial = null)
-            val pageSplitData by viewerViewModel.pageSplitData.collectAsState(initial = null)
+            val pageSplitData by viewerViewModel.pageSplitData.collectAsState()
             val isDarkTheme = isSystemInDarkTheme()
             val isNetworkConnected by networkStatusViewModel.connectedState.collectAsState()
             ViewerView(
