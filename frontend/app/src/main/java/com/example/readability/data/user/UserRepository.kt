@@ -110,4 +110,12 @@ class UserRepository @Inject constructor(
     fun signOut() {
         userDao.deleteAll()
     }
+
+    suspend fun deleteAccount(): Result<Unit> {
+        val accessToken = getAccessToken() ?: return Result.failure(UserNotSignedInException())
+        if (!networkStatusRepository.isConnected) {
+            return Result.failure(Exception("Network not connected"))
+        }
+        return userRemoteDataSource.deleteAccount(accessToken)
+    }
 }

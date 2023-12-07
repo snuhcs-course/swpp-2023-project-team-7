@@ -9,6 +9,7 @@ import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -84,6 +85,9 @@ interface UserAPI {
 
     @POST("/user/change_password")
     fun changePassword(@Query("access_token") accessToken: String, @Query("password") newPassword: String): Call<Unit>
+
+    @DELETE("/user/delete_user")
+    fun deleteAccount(@Query("access_token") accessToken: String): Call<Unit>
 }
 
 @InstallIn(SingletonComponent::class)
@@ -174,6 +178,15 @@ class UserRemoteDataSource @Inject constructor(
 
     suspend fun changePassword(accessToken: String, newPassword: String): Result<Unit> {
         val result = userApi.changePassword(accessToken, newPassword).execute()
+        if (result.isSuccessful) {
+            return Result.success(Unit)
+        } else {
+            return Result.failure(Throwable(parseErrorBody(result.errorBody())))
+        }
+    }
+
+    suspend fun deleteAccount(accessToken: String): Result<Unit> {
+        val result = userApi.deleteAccount(accessToken).execute()
         if (result.isSuccessful) {
             return Result.success(Unit)
         } else {

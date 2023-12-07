@@ -12,7 +12,6 @@ import com.example.readability.ui.animation.composableSharedAxis
 import com.example.readability.ui.viewmodels.SettingViewModel
 import com.example.readability.ui.viewmodels.UserViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 sealed class SettingsScreens(val route: String) {
@@ -61,9 +60,11 @@ fun SettingsScreen(
                 onDeleteAccount = {
                     withContext(Dispatchers.IO) {
                         // TODO: delete account using userViewModel
-                        userViewModel.signOut()
-                        delay(1000L)
-                        Result.success(Unit)
+                        val result = userViewModel.deleteAccount()
+                        if (result.isSuccess) {
+                            userViewModel.signOut()
+                        }
+                        result
                     }
                 },
                 onNavigateIntro = {

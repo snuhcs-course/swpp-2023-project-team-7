@@ -54,4 +54,6 @@ class UserViewModel @Inject constructor(
     suspend fun getUserInfo() = userRepository.getUserInfo()
 
     suspend fun changePassword(newPassword: String) = userRepository.changePassword(newPassword)
+
+    suspend fun deleteAccount() = userRepository.deleteAccount()
 }
