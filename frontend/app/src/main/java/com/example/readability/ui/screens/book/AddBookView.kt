@@ -103,7 +103,7 @@ fun AddBookView(
     var loading by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
-    val maxChar = 80
+    val maxChar = 60
 
     var defaultImageString = ""
     val defaultUri = Uri.parse(
