@@ -903,13 +903,13 @@ fun SummaryActions(
                 modifier = Modifier.weight(1f),
                 onClick = { onNavigateSummary() },
             ) {
-                Text("Generate Summary")
+                Text("Summarize")
             }
             RoundedRectFilledTonalButton(
                 modifier = Modifier.weight(1f),
                 onClick = { onNavigateQuiz() },
             ) {
-                Text("Generate Quiz")
+                Text("Solve Quiz")
             }
         }
     }
