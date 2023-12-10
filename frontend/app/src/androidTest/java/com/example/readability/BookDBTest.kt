@@ -13,10 +13,10 @@ import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
-import org.awaitility.Awaitility.await
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -60,6 +60,14 @@ class BookDBTest {
         return (diff / (bitmap1.width * bitmap1.height)) < 5
     }
 
+    suspend fun assertUntil(time: Long, block: () -> Boolean) {
+        val startTime = System.currentTimeMillis()
+        while (startTime + time > System.currentTimeMillis() && !block()) {
+            delay(100L)
+        }
+        assert(block())
+    }
+
     @OptIn(ExperimentalStdlibApi::class)
     @Test
     fun addBook_success() = runTest(timeout = Duration.parse("60s")) {
@@ -98,9 +106,7 @@ class BookDBTest {
 
         val bookRefreshResult = withContext(Dispatchers.IO) { bookRepository.refreshBookList() }
         assertTrue("Book refresh should succeed", bookRefreshResult.isSuccess)
-        await().timeout(java.time.Duration.ofMillis(5000L)).until {
-            bookList.value.isNotEmpty() && bookList.value.any { it.title == bookTitle }
-        }
+        assertUntil(5000L) { bookList.value.isNotEmpty() && bookList.value.any { it.title == bookTitle } }
 
         // get content and image
         var book = bookList.value.first { it.title == bookTitle }
@@ -109,7 +115,7 @@ class BookDBTest {
 
         assertTrue("Get content should succeed", contentResult.isSuccess)
         assertTrue("Get image should succeed", imageResult.isSuccess)
-        await().timeout(java.time.Duration.ofMillis(5000L)).until {
+        assertUntil(5000L) {
             book = bookList.value.first { it.title == bookTitle }
             book.contentData != null && book.coverImageData != null
         }

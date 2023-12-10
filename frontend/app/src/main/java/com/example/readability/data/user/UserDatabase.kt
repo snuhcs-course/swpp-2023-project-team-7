@@ -6,6 +6,7 @@ import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
@@ -33,10 +34,10 @@ data class User(
 
 @Dao
 interface UserDao {
-    @Query("SELECT * FROM User")
+    @Query("SELECT * FROM User LIMIT 1")
     fun get(): Flow<User?>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(user: User)
 
     @Query("DELETE FROM User")

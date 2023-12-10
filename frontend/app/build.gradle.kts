@@ -131,8 +131,6 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.4")
     androidTestImplementation("androidx.navigation:navigation-testing:2.7.5")
     androidTestImplementation("com.google.dagger:hilt-android-testing:$hiltVersion")
-    androidTestImplementation("org.awaitility:awaitility:4.2.0")
-    androidTestImplementation("org.awaitility:awaitility-kotlin:4.2.0")
 
     val mocckVersion = "1.13.8"
     testImplementation("io.mockk:mockk:$mocckVersion")

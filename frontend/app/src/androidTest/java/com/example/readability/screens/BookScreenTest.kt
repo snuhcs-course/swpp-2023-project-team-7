@@ -147,6 +147,7 @@ class BookScreenTest {
                     content = "asdf",
                     progress = 0.1,
                     coverImage = "asd",
+                    summaryProgress = 1.0,
                 ),
             ),
         )
@@ -179,6 +180,7 @@ class BookScreenTest {
                     content = "asdf",
                     progress = 0.1,
                     coverImage = "asd",
+                    summaryProgress = 1.0,
                 ),
             ),
         )
