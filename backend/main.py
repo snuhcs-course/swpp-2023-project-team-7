@@ -1,4 +1,6 @@
 from typing import Union
+
+from fastapi.staticfiles import StaticFiles
 from routers.ai import ai
 from routers.book import book
 from routers.user import user
@@ -9,6 +11,7 @@ app = FastAPI()
 app.include_router(ai)
 app.include_router(book)
 app.include_router(user)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 if __name__ == "__main__":
   import uvicorn
