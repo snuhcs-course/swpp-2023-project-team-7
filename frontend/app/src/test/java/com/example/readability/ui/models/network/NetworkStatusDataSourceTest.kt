@@ -3,7 +3,9 @@ package com.example.readability.ui.models.network
 import android.content.Context
 import android.net.ConnectivityManager
 import com.example.readability.data.NetworkStatusDataSource
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.resetMain
