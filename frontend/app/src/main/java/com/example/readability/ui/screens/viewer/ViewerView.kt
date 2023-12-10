@@ -174,7 +174,7 @@ fun ViewerView(
             onPageSizeChanged = { width, height ->
                 onPageSizeChanged(width, height)
             },
-            viewerStyle = pageSplitData?.viewerStyle
+            viewerStyle = pageSplitData?.viewerStyle,
         )
         AnimatedContent(
             modifier = Modifier
@@ -510,7 +510,8 @@ fun BookPage(
     pageIndex: Int,
     onPageDraw: (canvas: NativeCanvas, pageIndex: Int) -> Unit = { _, _ -> },
 ) {
-    val horizontalPadding = with(LocalDensity.current) { (pageSplitData?.viewerStyle?.horizontalPadding ?: 16f).dp.toPx() }
+    val horizontalPadding =
+        with(LocalDensity.current) { (pageSplitData?.viewerStyle?.horizontalPadding ?: 16f).dp.toPx() }
     val verticalPadding = with(LocalDensity.current) { (pageSplitData?.viewerStyle?.verticalPadding ?: 16f).dp.toPx() }
 
     val aspectRatio =
@@ -583,7 +584,7 @@ fun BookPage(
 fun ViewerSizeMeasurer(
     modifier: Modifier = Modifier,
     viewerStyle: ViewerStyle?,
-    onPageSizeChanged: (Int, Int) -> Unit = { _, _ -> }
+    onPageSizeChanged: (Int, Int) -> Unit = { _, _ -> },
 ) {
     val horizontalPadding = (viewerStyle?.horizontalPadding ?: 16f).dp
     val verticalPadding = (viewerStyle?.verticalPadding ?: 16f).dp
@@ -597,7 +598,7 @@ fun ViewerSizeMeasurer(
                 .fillMaxWidth()
                 .padding(
                     horizontal = horizontalPadding,
-                    vertical = verticalPadding
+                    vertical = verticalPadding,
                 )
                 .onGloballyPositioned {
                     onPageSizeChanged(
@@ -767,7 +768,7 @@ fun SummaryActions(
     onNavigateSummary: () -> Unit = {},
     onNavigateQuiz: () -> Unit = {},
     onUpdateSummaryProgress: suspend () -> Result<Unit> = { Result.success(Unit) },
-    pageSplitData: PageSplitData?
+    pageSplitData: PageSplitData?,
 ) {
     // update summary progress on every 2 seconds, if the progress is not 1
     val summaryUpdateScope = rememberCoroutineScope()

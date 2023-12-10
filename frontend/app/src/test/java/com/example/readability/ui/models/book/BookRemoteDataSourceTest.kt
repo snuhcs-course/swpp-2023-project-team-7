@@ -7,7 +7,10 @@ import com.example.readability.data.book.BookRemoteDataSource
 import com.example.readability.data.book.BookResponse
 import com.example.readability.data.book.BooksResponse
 import com.example.readability.data.book.SummaryProgressResponse
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -42,10 +45,26 @@ class BookRemoteDataSourceTest {
     fun `getBookList success should return a list of books`() = runTest {
         // Arrange
         coEvery { bookAPI.getBooks(any()).execute() } returns Response.success(
-            BooksResponse(listOf(
-                BookResponse(1, "Title1", "Author1", "Content1", "Cover1", 0.5),
-                BookResponse(2, "Title2", "Author2", "Content2", "Cover2", 0.8)
-            ))
+            BooksResponse(
+                listOf(
+                    BookResponse(
+                        1,
+                        "Title1",
+                        "Author1",
+                        "Content1",
+                        "Cover1",
+                        0.5,
+                    ),
+                    BookResponse(
+                        2,
+                        "Title2",
+                        "Author2",
+                        "Content2",
+                        "Cover2",
+                        0.8,
+                    ),
+                ),
+            ),
         )
 
         // Act
@@ -63,7 +82,9 @@ class BookRemoteDataSourceTest {
     @Test
     fun `getBookList failure should return a failure result`() = runTest {
         // Arrange
-        coEvery { bookAPI.getBooks(any()).execute() } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
+        coEvery {
+            bookAPI.getBooks(any()).execute()
+        } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
 
         // Act
         val result = bookRemoteDataSource.getBookList("accessToken")
@@ -80,7 +101,7 @@ class BookRemoteDataSourceTest {
         val byteArrayOutputStream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
         coEvery { bookAPI.getBookCoverImage(any(), any()).execute() } returns Response.success(
-            byteArrayOutputStream.toByteArray().toResponseBody("image/jpeg".toMediaTypeOrNull())
+            byteArrayOutputStream.toByteArray().toResponseBody("image/jpeg".toMediaTypeOrNull()),
         )
 
         // Act
@@ -98,7 +119,9 @@ class BookRemoteDataSourceTest {
     @Test
     fun `getCoverImageData failure should return a failure result`() = runTest {
         // Arrange
-        coEvery { bookAPI.getBookCoverImage(any(), any()).execute() } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
+        coEvery {
+            bookAPI.getBookCoverImage(any(), any()).execute()
+        } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
 
         // Act
         val result = bookRemoteDataSource.getCoverImageData("accessToken", "coverImage")
@@ -111,7 +134,9 @@ class BookRemoteDataSourceTest {
     @Test
     fun `getContentData success should return content string`() = runTest {
         // Arrange
-        coEvery { bookAPI.getBookContent(any(), any()).execute() } returns Response.success("Content".toResponseBody("text/plain".toMediaTypeOrNull()))
+        coEvery {
+            bookAPI.getBookContent(any(), any()).execute()
+        } returns Response.success("Content".toResponseBody("text/plain".toMediaTypeOrNull()))
 
         // Act
         val result = bookRemoteDataSource.getContentData("accessToken", "content")
@@ -125,7 +150,9 @@ class BookRemoteDataSourceTest {
     @Test
     fun `getContentData failure should return a failure result`() = runTest {
         // Arrange
-        coEvery { bookAPI.getBookContent(any(), any()).execute() } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
+        coEvery {
+            bookAPI.getBookContent(any(), any()).execute()
+        } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
 
         // Act
         val result = bookRemoteDataSource.getContentData("accessToken", "content")
@@ -138,7 +165,11 @@ class BookRemoteDataSourceTest {
     @Test
     fun `getSummaryProgress success should return summary progress string`() = runTest {
         // Arrange
-        coEvery { bookAPI.getSummaryProgress(any(), any()).execute() } returns Response.success(SummaryProgressResponse("0.7"))
+        coEvery { bookAPI.getSummaryProgress(any(), any()).execute() } returns Response.success(
+            SummaryProgressResponse(
+                "0.7",
+            ),
+        )
 
         // Act
         val result = bookRemoteDataSource.getSummaryProgress("accessToken", 1)
@@ -152,7 +183,9 @@ class BookRemoteDataSourceTest {
     @Test
     fun `getSummaryProgress failure should return a failure result`() = runTest {
         // Arrange
-        coEvery { bookAPI.getSummaryProgress(any(), any()).execute() } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
+        coEvery {
+            bookAPI.getSummaryProgress(any(), any()).execute()
+        } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
 
         // Act
         val result = bookRemoteDataSource.getSummaryProgress("accessToken", 1)
@@ -168,31 +201,51 @@ class BookRemoteDataSourceTest {
         coEvery { bookAPI.addBook(any(), any()).execute() } returns Response.success(Unit)
 
         // Act
-        val result = bookRemoteDataSource.addBook("accessToken", AddBookRequest("Title", "Content", "Author", "Cover"))
+        val result = bookRemoteDataSource.addBook(
+            "accessToken",
+            AddBookRequest("Title", "Content", "Author", "Cover"),
+        )
 
         // Assert
         assert(result.isSuccess)
         assert(result.getOrNull() == Unit)
-        coVerify { bookAPI.addBook("accessToken", AddBookRequest("Title", "Content", "Author", "Cover")) }
+        coVerify {
+            bookAPI.addBook(
+                "accessToken",
+                AddBookRequest("Title", "Content", "Author", "Cover"),
+            )
+        }
     }
 
     @Test
     fun `addBook failure should return a failure result`() = runTest {
         // Arrange
-        coEvery { bookAPI.addBook(any(), any()).execute() } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
+        coEvery {
+            bookAPI.addBook(any(), any()).execute()
+        } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
 
         // Act
-        val result = bookRemoteDataSource.addBook("accessToken", AddBookRequest("Title", "Content", "Author", "Cover"))
+        val result = bookRemoteDataSource.addBook(
+            "accessToken",
+            AddBookRequest("Title", "Content", "Author", "Cover"),
+        )
 
         // Assert
         assert(result.isFailure)
-        coVerify { bookAPI.addBook("accessToken", AddBookRequest("Title", "Content", "Author", "Cover")) }
+        coVerify {
+            bookAPI.addBook(
+                "accessToken",
+                AddBookRequest("Title", "Content", "Author", "Cover"),
+            )
+        }
     }
 
     @Test
     fun `deleteBook success should return success message`() = runTest {
         // Arrange
-        coEvery { bookAPI.deleteBook(any(), any()).execute() } returns Response.success("Success".toResponseBody("text/plain".toMediaTypeOrNull()))
+        coEvery {
+            bookAPI.deleteBook(any(), any()).execute()
+        } returns Response.success("Success".toResponseBody("text/plain".toMediaTypeOrNull()))
 
         // Act
         val result = bookRemoteDataSource.deleteBook(1, "accessToken")
@@ -206,7 +259,9 @@ class BookRemoteDataSourceTest {
     @Test
     fun `deleteBook failure should return a failure result`() = runTest {
         // Arrange
-        coEvery { bookAPI.deleteBook(any(), any()).execute() } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
+        coEvery {
+            bookAPI.deleteBook(any(), any()).execute()
+        } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
 
         // Act
         val result = bookRemoteDataSource.deleteBook(1, "accessToken")
@@ -219,7 +274,9 @@ class BookRemoteDataSourceTest {
     @Test
     fun `updateProgress success should return success message`() = runTest {
         // Arrange
-        coEvery { bookAPI.updateProgress(any(), any(), any()).execute() } returns Response.success("Success".toResponseBody("text/plain".toMediaTypeOrNull()))
+        coEvery {
+            bookAPI.updateProgress(any(), any(), any()).execute()
+        } returns Response.success("Success".toResponseBody("text/plain".toMediaTypeOrNull()))
 
         // Act
         val result = bookRemoteDataSource.updateProgress(1, 0.5, "accessToken")
@@ -233,7 +290,9 @@ class BookRemoteDataSourceTest {
     @Test
     fun `updateProgress failure should return a failure result`() = runTest {
         // Arrange
-        coEvery { bookAPI.updateProgress(any(), any(), any()).execute() } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
+        coEvery {
+            bookAPI.updateProgress(any(), any(), any()).execute()
+        } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
 
         // Act
         val result = bookRemoteDataSource.updateProgress(1, 0.5, "accessToken")

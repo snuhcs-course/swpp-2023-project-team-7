@@ -57,7 +57,7 @@ class FontDataSource @Inject constructor(
             ViewerStyleBuilder()
                 .textSize(16f)
                 .letterSpacing(0f)
-                .build()
+                .build(),
         ).fontMetrics
         referenceLineHeight.value = fontMetrics.bottom - fontMetrics.top + fontMetrics.leading
     }

@@ -82,4 +82,3 @@ class SettingRepositoryTest {
         assertEquals(ViewerStyleBuilder().build(), result)
     }
 }
-

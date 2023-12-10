@@ -45,13 +45,19 @@ class ViewerStyleBuilder(private var viewerStyle: ViewerStyle = ViewerStyle()) {
     fun textSize(textSize: Float) = apply { viewerStyle = viewerStyle.copy(textSize = textSize) }
     fun lineHeight(lineHeight: Float) = apply { viewerStyle = viewerStyle.copy(lineHeight = lineHeight) }
     fun letterSpacing(letterSpacing: Float) = apply { viewerStyle = viewerStyle.copy(letterSpacing = letterSpacing) }
-    fun paragraphSpacing(paragraphSpacing: Float) = apply { viewerStyle = viewerStyle.copy(paragraphSpacing = paragraphSpacing) }
+    fun paragraphSpacing(paragraphSpacing: Float) =
+        apply { viewerStyle = viewerStyle.copy(paragraphSpacing = paragraphSpacing) }
     fun fontFamily(fontFamily: String) = apply { viewerStyle = viewerStyle.copy(fontFamily = fontFamily) }
-    fun verticalPadding(verticalPadding: Float) = apply { viewerStyle = viewerStyle.copy(verticalPadding = verticalPadding) }
-    fun horizontalPadding(horizontalPadding: Float) = apply { viewerStyle = viewerStyle.copy(horizontalPadding = horizontalPadding) }
-    fun brightBackgroundColor(brightBackgroundColor: Int) = apply { viewerStyle = viewerStyle.copy(brightBackgroundColor = brightBackgroundColor) }
-    fun darkBackgroundColor(darkBackgroundColor: Int) = apply { viewerStyle = viewerStyle.copy(darkBackgroundColor = darkBackgroundColor) }
-    fun brightTextColor(brightTextColor: Int) = apply { viewerStyle = viewerStyle.copy(brightTextColor = brightTextColor) }
+    fun verticalPadding(verticalPadding: Float) =
+        apply { viewerStyle = viewerStyle.copy(verticalPadding = verticalPadding) }
+    fun horizontalPadding(horizontalPadding: Float) =
+        apply { viewerStyle = viewerStyle.copy(horizontalPadding = horizontalPadding) }
+    fun brightBackgroundColor(brightBackgroundColor: Int) =
+        apply { viewerStyle = viewerStyle.copy(brightBackgroundColor = brightBackgroundColor) }
+    fun darkBackgroundColor(darkBackgroundColor: Int) =
+        apply { viewerStyle = viewerStyle.copy(darkBackgroundColor = darkBackgroundColor) }
+    fun brightTextColor(brightTextColor: Int) =
+        apply { viewerStyle = viewerStyle.copy(brightTextColor = brightTextColor) }
     fun darkTextColor(darkTextColor: Int) = apply { viewerStyle = viewerStyle.copy(darkTextColor = darkTextColor) }
     fun build() = viewerStyle
 }

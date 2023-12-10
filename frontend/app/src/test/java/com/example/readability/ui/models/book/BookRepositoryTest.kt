@@ -9,7 +9,6 @@ import com.example.readability.data.book.BookFileDataSource
 import com.example.readability.data.book.BookRemoteDataSource
 import com.example.readability.data.book.BookRepository
 import com.example.readability.data.user.UserRepository
-import io.mockk.coEvery
 import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking

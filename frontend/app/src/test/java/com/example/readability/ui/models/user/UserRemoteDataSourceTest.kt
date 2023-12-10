@@ -39,7 +39,7 @@ class UserRemoteDataSourceTest {
                 clientId = any(),
                 clientSecret = any(),
                 username = any(),
-                password = any()
+                password = any(),
             ).execute()
         } returns Response.success(TokenResponse("access_token", "refresh_token", "token_type"))
 
@@ -62,7 +62,7 @@ class UserRemoteDataSourceTest {
                 clientId = any(),
                 clientSecret = any(),
                 username = any(),
-                password = any()
+                password = any(),
             ).execute()
         } returns Response.error(400, "".toResponseBody("application/json".toMediaTypeOrNull()))
 
@@ -91,7 +91,7 @@ class UserRemoteDataSourceTest {
         // Arrange
         coEvery { userAPI.signUp(any()).execute() } returns Response.error(
             400,
-            "".toResponseBody("application/json".toMediaTypeOrNull())
+            "".toResponseBody("application/json".toMediaTypeOrNull()),
         )
 
         // Act
@@ -107,8 +107,8 @@ class UserRemoteDataSourceTest {
         coEvery { userAPI.refreshAccessToken(any()).execute() } returns Response.success(
             RefreshTokenResponse(
                 "new_access_token",
-                "token_type"
-            )
+                "token_type",
+            ),
         )
 
         // Act
@@ -124,7 +124,7 @@ class UserRemoteDataSourceTest {
         // Arrange
         coEvery { userAPI.refreshAccessToken(any()).execute() } returns Response.error(
             400,
-            "".toResponseBody("application/json".toMediaTypeOrNull())
+            "".toResponseBody("application/json".toMediaTypeOrNull()),
         )
 
         // Act
@@ -142,8 +142,8 @@ class UserRemoteDataSourceTest {
                 "username",
                 "email",
                 "created_at",
-                1
-            )
+                1,
+            ),
         )
 
         // Act
@@ -160,7 +160,7 @@ class UserRemoteDataSourceTest {
         // Arrange
         coEvery { userAPI.getUserInfo(any()).execute() } returns Response.error(
             400,
-            "".toResponseBody("application/json".toMediaTypeOrNull())
+            "".toResponseBody("application/json".toMediaTypeOrNull()),
         )
 
         // Act
@@ -188,7 +188,7 @@ class UserRemoteDataSourceTest {
         // Arrange
         coEvery { userAPI.changePassword(any(), any()).execute() } returns Response.error(
             400,
-            "".toResponseBody("application/json".toMediaTypeOrNull())
+            "".toResponseBody("application/json".toMediaTypeOrNull()),
         )
 
         // Act
@@ -216,7 +216,7 @@ class UserRemoteDataSourceTest {
         // Arrange
         coEvery { userAPI.deleteAccount(any()).execute() } returns Response.error(
             400,
-            "".toResponseBody("application/json".toMediaTypeOrNull())
+            "".toResponseBody("application/json".toMediaTypeOrNull()),
         )
 
         // Act

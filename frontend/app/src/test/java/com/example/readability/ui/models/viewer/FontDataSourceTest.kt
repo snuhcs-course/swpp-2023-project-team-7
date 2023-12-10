@@ -1,6 +1,5 @@
 package com.example.readability.ui.models.viewer
 
-
 import android.content.Context
 import androidx.core.content.res.ResourcesCompat
 import com.example.readability.data.viewer.FontDataSource

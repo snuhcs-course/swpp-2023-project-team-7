@@ -51,18 +51,18 @@ class PageSplitRepositoryTest {
                 contentData = "content",
                 coverImage = null,
                 progress = 0.7,
-            )
+            ),
         )
         pageSplitRepository = PageSplitRepository(
             pageSplitDataSource,
             fontDataSource,
             settingRepository,
-            bookRepository
+            bookRepository,
         )
         coEvery { pageSplitDataSource.splitPage(any(), any(), any(), any(), any(), any()) } returns listOf(
             0,
             3,
-            5
+            5,
         ).toIntArray()
     }
 

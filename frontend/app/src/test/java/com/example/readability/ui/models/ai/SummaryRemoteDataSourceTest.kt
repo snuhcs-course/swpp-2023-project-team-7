@@ -73,7 +73,8 @@ class SummaryRemoteDataSourceTest {
 
         // Assert
         result.toList().reduce {
-            acc, s -> acc + s
+                acc, s ->
+            acc + s
         }.let {
             assert(it == "This is a test summary.\n")
         }

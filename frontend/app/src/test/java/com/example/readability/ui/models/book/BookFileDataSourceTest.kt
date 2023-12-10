@@ -6,7 +6,10 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import com.example.readability.data.book.BookFileDataSource
 import com.example.readability.data.book.FileHelper
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import io.mockk.spyk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -118,7 +121,7 @@ class BookFileDataSourceTest {
         val imageBitmap: ImageBitmap = spyk(
             Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888).asImageBitmap(),
         )
-        every { imageBitmap.asAndroidBitmap() } returns mockk()
+        coEvery { imageBitmap.asAndroidBitmap() } returns mockk()
         coEvery { fileHelper.openFileOutputStream(any()) } returns mockk()
 
         // Act

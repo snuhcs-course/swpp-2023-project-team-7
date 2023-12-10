@@ -3,7 +3,6 @@ package com.example.readability.ui.models.ai
 import com.example.readability.data.ai.QuizAPI
 import com.example.readability.data.ai.QuizRemoteDataSource
 import com.example.readability.data.ai.QuizResponseType
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody
@@ -128,7 +127,7 @@ class QuizRemoteDataSourceTest {
         val result = quizRemoteDataSource.getQuiz(bookId, progress, accessToken)
 
         // Assert
-        val number_of_quiz = 3
+        val numberOfQuiz = 3
         val data = mutableListOf(
             "Why this unit test is meaningful?" to "Because it checks the correctness of the code.",
             "What is the best programming language?" to "Kotlin!",
@@ -139,7 +138,7 @@ class QuizRemoteDataSourceTest {
         result.toList().forEach {
             println(it)
             if (it.type == QuizResponseType.COUNT) {
-                assert(it.intData == number_of_quiz)
+                assert(it.intData == numberOfQuiz)
             } else if (it.type == QuizResponseType.QUESTION_END) {
                 isQuestion = false
             } else if (it.type == QuizResponseType.ANSWER_END) {
@@ -149,12 +148,12 @@ class QuizRemoteDataSourceTest {
                 if (isQuestion) {
                     assert(data[index].first.startsWith(it.data))
                     data[index] = data[index].copy(
-                        first = data[index].first.substring(it.data.length)
+                        first = data[index].first.substring(it.data.length),
                     )
                 } else {
                     assert(data[index].second.startsWith(it.data))
                     data[index] = data[index].copy(
-                        second = data[index].second.substring(it.data.length)
+                        second = data[index].second.substring(it.data.length),
                     )
                 }
             }
@@ -226,7 +225,9 @@ class QuizRemoteDataSourceTest {
         val progress = 0.5
         val accessToken = "testAccessToken"
         val responseBody = mock(ResponseBody::class.java)
-        doReturn(ByteArrayInputStream("data: Sorry, but we cannot generate quiz.".toByteArray())).`when`(responseBody).byteStream()
+        doReturn(
+            ByteArrayInputStream("data: Sorry, but we cannot generate quiz.".toByteArray()),
+        ).`when`(responseBody).byteStream()
         val response = Response.success(responseBody)
 
         val call = mock(retrofit2.Call::class.java)

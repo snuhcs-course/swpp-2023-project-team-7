@@ -262,7 +262,7 @@ fun TextOptions(
                             onViewerStyleChanged(
                                 ViewerStyleBuilder(viewerStyle)
                                     .fontFamily(selectionOption.key)
-                                    .build()
+                                    .build(),
                             )
                             fontFamilyExpanded = false
                         }, text = {
@@ -282,14 +282,14 @@ fun TextOptions(
                 onViewerStyleChanged(
                     ViewerStyleBuilder(viewerStyle)
                         .textSize(minOf(50f, viewerStyle.textSize + 1f))
-                        .build()
+                        .build(),
                 )
             },
             onMinus = {
                 onViewerStyleChanged(
                     ViewerStyleBuilder(viewerStyle)
                         .textSize(maxOf(10f, viewerStyle.textSize - 1f))
-                        .build()
+                        .build(),
                 )
             },
         )
@@ -300,14 +300,14 @@ fun TextOptions(
                 onViewerStyleChanged(
                     ViewerStyleBuilder(viewerStyle)
                         .lineHeight(minOf(6f, viewerStyle.lineHeight + 0.05f))
-                        .build()
+                        .build(),
                 )
             },
             onMinus = {
                 onViewerStyleChanged(
                     ViewerStyleBuilder(viewerStyle)
                         .lineHeight(maxOf(0.6f, viewerStyle.lineHeight - 0.05f))
-                        .build()
+                        .build(),
                 )
             },
         )
@@ -318,14 +318,14 @@ fun TextOptions(
                 onViewerStyleChanged(
                     ViewerStyleBuilder(viewerStyle)
                         .letterSpacing(minOf(0.4f, viewerStyle.letterSpacing + 0.01f))
-                        .build()
+                        .build(),
                 )
             },
             onMinus = {
                 onViewerStyleChanged(
                     ViewerStyleBuilder(viewerStyle)
                         .letterSpacing(maxOf(0f, viewerStyle.letterSpacing - 0.01f))
-                        .build()
+                        .build(),
                 )
             },
         )
@@ -336,14 +336,14 @@ fun TextOptions(
                 onViewerStyleChanged(
                     ViewerStyleBuilder(viewerStyle)
                         .paragraphSpacing(minOf(3f, viewerStyle.paragraphSpacing + 0.05f))
-                        .build()
+                        .build(),
                 )
             },
             onMinus = {
                 onViewerStyleChanged(
                     ViewerStyleBuilder(viewerStyle)
                         .paragraphSpacing(maxOf(1f, viewerStyle.paragraphSpacing - 0.05f))
-                        .build()
+                        .build(),
                 )
             },
         )
@@ -366,14 +366,14 @@ fun ViewerOptions(
                 onViewerStyleChanged(
                     ViewerStyleBuilder(viewerStyle)
                         .horizontalPadding(minOf(70f, viewerStyle.horizontalPadding + 1))
-                        .build()
+                        .build(),
                 )
             },
             onMinus = {
                 onViewerStyleChanged(
                     ViewerStyleBuilder(viewerStyle)
                         .horizontalPadding(maxOf(0f, viewerStyle.horizontalPadding - 1))
-                        .build()
+                        .build(),
                 )
             },
         )
@@ -384,14 +384,14 @@ fun ViewerOptions(
                 onViewerStyleChanged(
                     ViewerStyleBuilder(viewerStyle)
                         .verticalPadding(minOf(110f, viewerStyle.verticalPadding + 1))
-                        .build()
+                        .build(),
                 )
             },
             onMinus = {
                 onViewerStyleChanged(
                     ViewerStyleBuilder(viewerStyle)
                         .verticalPadding(maxOf(0f, viewerStyle.verticalPadding - 1))
-                        .build()
+                        .build(),
                 )
             },
         )

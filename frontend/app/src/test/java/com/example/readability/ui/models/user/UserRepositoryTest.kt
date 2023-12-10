@@ -79,7 +79,7 @@ class UserRepositoryTest {
         coEvery {
             userRemoteDataSource.signIn(
                 any(),
-                any()
+                any(),
             )
         } returns Result.failure(Throwable("Any custom error message should be handled"))
 
@@ -102,8 +102,8 @@ class UserRepositoryTest {
             TokenResponse(
                 "fake_access_token",
                 "fake_refresh_token",
-                "bearer"
-            )
+                "bearer",
+            ),
         )
 
         // Act
@@ -124,7 +124,7 @@ class UserRepositoryTest {
             userRemoteDataSource.signUp(
                 any(),
                 any(),
-                any()
+                any(),
             )
         } returns Result.failure(Throwable("Any custom error message should be handled"))
 
@@ -176,7 +176,9 @@ class UserRepositoryTest {
 
         coEvery { userDao.get() } returns flowOf(fakeUser)
         coEvery { userDao.updateAccessToken(any(), any()) } returns Unit
-        coEvery { userRemoteDataSource.refreshAccessToken(fakeRefreshToken) } returns Result.success("fake_new_access_token")
+        coEvery {
+            userRemoteDataSource.refreshAccessToken(fakeRefreshToken)
+        } returns Result.success("fake_new_access_token")
 
         // Act
         val result = userRepository.getAccessToken()
@@ -202,12 +204,14 @@ class UserRepositoryTest {
             username = "testuser",
             email = "test@example.com",
             created_at = "2023-01-01",
-            verified = 1
+            verified = 1,
         )
 
         coEvery { userDao.get() } returns flowOf(fakeUser)
         coEvery { networkStatusRepository.isConnected } returns true
-        coEvery { userRemoteDataSource.getUserInfo(fakeUser.accessToken!!) } returns Result.success(fakeUserInfoResponse)
+        coEvery {
+            userRemoteDataSource.getUserInfo(fakeUser.accessToken!!)
+        } returns Result.success(fakeUserInfoResponse)
 
         // Act
         val result = userRepository.getUserInfo()
@@ -233,7 +237,9 @@ class UserRepositoryTest {
 
         coEvery { userDao.get() } returns flowOf(fakeUser)
         coEvery { networkStatusRepository.isConnected } returns true
-        coEvery { userRemoteDataSource.getUserInfo(fakeUser.accessToken!!) } returns Result.failure(Throwable("Any custom error message"))
+        coEvery {
+            userRemoteDataSource.getUserInfo(fakeUser.accessToken!!)
+        } returns Result.failure(Throwable("Any custom error message"))
 
         // Act
         val result = userRepository.getUserInfo()
@@ -263,7 +269,7 @@ class UserRepositoryTest {
         coEvery {
             userRemoteDataSource.changePassword(
                 fakeUser.accessToken!!,
-                newPassword
+                newPassword,
             )
         } returns Result.success(Unit)
 
@@ -292,7 +298,7 @@ class UserRepositoryTest {
         coEvery { userDao.get() } returns flowOf(fakeUser)
         coEvery { networkStatusRepository.isConnected } returns true
         coEvery { userRemoteDataSource.changePassword(fakeUser.accessToken!!, newPassword) } returns Result.failure(
-            Throwable("Any custom error message")
+            Throwable("Any custom error message"),
         )
 
         // Act

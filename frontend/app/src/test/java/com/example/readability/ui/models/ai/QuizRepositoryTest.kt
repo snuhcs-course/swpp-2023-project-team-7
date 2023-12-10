@@ -1,25 +1,17 @@
 package com.example.readability.ui.models.ai
 
+import com.example.readability.data.NetworkStatusRepository
 import com.example.readability.data.ai.QuizRemoteDataSource
 import com.example.readability.data.ai.QuizRepository
-
-import com.example.readability.data.NetworkStatusRepository
-import com.example.readability.data.ai.QuizLoadState
 import com.example.readability.data.ai.QuizResponse
 import com.example.readability.data.ai.QuizResponseType
 import com.example.readability.data.user.UserNotSignedInException
 import com.example.readability.data.user.UserRepository
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -86,7 +78,7 @@ class QuizRepositoryTest {
             QuizResponse(QuizResponseType.STRING, "Question 3", 0),
             QuizResponse(QuizResponseType.QUESTION_END, "", 0),
             QuizResponse(QuizResponseType.STRING, "Answer 3", 0),
-            QuizResponse(QuizResponseType.ANSWER_END, "", 0)
+            QuizResponse(QuizResponseType.ANSWER_END, "", 0),
         )
 
         // Act

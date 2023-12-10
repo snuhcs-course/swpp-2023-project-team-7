@@ -1,7 +1,6 @@
 package com.example.readability.data.user
 
 import com.example.readability.data.NetworkStatusRepository
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject

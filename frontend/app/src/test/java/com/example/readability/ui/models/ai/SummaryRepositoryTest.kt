@@ -31,7 +31,7 @@ class SummaryRepositoryTest {
         summaryRepository = SummaryRepository(
             summaryRemoteDataSource,
             userRepository,
-            networkStatusRepository
+            networkStatusRepository,
         )
     }
 
@@ -67,7 +67,9 @@ class SummaryRepositoryTest {
         // Arrange
         coEvery { networkStatusRepository.isConnected } returns true
         coEvery { userRepository.getAccessToken() } returns "testAccessToken"
-        coEvery { summaryRemoteDataSource.getSummary(any(), any(), any()) } returns flowOf("Summary 1", "Summary 2", "Summary 3")
+        coEvery {
+            summaryRemoteDataSource.getSummary(any(), any(), any())
+        } returns flowOf("Summary 1", "Summary 2", "Summary 3")
 
         // Act
         val result = summaryRepository.getSummary(1, 0.5)
