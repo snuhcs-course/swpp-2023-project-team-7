@@ -6,17 +6,17 @@ plugins {
 }
 
 android {
-    namespace = "com.example.readability"
+    namespace = "com.snu.readability"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.readability"
+        applicationId = "com.snu.readability"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "com.example.readability.HiltTestRunner"
+        testInstrumentationRunner = "com.snu.readability.HiltTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
