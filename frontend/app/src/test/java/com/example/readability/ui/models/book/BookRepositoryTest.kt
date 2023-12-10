@@ -1,4 +1,4 @@
-package com.example.readability.ui.models
+package com.example.readability.ui.models.book
 
 import com.example.readability.data.NetworkStatusRepository
 import com.example.readability.data.book.AddBookRequest
@@ -9,9 +9,12 @@ import com.example.readability.data.book.BookFileDataSource
 import com.example.readability.data.book.BookRemoteDataSource
 import com.example.readability.data.book.BookRepository
 import com.example.readability.data.user.UserRepository
+import io.mockk.coEvery
+import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -115,8 +118,13 @@ class BookRepositoryTest {
         )
     }
 
+    @After
+    fun tearDown() {
+        unmockkAll()
+    }
+
     @Test
-    fun setProgress_succeed() = runTest {
+    fun `setProgress success`() = runTest {
         // Arrange
         val bookId = 1
         val progress = 0.5
@@ -133,7 +141,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun updateSummaryProgress_succeed() = runTest {
+    fun `updateProgressSummary success`() = runTest {
         // Arrange
         val bookId = 1
         val summaryProgress = 0.5
@@ -154,7 +162,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun updateSummaryProgress_remote_fail() = runTest {
+    fun `updateSummaryProgress when server error should return failure`() = runTest {
         // Arrange
         val bookId = 1
         `when`(bookRemoteDataSource.getSummaryProgress("test", bookId)).thenReturn(Result.failure(Throwable("test")))
@@ -167,7 +175,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun getBook_succeed() = runTest {
+    fun `getBook success`() = runTest {
         // Arrange
         val bookId = 1
         `when`(bookDao.getBook(bookId)).thenReturn(
@@ -191,7 +199,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun getBook_fail() = runTest {
+    fun `getBook fail`() = runTest {
         // Arrange
         val bookId = 10
         `when`(bookDao.getBook(bookId)).thenReturn(null)
@@ -205,7 +213,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun refreshBookList_succeed() = runTest {
+    fun `refreshBookList success should update book list`() = runTest {
         // Arrange
         val deletedBookId = 1
         val updatedProgressBookId = 2
@@ -309,7 +317,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun refreshBookList_network_fail() = runTest {
+    fun `refreshBookList when no network should return failure`() = runTest {
         // Arrange
         `when`(networkStatusRepository.isConnected).thenReturn(false)
 
@@ -321,7 +329,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun refreshBookList_remote_fail() = runTest {
+    fun `refreshBookList when server error should return failure`() = runTest {
         // Arrange
         `when`(bookRemoteDataSource.getBookList("test")).thenReturn(Result.failure(Throwable("test")))
 
@@ -333,7 +341,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun getCoverImageData_succeed() = runTest {
+    fun `getCoverImageData success`() = runTest {
         // Arrange
         val bookId = 2
         val imageBitmap = null
@@ -349,7 +357,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun getCoverImageData_fail() = runTest {
+    fun `getCoverImageData fails when server error`() = runTest {
         // Arrange
         val bookId = 2
         val coverImage = "test"
@@ -365,7 +373,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun getCoverImageDataIsNull_fail() = runTest {
+    fun `getCoverImageData fails`() = runTest {
         // Arrange
         val bookId = 1
         `when`(bookFileDataSource.coverImageExists(bookId)).thenReturn(false)
@@ -378,7 +386,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun getContentData_succeed() = runTest {
+    fun `getContentData success when local data exists`() = runTest {
         // Arrange
         val bookId = 1
         val contentString = "test_string"
@@ -394,7 +402,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun getContentData_fail() = runTest {
+    fun `getContentData fail`() = runTest {
         // Arrange
         val bookId = 1
         val content = "test"
@@ -410,7 +418,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun getContentData_remote_succeed() = runTest {
+    fun `getContenData success`() = runTest {
         // Arrange
         val bookId = 1
         val content = "test"
@@ -428,7 +436,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun addBook_succeed() = runTest {
+    fun `addBook success should add book data`() = runTest {
         // Arrange
         val addBookRequest = AddBookRequest(
             title = "test",
@@ -517,7 +525,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun addBook_remote_fail() = runTest {
+    fun `addBook when server error should return failure`() = runTest {
         // Arrange
         val addBookRequest = AddBookRequest(
             title = "test",
@@ -536,7 +544,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun deleteBook_succeed() = runTest {
+    fun `deleteBook success should remove book data`() = runTest {
         // Arrange
         val bookId = 3
 
@@ -582,7 +590,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    fun deleteBook_remote_fail() = runTest {
+    fun `deleteBook when server error should return failure`() = runTest {
         // Arrange
         val bookId = 3
 
@@ -593,5 +601,19 @@ class BookRepositoryTest {
 
         // Assert
         assert(result.isFailure)
+    }
+
+    @Test
+    fun `clearBooks success should clear books`() = runTest {
+        // Arrange
+        doNothing().`when`(bookFileDataSource).deleteAll()
+        doNothing().`when`(bookDao).deleteAll()
+
+        // Act
+        bookRepository.clearBooks()
+
+        // Assert
+        verify(bookFileDataSource, times(1)).deleteAll()
+        verify(bookDao, times(1)).deleteAll()
     }
 }

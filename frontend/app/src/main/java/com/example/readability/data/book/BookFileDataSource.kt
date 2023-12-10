@@ -10,35 +10,63 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@Singleton
-class BookFileDataSource @Inject constructor(
+class FileHelper @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
-    init {
-        if (!File(context.filesDir.path + "/book_cover").exists()) {
-            File(context.filesDir.path + "/book_cover").mkdir()
-        }
-        if (!File(context.filesDir.path + "/book_content").exists()) {
-            File(context.filesDir.path + "/book_content").mkdir()
+    fun openFileInputStream(fileName: String): InputStream {
+        return FileInputStream(context.filesDir.path + fileName)
+    }
+
+    fun openFileOutputStream(fileName: String): OutputStream {
+        return FileOutputStream(context.filesDir.path + fileName)
+    }
+
+    fun deleteFile(fileName: String) {
+        File(context.filesDir.path + fileName).delete()
+    }
+
+    fun exists(fileName: String): Boolean {
+        return File(context.filesDir.path + fileName).exists()
+    }
+
+    fun mkdirsIfNotExists(fileName: String) {
+        if (!File(context.filesDir.path + fileName).exists()) {
+            File(context.filesDir.path + fileName).mkdirs()
         }
     }
+
+    fun resetDirectory(fileName: String) {
+        File(context.filesDir.path + fileName).deleteRecursively()
+        File(context.filesDir.path + fileName).mkdir()
+    }
+}
+
+@Singleton
+class BookFileDataSource @Inject constructor(
+    private val fileHelper: FileHelper,
+) {
+    init {
+        fileHelper.mkdirsIfNotExists("/book_cover")
+        fileHelper.mkdirsIfNotExists("/book_content")
+    }
+
     fun contentExists(bookId: Int): Boolean {
-        val bookContentPath = context.filesDir.path + "/book_content/$bookId.txt"
         return try {
-            File(bookContentPath).exists()
+            fileHelper.exists("/book_content/$bookId.txt")
         } catch (e: Exception) {
             println("BookFileDataSource: contentExists failed: ${e.message}")
             false
         }
     }
     fun readContentFile(bookId: Int): String? {
-        val bookContentPath = context.filesDir.path + "/book_content/$bookId.txt"
         return if (contentExists(bookId)) {
             try {
-                FileInputStream(bookContentPath).bufferedReader().use {
+                fileHelper.openFileInputStream("/book_content/$bookId.txt").bufferedReader().use {
                     it.readText()
                 }
             } catch (e: Exception) {
@@ -51,9 +79,8 @@ class BookFileDataSource @Inject constructor(
     }
 
     fun writeContentFile(bookId: Int, content: String) {
-        val bookContentPath = context.filesDir.path + "/book_content/$bookId.txt"
         try {
-            FileOutputStream(bookContentPath).bufferedWriter().use {
+            fileHelper.openFileOutputStream("/book_content/$bookId.txt").bufferedWriter().use {
                 it.write(content)
             }
         } catch (e: Exception) {
@@ -62,19 +89,16 @@ class BookFileDataSource @Inject constructor(
     }
 
     fun deleteContentFile(bookId: Int) {
-        val bookContentPath = context.filesDir.path + "/book_content/$bookId.txt"
         try {
-            File(bookContentPath).delete()
+            fileHelper.deleteFile("/book_content/$bookId.txt")
         } catch (e: Exception) {
             println("BookFileDataSource: deleteContentFile failed: ${e.message}")
         }
     }
 
     fun coverImageExists(bookId: Int): Boolean {
-        val coverImagePath = context.filesDir.path + "/book_cover/$bookId.png"
-        println("BookFileDataSource: check for exist: $coverImagePath")
         return try {
-            File(coverImagePath).exists()
+            fileHelper.exists("/book_cover/$bookId.png")
         } catch (e: Exception) {
             println("BookFileDataSource: coverImageExists failed: ${e.message}")
             false
@@ -82,10 +106,9 @@ class BookFileDataSource @Inject constructor(
     }
 
     fun readCoverImageFile(bookId: Int): ImageBitmap? {
-        val coverImagePath = context.filesDir.path + "/book_cover/$bookId.png"
         return if (coverImageExists(bookId)) {
             try {
-                FileInputStream(coverImagePath).use {
+                fileHelper.openFileInputStream("/book_cover/$bookId.png").use {
                     val byteArray = it.readBytes()
                     BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size).asImageBitmap()
                 }
@@ -99,10 +122,8 @@ class BookFileDataSource @Inject constructor(
     }
 
     fun writeCoverImageFile(bookId: Int, coverImage: ImageBitmap) {
-        val coverImagePath = context.filesDir.path + "/book_cover/$bookId.png"
-        println("BookFileDataSource: write cover image: $coverImagePath")
         try {
-            FileOutputStream(coverImagePath).use {
+            fileHelper.openFileOutputStream("/book_cover/$bookId.png").use {
                 coverImage.asAndroidBitmap().compress(Bitmap.CompressFormat.JPEG, 100, it)
             }
         } catch (e: Exception) {
@@ -111,9 +132,8 @@ class BookFileDataSource @Inject constructor(
     }
 
     fun deleteCoverImageFile(bookId: Int) {
-        val coverImagePath = context.filesDir.path + "/book_cover/$bookId.png"
         try {
-            File(coverImagePath).delete()
+            fileHelper.deleteFile("/book_cover/$bookId.png")
         } catch (e: Exception) {
             println("BookFileDataSource: deleteCoverImageFile failed: ${e.message}")
         }
@@ -121,10 +141,8 @@ class BookFileDataSource @Inject constructor(
 
     fun deleteAll() {
         try {
-            File(context.filesDir.path + "/book_cover").deleteRecursively()
-            File(context.filesDir.path + "/book_cover").mkdir()
-            File(context.filesDir.path + "/book_content").deleteRecursively()
-            File(context.filesDir.path + "/book_content").mkdir()
+            fileHelper.resetDirectory("/book_cover")
+            fileHelper.resetDirectory("/book_content")
         } catch (e: Exception) {
             println("BookFileDataSource: clearAll failed: ${e.message}")
         }

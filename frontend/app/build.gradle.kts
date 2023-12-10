@@ -132,6 +132,7 @@ dependencies {
     androidTestImplementation("androidx.navigation:navigation-testing:2.7.5")
     androidTestImplementation("com.google.dagger:hilt-android-testing:$hiltVersion")
     androidTestImplementation("org.awaitility:awaitility:4.2.0")
+    androidTestImplementation("org.awaitility:awaitility-kotlin:4.2.0")
 
     val mocckVersion = "1.13.8"
     testImplementation("io.mockk:mockk:$mocckVersion")
@@ -140,11 +141,4 @@ dependencies {
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-}
-
-configurations.all {
-    resolutionStrategy.dependencySubstitution {
-        substitute(module("org.hamcrest:hamcrest-core:1.3")).using(module("junit:junit:4.13.2"))
-        substitute(module("org.hamcrest:hamcrest-library:1.3")).using(module("junit:junit:4.13.2"))
-    }
 }

@@ -2,6 +2,7 @@ package com.example.readability.data.user
 
 import com.example.readability.data.NetworkStatusRepository
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -49,7 +50,7 @@ class UserRepository @Inject constructor(
     }
 
     suspend fun getRefreshToken(): String? {
-        val user = userDao.get().first() ?: return null
+        val user = userDao.get().firstOrNull() ?: return null
         if (user.refreshTokenLife!! < System.currentTimeMillis()) {
             signOut()
             return null
@@ -58,7 +59,7 @@ class UserRepository @Inject constructor(
     }
 
     suspend fun getAccessToken(): String? {
-        val user = userDao.get().first() ?: return null
+        val user = userDao.get().firstOrNull() ?: return null
         if (user.accessTokenLife!! < System.currentTimeMillis()) {
             refreshAccessToken()
         }

@@ -85,6 +85,9 @@ class QuizRemoteDataSource @Inject constructor(
                             if (token.contains(":")) {
                                 updateContent(token.substring(0, token.indexOf(":")))
                                 if (quizCount == 0) {
+                                    if (!"Number of Questions".startsWith(content.trim())) {
+                                        throw Throwable("Failed to parse quiz")
+                                    }
                                     receivingQuizCount = true
                                 } else {
                                     receivingQuiz = content.contains("Q")
@@ -114,6 +117,11 @@ class QuizRemoteDataSource @Inject constructor(
                                 } else if (receivingAnswer) {
                                     emit(QuizResponse(QuizResponseType.STRING, content, 0))
                                     content = ""
+                                } else if (!receivingQuizCount && quizCount == 0) {
+                                    println(content)
+                                    if (!"Number of Questions".startsWith(content.trim())) {
+                                        throw Throwable("Failed to parse quiz")
+                                    }
                                 }
                             }
                         }
