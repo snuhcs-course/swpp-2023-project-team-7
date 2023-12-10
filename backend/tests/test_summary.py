@@ -6,7 +6,7 @@ from llama.preprocess_summary import (
     reduce_multiple_summaries_to_one, reduce_summaries_list, 
     generate_summary_tree, update_summary_path_url, get_number_of_inferences
 )
-from llama.custom_type import Summary
+from llama.custom_type import Summary, ProxyAIBackend, GPT4Backend, GPT3Backend
 import random
 import string
 import tiktoken
@@ -161,3 +161,10 @@ def test_get_number_of_inferences():
 	expected4 = 1
 	assert get_number_of_inferences(len(list4)) == expected4, "Failed on list smaller than split size"
 	print("fourth case passed")
+
+def test_proxy_pattern():
+	ai_backend = ProxyAIBackend(GPT4Backend())
+	assert type(ai_backend.summary_generator) == GPT4Backend
+	ai_backend.summary_generator = GPT3Backend()
+	assert type(ai_backend.summary_generator) == GPT3Backend
+
