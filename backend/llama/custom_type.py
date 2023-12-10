@@ -243,7 +243,7 @@ class GPT4Backend(AIBackend):
 		available_summary_list = summary_tree.find_included_summaries(leaf)
 
 		content = "\n\n".join([summary.summary_content for summary in available_summary_list])
-		content += "\n\n" + book_content[leaf.end_idx:word_index]
+		content += "\n\n" + book_content[leaf.start_idx:word_index]
 
 		for resp in self.completion_with_backoff(
 			model="gpt-4", messages=[

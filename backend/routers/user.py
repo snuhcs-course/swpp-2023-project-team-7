@@ -19,8 +19,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 #TODO:
 SECRET_KEY = "your_secret_key"  # Use an environment variable or a config file for the real secret
 ALGORITHM = "HS256"  # Can be HS256 or RS256
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-REFRESH_TOKEN_EXPIRE_WEEKS = 2
+ACCESS_TOKEN_EXPIRE_WEEKS = 52
+REFRESH_TOKEN_EXPIRE_WEEKS = 104
 
 def check_token_expired(token):
     decoded_token = jwt.decode(token.replace('"',''), SECRET_KEY, algorithms=[ALGORITHM])
@@ -181,7 +181,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         )
 
     token_data = {"sub": email}
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(weeks=ACCESS_TOKEN_EXPIRE_WEEKS)
     access_token = create_jwt_token(
         data=token_data, expires_delta=access_token_expires
     )
@@ -258,7 +258,7 @@ def refresh_access_token(refresh_token: str):
         print(exc)
         raise credentials_exception from exc
 
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(weeks=ACCESS_TOKEN_EXPIRE_WEEKS)
     new_access_token = create_jwt_token(
         data={"sub": email}, expires_delta=access_token_expires
     )
