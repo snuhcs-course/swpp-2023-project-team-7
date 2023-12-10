@@ -5,22 +5,25 @@
 
 Readability is an eBook reader application that provide reading assistant services.
 
-
 ## Features
 
 - Feature 1: Summary for previous contents
 - Feature 2: Quiz generation
 
-- Ebook Viewer with overlay
+- E-Book Viewer with overlay
 - Upload own book with txt file
   
 ## Getting Started
 
 ### Prerequisites
 
-- Android Studio [version, e.g., 4.2.1]
-- Minimum Android SDK Version [e.g., 21]
+#### Frontend
 
-### Installation
+- Android Studio Giraffe (2022.3) or above
+- Minimum Android SDK Version: 24
+- Target Android SDK Version: 34
 
-[Installation link here]
+#### Backend
+
+- OpenAI key for GPT-4
+- A MySQL server
